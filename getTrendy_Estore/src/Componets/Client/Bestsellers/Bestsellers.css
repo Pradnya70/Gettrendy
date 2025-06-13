@@ -1,0 +1,87 @@
+.Bestsellers-container {
+    padding-top: 100px;
+}
+
+
+.Bestsellers-container {
+    margin: 2rem auto;
+    /* Adjust as needed */
+}
+
+.custom-card {
+    background-color: #f9f9f9;
+    /* Change to your desired color */
+    border: 1px solid #ddd;
+    /* Optional: for card border */
+}
+
+.card-icons {
+    display: flex;
+    justify-content: space-around;
+    /* Space out the icons */
+    margin-top: 10px;
+}
+
+.icon {
+    font-size: 2rem;
+    /* Adjust size here */
+    cursor: pointer;
+    /* Add cursor style for better UX */
+}
+
+.icon:hover {
+    color: #E9272D;
+    /* Change color on hover */
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    /* Centers the pagination */
+    /* Sets the background color */
+    padding: 10px;
+    /* Adds padding around the pagination */
+    border-radius: 5px;
+    /* Optional: rounds the corners */
+}
+
+.MuiPagination-root {
+    color: white;
+    /* Sets the default text color to white */
+}
+
+.MuiPagination-ul {
+    justify-content: center;
+    /* Centers the pagination items */
+}
+
+.MuiPagination-item {
+    color: white;
+    /* Sets the color of pagination numbers to white */
+    background-color: #E9272D !important;
+
+    /* Sets background color for pagination buttons */
+    border: none;
+    /* Optional: removes border */
+}
+
+.css-q7jpt8-MuiButtonBase-root-MuiPaginationItem-root.Mui-selected {
+    background-color: #E9272D !important;
+    color: white !important;
+}
+
+.MuiPagination-item:hover {
+    background-color: #E9272D !important;
+    color: white !important;
+}
+
+.MuiPagination-item.Mui-selected {
+    background-color: #E9272D !important;
+    color: white !important;
+}
+
+@media (max-width :767px) {
+    .product-image-container {
+        margin-top: 20px;
+    }
+}

@@ -1,0 +1,85 @@
+.carousel-card {
+
+  padding-top: 95px; /* Optional – adjust as needed */
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.carousel-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover; /* or 'contain' if you want full image visibility */
+  border-radius: 8px; /* optional */
+  padding: 7px;
+}
+
+
+
+.left-side {
+    /* flex: 1;
+    max-width: 50%;
+    padding-right: 20px; */
+}
+
+.left-side h5 {
+    font-size: 1.2em;
+    color: white;
+    font-style: italic;
+}
+
+.left-side h3 {
+    font-size: 3.5rem;
+    margin: 10px 0;
+    font-weight: bold;
+    font-style: italic;
+    color: white;
+}
+
+.left-side p {
+    font-size: 1em;
+    margin-bottom: 20px;
+    color: white;
+    font-weight: 150;
+}
+
+.home-btn {
+    background-color: yellow !important;
+    color: black !important;
+    font-weight: bold !important;
+    border-radius: 50px !important;
+}
+
+.right-side {
+    flex: 1;
+    width: 100%;
+    object-fit: cover;
+}
+
+.right-side img {
+    max-width: 150%;
+    height: auto;
+}
+
+.image-bottom {
+    height: 120px;
+    width: 150px;
+    object-fit: cover;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .left-side h3 {
+        font-size: 1.5rem;
+    }
+
+    .left-side p {
+        font-size: 13px;
+        font-weight: 200;
+    }
+
+    .carousel-content {
+        height: 50vh;
+    }
+}

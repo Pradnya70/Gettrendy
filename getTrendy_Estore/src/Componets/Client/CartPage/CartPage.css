@@ -1,0 +1,45 @@
+.cart-page {
+    padding: 50px;
+    background-color: #f8f9fa;
+    margin-top: 180px;
+    margin-bottom: 20px;
+}
+
+.cart-page h2 {
+    font-weight: bold;
+}
+
+.subtotal-section {
+    background-color: white;
+    border-radius: 5px;
+}
+
+.table {
+    margin-top: 20px;
+}
+
+.table img {
+    max-width: 80px;
+    border-radius: 8px;
+}
+
+.table p {
+    margin: 0;
+}
+
+button {
+    margin-left: 10px;
+}
+
+.subtotal-section p {
+    font-size: 18px;
+}
+
+.subtotal-section button {
+    width: 100%;
+}
+
+.d-flex {
+    display: flex;
+    align-items: center;
+}

@@ -1,0 +1,31 @@
+.delivery-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.boxsadow {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+
+}
+
+.boxsadow1 {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+}
+
+.delivery-icon {
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+
+.delivery-section h5 {
+    font-weight: bold;
+}
+
+.order-heading {
+    display: flex;
+    justify-content: space-between;
+}

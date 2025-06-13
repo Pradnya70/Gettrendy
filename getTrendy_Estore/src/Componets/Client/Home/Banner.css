@@ -1,0 +1,71 @@
+.banner-container {
+    background-color: #f7e2b5;
+    padding: 50px 20px;
+    position: relative;
+}
+
+.text-section h4 {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.sale-heading {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #2c2c54;
+}
+
+.discount-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.description {
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.shop-now-btn {
+    background-color: #f15a24;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+}
+
+.image-section {
+    position: relative;
+}
+
+.image-section img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.date-section {
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    text-align: center;
+    font-weight: bold;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.date-section span {
+    display: block;
+}
+
+.date {
+    font-size: 2rem;
+    color: #f15a24;
+}
+
+.date-end {
+    font-size: 1rem;
+    color: #888;
+}

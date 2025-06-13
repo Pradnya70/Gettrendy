@@ -1,0 +1,81 @@
+.ProductPage-container {
+    padding-top: 100px;
+}
+
+.promo-banner {
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    height: 100%;
+}
+
+.promo-banner h4 {
+    color: #b5651d;
+}
+
+.promo-banner h2 {
+    color: #2c2c2c;
+}
+
+.promo-banner img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}
+
+.card {
+    border: none;
+    text-align: center;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 1.2rem;
+}
+
+.card-text {
+    color: #2c2c2c;
+}
+
+.customs-product-card {
+    padding: 11px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+}
+
+.customs-product-card:hover {
+    border: 1px solid black;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+
+}
+
+.product-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 8px;
+    /* object-fit: cover; */
+}
+
+.product-card-desc {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    flex-direction: column;
+}
+
+.rating {
+    color: gold;
+}
+
+.hading {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .promo-banner {
+        margin-bottom: 20px;
+    }
+}

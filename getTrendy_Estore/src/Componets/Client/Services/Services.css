@@ -1,0 +1,46 @@
+.Services-Container {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    padding-top: 50px;
+    max-width: 1200px;
+    /* Set maximum width to 1200px */
+    width: 100%;
+    /* Ensure it uses full width up to max-width */
+    margin: 0 auto;
+    /* Center the container */
+}
+
+.service-row {
+    padding: 24px 43px;
+    border-top: 2px solid #eaebed;
+    border-bottom: 2px solid #eaebed;
+    /* border-radius: 16px; */
+    width: 100%;
+    /* box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.service-colum {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.service-icon {
+    color: #E9272D;
+}
+
+@media (max-width: 768px) {
+    .margin-btm {
+        margin-bottom: 50px;
+    }
+}
+
+.ml-10 {
+    margin-left: 10px;
+}

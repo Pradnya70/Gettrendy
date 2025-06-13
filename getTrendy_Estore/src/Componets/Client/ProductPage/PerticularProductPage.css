@@ -1,0 +1,287 @@
+.product-image img {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: contain;
+}
+
+.product-details {
+    text-align: left;
+}
+
+.product-details h3 {
+    font-weight: bold;
+}
+
+.product-price {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+}
+
+.social-icons {
+    font-size: 25px;
+    cursor: pointer;
+    gap: 15px;
+}
+
+.product-details {
+
+    /* Reduce spacing between elements */
+    p, h3 {
+        margin-bottom: 5px;
+        /* You can adjust the value as needed */
+    }
+}
+
+.quantity-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    /* Adjust the gap between quantity selector and "Add to Cart" button */
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+}
+
+.add-to-cart {
+    margin-left: 20px;
+}
+
+.product-details p,
+.product-details h3,
+.product-details .stock-status,
+.product-details .product-price,
+.product-details .product-description,
+.product-details .social-icons {
+    margin-bottom: 4px;
+    /* Decrease this value to reduce space between elements */
+}
+
+/* For even more control, you can adjust margins per element */
+.product-details .product-category {
+    margin-bottom: 3px;
+    /* Category */
+}
+
+.product-details .product-title {
+    margin-bottom: 5px;
+    /* Title */
+}
+
+.product-details .stock-status {
+    margin-bottom: 5px;
+    /* Stock Status */
+}
+
+.product-details .product-price {
+    margin-bottom: 5px;
+    /* Price */
+}
+
+.product-details .product-description {
+    margin-bottom: 5px;
+    /* Description */
+}
+
+.quantity-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /* Adjust gap between quantity selector and Add to Cart button */
+}
+
+.social-icons {
+    margin-top: 10px;
+    /* Adjust space before social icons */
+}
+
+/* Reducing space between buttons in the wishlist and ask question section */
+.mt-3 .btn {
+    margin-right: 5px;
+    /* Reduce space between buttons */
+}
+
+/* Basic layout styling */
+.reviews-page {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.reviews-section, .review-form-section {
+    width: 45%;
+}
+
+.customer-reviews-summary h1 {
+    font-size: 48px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.customer-reviews-summary h3, .rating-review h3 {
+    margin-bottom: 10px;
+}
+
+.single-review {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.rating-selection {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.star {
+    cursor: pointer;
+    font-size: 24px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+form input, form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+.product-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    /* Limit to 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+.product-description.expanded {
+    -webkit-line-clamp: unset;
+    /* Remove the line limit when expanded */
+    overflow: visible;
+}
+
+.read-more-btn {
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: blue;
+    font-size: 14px;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.h6-title {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.6);
+    padding-bottom: 10px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .reviews-page {
+        flex-direction: column;
+        /* Stack sections vertically */
+    }
+
+    .reviews-section,
+    .review-form-section {
+        width: 100%;
+        /* Full width for each section on smaller screens */
+    }
+
+    .customer-reviews-summary h1 {
+        font-size: 36px;
+        /* Adjust font size for smaller screens */
+    }
+}
+
+/* Adjustments for smaller elements */
+.single-review {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.rating-selection {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.star {
+    cursor: pointer;
+    font-size: 20px;
+    /* Adjust font size for stars on smaller screens */
+}
+
+form input, form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+/* Mobile adjustments for button */
+form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    /* Full width on smaller screens */
+}
+
+/* Product description styles */
+.product-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+.product-description.expanded {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.read-more-btn {
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: blue;
+    font-size: 14px;
+    text-decoration: underline;
+    padding: 0;
+}

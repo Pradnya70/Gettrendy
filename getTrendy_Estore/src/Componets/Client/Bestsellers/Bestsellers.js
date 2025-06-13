@@ -1,0 +1,245 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { Button, Card, Col, Container, Row } from "react-bootstrap"
+import "./Bestsellers.css"
+import Pagination from "@mui/material/Pagination"
+import Stack from "@mui/material/Stack"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import { BASEURL } from "../Comman/CommanConstans"
+import Loader from "../Loader/Loader"
+import { useAuth } from "../../AuthContext/AuthContext"
+import { useCart } from "../../CartContext/CartContext"
+
+const Bestsellers = () => {
+  const { userToken } = useAuth()
+  const { addToCart } = useCart()
+  const [pageAll, setPageAll] = useState(1)
+  const [limitAll, setLimitAll] = useState(3)
+  const [allProducts, setAllProducts] = useState([])
+  const [pagesCountAll, setPagesCountAll] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const navigate = useNavigate()
+
+  const handleNavigate = () => {
+    navigate("/shop")
+    window.scroll(0, 0)
+  }
+
+  const getAllProducts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      console.log(
+        "Fetching bestsellers from:",
+        `${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&bestseller=true`,
+      )
+
+      const response = await axios.get(`${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&bestseller=true`)
+
+      setLoading(false)
+
+      // Log the entire response to see its structure
+      console.log("Bestsellers API Response:", response)
+
+      if (response && response.data) {
+        // Check if response.data has rows property
+        if (response.data.rows) {
+          console.log("Bestsellers found:", response.data.rows)
+          setAllProducts(response.data.rows)
+          setPagesCountAll(response.data.pages_count || 1)
+        }
+        // Check if response.data is the array directly
+        else if (Array.isArray(response.data)) {
+          console.log("Bestsellers found (array):", response.data)
+          setAllProducts(response.data)
+          setPagesCountAll(Math.ceil(response.data.length / limitAll) || 1)
+        }
+        // Check if response has products property
+        else if (response.data.products) {
+          console.log("Bestsellers found (products property):", response.data.products)
+          setAllProducts(response.data.products)
+          setPagesCountAll(response.data.pages_count || 1)
+        }
+        // Check if response has data property
+        else if (response.data.data) {
+          console.log("Bestsellers found (data property):", response.data.data)
+          setAllProducts(response.data.data)
+          setPagesCountAll(response.data.pages_count || 1)
+        }
+        // If we still don't have products, log an error
+        else {
+          console.error("No bestsellers found in response:", response)
+          setError("No bestseller products found in API response")
+        }
+      } else {
+        console.error("Invalid response:", response)
+        setError("Invalid API response")
+      }
+    } catch (error) {
+      setLoading(false)
+      console.error("Error fetching bestsellers:", error)
+      setError(error.message || "Error fetching bestsellers")
+    }
+  }
+
+  const truncateText = (text, limit) => {
+    if (!text) return ""
+    return text.length > limit ? text.slice(0, limit) + "..." : text
+  }
+
+  const navigateToProduct = (id) => {
+    navigate("/perticularproductpage", { state: { productId: id } })
+    window.scroll(0, 0)
+  }
+
+  const handleAddToCart = (product) => {
+    if (userToken) {
+      addToCart(product, 1)
+    } else {
+      navigate("/login")
+      window.scroll(0, 0)
+    }
+  }
+
+  const renderPaginationCount = () => {
+    return pagesCountAll
+  }
+
+  const handlePageChange = (event, value) => {
+    setPageAll(value)
+  }
+
+  useEffect(() => {
+    getAllProducts()
+  }, [pageAll])
+
+  return (
+    <>
+      {loading ? <Loader /> : ""}
+      <Container className="Bestsellers-container">
+        <Row>
+          <div
+            data-aos="fade-down"
+            data-aos-duration="2000"
+            data-aos-easing="ease-in-out"
+            className="section-title mb-5"
+          >
+            <div className="section-line"></div>
+            <div className="text-center">
+              <h5>More to Discover</h5>
+              <h1>Bestsellers of the week</h1>
+            </div>
+
+            <div className="section-line"></div>
+          </div>
+
+          {/* Display error message if there is one */}
+          {error && <div className="alert alert-danger text-center mb-4">Error: {error}</div>}
+
+          <Col md={4}>
+            <div className="promo-banner">
+              <h4>Weekend Sales</h4>
+              <h2>Unlock Up to 26% Off on Premium Products!</h2>
+              <button
+                className="btn mt-3"
+                style={{ background: "#E9272D", color: "white" }}
+                onClick={() => handleNavigate()}
+              >
+                Shop Now
+              </button>{" "}
+              <br />
+              <img src="/Images/teshirt6.png" alt="Vegetable Bag" className="img-fluid mt-3" />
+            </div>
+          </Col>
+          <Col md={8}>
+            <div>
+              <Row>
+                {allProducts && allProducts.length > 0 ? (
+                  allProducts.map((product) => (
+                    <Col lg={4} md={6} sm={12} key={product.id || product._id} className="mb-5">
+                      <Card className=" ">
+                        <div className="product-image-container">
+                          <Card.Img
+                            variant="top"
+                            src={
+                              product.product_image
+                                ? `${BASEURL}/uploads/${product.product_image}`
+                                : product.images && product.images.length > 0
+                                  ? `${BASEURL}${product.images[0]}`
+                                  : `${BASEURL}/uploads/placeholder.png`
+                            }
+                            alt={product.product_name}
+                            className="particular-product-image"
+                            onError={(e) => {
+                              console.log("Image error:", e)
+                              e.target.src = `${BASEURL}/uploads/placeholder.png`
+                            }}
+                          />
+                        </div>
+                        <Card.Body>
+                          <Card.Title className="product-title">{product.product_name}</Card.Title>
+                          <Card.Text className="product-description">
+                            {truncateText(product.description || product.product_description, 100)}
+                          </Card.Text>
+                          <div className="product-price mb-2">
+                            <span className="current-price">${product.discount_price || product.price}</span>
+                            {product.discount_price && product.discount_price < product.price && (
+                              <span className="original-price ms-2">${product.price}</span>
+                            )}
+                          </div>
+                          <div className="button-section text-center">
+                            <Button
+                              variant="outline-dark"
+                              className="view-more-btn"
+                              onClick={() => navigateToProduct(product.id || product._id)}
+                            >
+                              View More
+                            </Button>
+                            <Button
+                              className="add-to-cart-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleAddToCart(product)
+                              }}
+                            >
+                              Add To Cart
+                            </Button>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))
+                ) : (
+                  <div className="text-center mb-5">
+                    <h4>No Bestseller Products Found</h4>
+                    <p>Please check the API connection or try again later.</p>
+                  </div>
+                )}
+              </Row>
+            </div>
+            {allProducts && allProducts.length > 0 && (
+              <div className="display-start mb-5">
+                <Stack spacing={2}>
+                  <Pagination
+                    count={renderPaginationCount()}
+                    page={pageAll}
+                    variant="outlined"
+                    shape="rounded"
+                    onChange={handlePageChange}
+                  />
+                </Stack>
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Container>
+    </>
+  )
+}
+
+export default Bestsellers

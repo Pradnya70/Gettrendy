@@ -1,0 +1,175 @@
+.Register-Container {
+    margin-top: 150px;
+}
+
+.login-container {
+    margin-top: 100px;
+}
+
+.buttomsapcec {
+    margin-bottom: 20px;
+}
+
+.title-heading {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.custom-input {
+    padding: 10px;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.phone-input {
+    flex: 1;
+    /* Ensure it takes up the remaining space */
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.country-code-dropdown {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.password-toggle {
+    pointer-events: auto;
+    /* Ensure the password toggle icon can be clicked */
+}
+
+.loginheding {
+    font-weight: bold;
+    font-size: 50px;
+}
+
+.cutomebutton {
+    width: 100%;
+    height: 48px;
+    color: white;
+    background: #E9272D !important;
+    font-size: 16px !important;
+}
+
+.login-image-col, .register-image-col {
+    height: auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background-color: #fff;
+    min-height: 80vh;
+}
+
+.login-image {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+}
+
+.login-form-container {
+    width: 100%;
+    max-width: 636px;
+    margin: 0 auto;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    padding: 50px;
+    background-color: #fff;
+    z-index: 2;
+}
+
+.login-img {
+    position: absolute;
+    bottom: 100px;
+    right: 20px;
+    z-index: 1;
+}
+
+.login-img img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.login-icon {
+    height: 130px;
+    width: 130px;
+}
+
+.create-account {
+    color: #E9272D;
+}
+
+.phoneloginicon {
+    margin-right: 5px;
+    position: relative;
+    top: -23px;
+}
+
+.loginions {
+    margin-right: 11px;
+    position: relative;
+    top: -30px;
+}
+
+.login-img img {
+    height: 400px;
+    width: 400px;
+}
+
+/* Media query for iPhone or devices with width less than 768px */
+@media (max-width: 767.98px) {
+    .login-image-col, .register-image-col {
+        /* margin-top: 120px !important; */
+        padding: 1rem;
+        flex-direction: column;
+    }
+
+    .login-form-container {
+        padding: 1rem;
+        order: 1;
+    }
+
+    .login-img {
+        margin-top: 20px;
+        height: auto;
+        position: static;
+        /* Remove absolute positioning */
+        order: 2;
+        /* Ensure image comes after the form */
+        display: flex;
+        justify-content: center;
+        /* Center the image */
+    }
+
+    .login-img img {
+        height: auto;
+        width: 100%;
+        /* Makes image responsive */
+        object-fit: contain;
+    }
+
+    .loginheding {
+        font-size: 36px;
+    }
+
+    .cutomebutton {
+        width: 100%;
+        height: 48px;
+    }
+}
+@media only screen and (min-width: 1440px) and (max-height: 900px) {
+    .login-img {
+        right: -30px;
+    }
+  }
+  

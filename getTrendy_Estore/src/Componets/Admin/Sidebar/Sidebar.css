@@ -1,0 +1,123 @@
+.custom-sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: white;
+    color: black !important;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+    overflow-y: auto;
+    padding-bottom: 20px;
+    transform: translateX(-100%);
+}
+
+.custom-sidebar.open {
+    transform: translateX(0);
+}
+
+.custom-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: white;
+    flex-grow: 1;
+    margin-top: 0px;
+}
+
+.custom-sidebar-item {
+    color: black;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.custom-sidebar-item:hover {
+    background-color: #f0f0f0;
+    color: #E9272D;
+}
+
+.custom-sidebar-icon {
+    margin-right: 10px;
+}
+
+.active {
+    font-weight: bold;
+    color: red;
+}
+
+.custom-sidebarimg {
+    height: 150px;
+    width: 150px;
+    border-radius: 10000px;
+    object-fit: cover;
+}
+
+.custom-sidebarbtn {
+    height: 30px;
+    width: 154px;
+    background: #E9272D !important;
+    margin-bottom: 5px;
+    border-radius: 50px !important;
+    border: 1px solid white !important;
+    color: white;
+}
+
+.custom-search-container {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 5px;
+    padding: 5px;
+    position: relative;
+}
+
+.custom-search-icon {
+    margin-left: 5px;
+    color: #E9272D;
+    position: absolute;
+    left: 10px;
+}
+
+.custom-search-input {
+    border: none;
+    outline: none;
+    padding: 5px 5px 5px 30px;
+    flex-grow: 1;
+    border-radius: 5px;
+    width: 100%;
+    color: black;
+    border-bottom: 2px solid #ccc;
+}
+
+.custom-sidebar.open {
+    transform: translateX(0);
+    /* Slide sidebar in */
+}
+
+.custom-sidebar.closed {
+    transform: translateX(-100%);
+    /* Slide sidebar out */
+}
+
+.sidebar-toggle-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+}
+@media (max-width : 768){
+    .custom-sidebar-menu {
+        margin-top: 50px;
+    }
+}

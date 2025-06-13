@@ -1,0 +1,53 @@
+.checkout-page {
+    margin-top: 200px;
+    margin-bottom: 20px;
+}
+
+.checkout-page h2 {
+    font-weight: bold;
+}
+
+.billing-details,
+.order-summary {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.billing-details h3 {
+    font-weight: bold;
+}
+
+.order-summary h3 {
+    font-weight: bold;
+}
+
+.order-summary table {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.order-summary button {
+    width: 100%;
+}
+
+.text-bold {
+    font-weight: bold !important;
+    font-size: 16px !important;
+}
+
+.require {
+    color: red;
+}
+
+.table-container {
+    max-height: 200px;
+    /* Adjust the height as per your requirement */
+    overflow-y: auto;
+}
+
+.table-container table thead th,
+.table-container table tbody td {
+    white-space: nowrap;
+    /* Prevent text wrapping */
+}

@@ -1,151 +1,169 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Form, Button, Container, Row, Col, Modal } from "react-bootstrap"
-import { NavLink, useNavigate } from "react-router-dom"
-import "./LoginPage.css"
-import { faEnvelope, faEye, faEyeSlash, faPhone, faUser } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import axios from "axios"
-import Loader from "../Loader/Loader"
-import { useAuth } from "../../AuthContext/AuthContext"
-import Footer from "../Footer/Footer"
+import { useState } from "react";
+import { Form, Button, Container, Row, Col, Modal } from "react-bootstrap";
+import { NavLink, useNavigate } from "react-router-dom";
+import "./LoginPage.css";
+import {
+  faEnvelope,
+  faEye,
+  faEyeSlash,
+  faPhone,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import Loader from "../Loader/Loader";
+import { useAuth } from "../../AuthContext/AuthContext";
+import Footer from "../Footer/Footer";
+import { BASEURL } from "../Comman/CommanConstans";
 
 function Register() {
-  const { login } = useAuth()
-  const [type, setType] = useState("password")
-  const [type1, setType1] = useState("password")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState("user") // Default role is user
-  const [errors, setErrors] = useState({})
-  const [show, setShow] = useState(false)
-  const [message, setMessage] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [check, setCheck] = useState(true)
+  const { login } = useAuth();
+  const [type, setType] = useState("password");
+  const [type1, setType1] = useState("password");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("user"); // Default role is user
+  const [errors, setErrors] = useState({});
+  const [show, setShow] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [check, setCheck] = useState(true);
 
   const handleClose = () => {
-    setShow(false)
-  }
-  const handleShow = () => setShow(true)
+    setShow(false);
+  };
+  const handleShow = () => setShow(true);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
-    setType(type === "password" ? "text" : "password")
-  }
+    setType(type === "password" ? "text" : "password");
+  };
 
   const toggleConfirmPasswordVisibility = () => {
-    setType1(type1 === "password" ? "text" : "password")
-  }
+    setType1(type1 === "password" ? "text" : "password");
+  };
 
   const validateForm = () => {
-    let valid = true
-    const newErrors = {}
+    let valid = true;
+    const newErrors = {};
     if (!name) {
-      newErrors.name = "Name is required"
-      valid = false
+      newErrors.name = "Name is required";
+      valid = false;
     }
     if (!email) {
-      newErrors.email = "Email address is required"
-      valid = false
+      newErrors.email = "Email address is required";
+      valid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email address is invalid"
-      valid = false
+      newErrors.email = "Email address is invalid";
+      valid = false;
     }
     if (!phone) {
-      newErrors.phone = "Phone Number is required"
-      valid = false
+      newErrors.phone = "Phone Number is required";
+      valid = false;
     }
     if (!password) {
-      newErrors.password = "Password is required"
-      valid = false
+      newErrors.password = "Password is required";
+      valid = false;
     } else if (password.length < 6) {
-      newErrors.password = "Password must be 6 digit long"
-      valid = false
+      newErrors.password = "Password must be 6 digit long";
+      valid = false;
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = "Confirm Password is required"
-      valid = false
+      newErrors.confirmPassword = "Confirm Password is required";
+      valid = false;
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
-      valid = false
+      newErrors.confirmPassword = "Passwords do not match";
+      valid = false;
     }
 
-    setErrors(newErrors)
-    return valid
-  }
+    setErrors(newErrors);
+    return valid;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
-      setLoading(true)
+      setLoading(true);
       const formData = {
         name,
         email,
         phone,
         password,
         role,
-      }
+      };
 
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/register", formData)
+        const response = await axios.post(
+          `${BASEURL}/api/auth/register`,
+          formData
+        );
 
-        console.log("Register response:", response.data)
+        console.log("Register response:", response.data);
 
         if (response) {
-          const token = response?.data?.data?.token
-          const userRole = response?.data?.data?.user?.role
-          const userId = response?.data?.data?.user?.id
-          const userName = response?.data?.data?.user?.name
+          const token = response?.data?.data?.token;
+          const userRole = response?.data?.data?.user?.role;
+          const userId = response?.data?.data?.user?.id;
+          const userName = response?.data?.data?.user?.name;
 
-          console.log("Registration successful:", { userRole, userId, userName })
+          console.log("Registration successful:", {
+            userRole,
+            userId,
+            userName,
+          });
 
-          login(token, userRole, userId, userName)
-          setMessage(response?.data?.message)
-          handleShow()
-          setEmail("")
-          setName("")
-          setPassword("")
-          setConfirmPassword("")
+          login(token, userRole, userId, userName);
+          setMessage(response?.data?.message);
+          handleShow();
+          setEmail("");
+          setName("");
+          setPassword("");
+          setConfirmPassword("");
 
           // Redirect based on role
           setTimeout(() => {
-            console.log("Redirecting user with role:", userRole)
+            console.log("Redirecting user with role:", userRole);
             if (userRole === "admin") {
-              console.log("Redirecting to admin dashboard")
-              navigate("/admin-dashboard")
+              console.log("Redirecting to admin dashboard");
+              navigate("/admin-dashboard");
             } else {
-              console.log("Redirecting to user dashboard")
-              navigate("/dashboard")
+              console.log("Redirecting to user dashboard");
+              navigate("/dashboard");
             }
-          }, 1500)
+          }, 1500);
         }
-        setLoading(false)
+        setLoading(false);
       } catch (error) {
-        setLoading(false)
-        const errorMessage = error?.response?.data?.message || "Internal Server Error"
-        setMessage(errorMessage)
-        handleShow()
+        setLoading(false);
+        const errorMessage =
+          error?.response?.data?.message || "Internal Server Error";
+        setMessage(errorMessage);
+        handleShow();
       }
     } else {
-      console.log("Form is invalid.")
+      console.log("Form is invalid.");
     }
-  }
+  };
 
   const navigateTologin = () => {
-    navigate("/login")
-    window.scroll(0, 0)
-  }
+    navigate("/login");
+    window.scroll(0, 0);
+  };
 
   return (
     <>
       {loading ? <Loader /> : ""}
-      <Container fluid className="d-flex align-items-center justify-content-center Register-Container">
+      <Container
+        fluid
+        className="d-flex align-items-center justify-content-center Register-Container"
+      >
         <Container fluid>
           <Row className="">
             <Col
@@ -158,7 +176,9 @@ function Register() {
             >
               <div className="login-form-container">
                 <h1 className="mb-3 text-center loginheding">Welcome!</h1>
-                <p className="text-center">Don't have an account? Create a free account.</p>
+                <p className="text-center">
+                  Don't have an account? Create a free account.
+                </p>
                 <form onSubmit={handleSubmit}>
                   <div className="buttomsapcec">
                     <label htmlFor="name" className="title-heading">
@@ -175,7 +195,9 @@ function Register() {
                       />
                       <FontAwesomeIcon icon={faUser} className="input-icon" />
                     </div>
-                    {errors.name && <p className="text-danger">{errors.name}</p>}
+                    {errors.name && (
+                      <p className="text-danger">{errors.name}</p>
+                    )}
                   </div>
                   <div className="buttomsapcec">
                     <label htmlFor="email" className="title-heading">
@@ -190,9 +212,14 @@ function Register() {
                         onChange={(e) => setEmail(e.target.value)}
                         value={email}
                       />
-                      <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
+                      <FontAwesomeIcon
+                        icon={faEnvelope}
+                        className="input-icon"
+                      />
                     </div>
-                    {errors.email && <p className="text-danger">{errors.email}</p>}
+                    {errors.email && (
+                      <p className="text-danger">{errors.email}</p>
+                    )}
                   </div>
                   <div className="buttomsapcec">
                     <label htmlFor="phonenumber" className="title-heading">
@@ -209,7 +236,9 @@ function Register() {
                       />
                       <FontAwesomeIcon icon={faPhone} className="input-icon" />
                     </div>
-                    {errors.phone && <p className="text-danger">{errors.phone}</p>}
+                    {errors.phone && (
+                      <p className="text-danger">{errors.phone}</p>
+                    )}
                   </div>
                   <div className="buttomsapcec">
                     <label htmlFor="Password" className="title-heading">
@@ -230,7 +259,9 @@ function Register() {
                         onClick={() => togglePasswordVisibility()}
                       />
                     </div>
-                    {errors.password && <p className="text-danger">{errors.password}</p>}
+                    {errors.password && (
+                      <p className="text-danger">{errors.password}</p>
+                    )}
                   </div>
                   <div className="buttomsapcec">
                     <label htmlFor="confirmpassword" className="title-heading">
@@ -251,7 +282,9 @@ function Register() {
                         onClick={toggleConfirmPasswordVisibility}
                       />
                     </div>
-                    {errors.confirmPassword && <p className="text-danger">{errors.confirmPassword}</p>}
+                    {errors.confirmPassword && (
+                      <p className="text-danger">{errors.confirmPassword}</p>
+                    )}
                   </div>
 
                   <div className="buttomsapcec">
@@ -297,7 +330,9 @@ function Register() {
                     <p>
                       Already have an account?{" "}
                       <NavLink to="/login" onClick={() => navigateTologin()}>
-                        <span className="create-account pointer">Log in here.</span>
+                        <span className="create-account pointer">
+                          Log in here.
+                        </span>
                       </NavLink>
                     </p>
                   </div>
@@ -325,7 +360,7 @@ function Register() {
 
       <Footer />
     </>
-  )
+  );
 }
 
-export default Register
+export default Register;

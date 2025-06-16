@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { axios, API_ENDPOINTS } from "../Comman/CommanConstans";
+import { axios, API_ENDPOINTS, BASEURL } from "../Comman/CommanConstans";
 import { toast } from "react-toastify";
 import "./Categories.css";
 
@@ -93,9 +93,9 @@ const Categories = () => {
             <div className="category-image">
               {category.category_image ? (
                 <img
-                  src={`${
-                    process.env.REACT_APP_API_URL || "http://localhost:5000"
-                  }${category.category_image}`}
+                  src={`${process.env.REACT_APP_API_URL || BASEURL}${
+                    category.category_image
+                  }`}
                   alt={category.category_name}
                   onError={(e) => {
                     e.target.onerror = null;

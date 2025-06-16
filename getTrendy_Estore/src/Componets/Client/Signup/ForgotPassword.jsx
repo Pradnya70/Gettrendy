@@ -1,210 +1,257 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button, Container, Row, Col, Modal, Form, Alert } from "react-bootstrap"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import Loader from "../Loader/Loader"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEnvelope, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
-import Footer from "../Footer/Footer"
-import "./LoginPage.css"
+import { useState } from "react";
+import {
+  Button,
+  Container,
+  Row,
+  Col,
+  Modal,
+  Form,
+  Alert,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Loader from "../Loader/Loader";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEnvelope,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons";
+import Footer from "../Footer/Footer";
+import "./LoginPage.css";
+import { BASEURL } from "../Comman/CommanConstans";
 
 function ForgotPassword() {
-  const [email, setEmail] = useState("")
-  const [errors, setErrors] = useState({})
-  const [show, setShow] = useState(false)
-  const [message, setMessage] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [otp, setOtp] = useState("")
-  const [resetToken, setResetToken] = useState("")
-  const [showResetForm, setShowResetForm] = useState(false)
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [alertInfo, setAlertInfo] = useState({ show: false, variant: "", message: "" })
-  const [devOtp, setDevOtp] = useState("") // For development testing
+  const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState({});
+  const [show, setShow] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({
+    show: false,
+    variant: "",
+    message: "",
+  });
+  const [devOtp, setDevOtp] = useState(""); // For development testing
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const handleClose = () => setShow(false)
+  const handleClose = () => setShow(false);
 
   const showAlert = (variant, message) => {
     setAlertInfo({
       show: true,
       variant,
       message,
-    })
+    });
     setTimeout(() => {
-      setAlertInfo({ show: false, variant: "", message: "" })
-    }, 5000)
-  }
+      setAlertInfo({ show: false, variant: "", message: "" });
+    }, 5000);
+  };
 
   const validateEmail = () => {
-    let valid = true
-    const newErrors = {}
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    let valid = true;
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email) {
-      newErrors.email = "Email address is required"
-      valid = false
+      newErrors.email = "Email address is required";
+      valid = false;
     } else if (!emailRegex.test(email)) {
-      newErrors.email = "Enter a valid email address"
-      valid = false
+      newErrors.email = "Enter a valid email address";
+      valid = false;
     }
 
-    setErrors(newErrors)
-    return valid
-  }
+    setErrors(newErrors);
+    return valid;
+  };
 
   const validateOtp = () => {
-    let valid = true
-    const newErrors = {}
+    let valid = true;
+    const newErrors = {};
 
     if (!otp) {
-      newErrors.otp = "OTP is required"
-      valid = false
+      newErrors.otp = "OTP is required";
+      valid = false;
     } else if (otp.length !== 6 || !/^\d+$/.test(otp)) {
-      newErrors.otp = "OTP must be 6 digits"
-      valid = false
+      newErrors.otp = "OTP must be 6 digits";
+      valid = false;
     }
 
-    setErrors(newErrors)
-    return valid
-  }
+    setErrors(newErrors);
+    return valid;
+  };
 
   const validatePassword = () => {
-    let valid = true
-    const newErrors = {}
+    let valid = true;
+    const newErrors = {};
 
     if (!newPassword) {
-      newErrors.newPassword = "New password is required"
-      valid = false
+      newErrors.newPassword = "New password is required";
+      valid = false;
     } else if (newPassword.length < 6) {
-      newErrors.newPassword = "Password must be at least 6 characters"
-      valid = false
+      newErrors.newPassword = "Password must be at least 6 characters";
+      valid = false;
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword = "Confirm password is required"
-      valid = false
+      newErrors.confirmPassword = "Confirm password is required";
+      valid = false;
     } else if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
-      valid = false
+      newErrors.confirmPassword = "Passwords do not match";
+      valid = false;
     }
 
-    setErrors(newErrors)
-    return valid
-  }
+    setErrors(newErrors);
+    return valid;
+  };
 
   const handleSendOtp = async () => {
     if (validateEmail()) {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/forgot-password", { email })
-        setMessage(response.data.message)
-        setShow(true)
-        setIsOtpSent(true)
-        showAlert("success", "OTP sent successfully to your email")
+        const response = await axios.post(
+          `${BASEURL}/api/auth/forgot-password`,
+          { email }
+        );
+        setMessage(response.data.message);
+        setShow(true);
+        setIsOtpSent(true);
+        showAlert("success", "OTP sent successfully to your email");
 
         // For development/testing - if the backend returns the OTP
         if (response.data.otp) {
-          setDevOtp(response.data.otp)
-          console.log("Development OTP:", response.data.otp)
+          setDevOtp(response.data.otp);
+          console.log("Development OTP:", response.data.otp);
         }
       } catch (error) {
-        const errorMsg = error?.response?.data?.message || "Something went wrong"
-        setMessage(errorMsg)
-        setShow(true)
-        showAlert("danger", errorMsg)
-        console.error("Error sending OTP:", error.response?.data || error.message)
+        const errorMsg =
+          error?.response?.data?.message || "Something went wrong";
+        setMessage(errorMsg);
+        setShow(true);
+        showAlert("danger", errorMsg);
+        console.error(
+          "Error sending OTP:",
+          error.response?.data || error.message
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   const handleVerifyOtp = async () => {
     if (validateOtp()) {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/verify-otp", { email, otp })
-        setMessage(response.data.message)
-        setShow(true)
-        setResetToken(response.data.resetToken)
-        setShowResetForm(true)
-        showAlert("success", "OTP verified successfully")
+        const response = await axios.post(`${BASEURL}/api/auth/verify-otp`, {
+          email,
+          otp,
+        });
+        setMessage(response.data.message);
+        setShow(true);
+        setResetToken(response.data.resetToken);
+        setShowResetForm(true);
+        showAlert("success", "OTP verified successfully");
       } catch (error) {
-        const errorMsg = error?.response?.data?.message || "Invalid OTP"
-        setMessage(errorMsg)
-        setShow(true)
-        showAlert("danger", errorMsg)
-        console.error("Error verifying OTP:", error.response?.data || error.message)
+        const errorMsg = error?.response?.data?.message || "Invalid OTP";
+        setMessage(errorMsg);
+        setShow(true);
+        showAlert("danger", errorMsg);
+        console.error(
+          "Error verifying OTP:",
+          error.response?.data || error.message
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   const handleResetPassword = async () => {
     if (validatePassword()) {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/reset-password", {
-          resetToken,
-          newPassword,
-        })
-        setMessage(response.data.message)
-        setShow(true)
-        showAlert("success", "Password reset successful! Redirecting to login...")
+        const response = await axios.post(
+          `${BASEURL}/api/auth/reset-password`,
+          {
+            resetToken,
+            newPassword,
+          }
+        );
+        setMessage(response.data.message);
+        setShow(true);
+        showAlert(
+          "success",
+          "Password reset successful! Redirecting to login..."
+        );
 
         // Redirect to login after successful password reset
         setTimeout(() => {
-          navigate("/login")
-        }, 3000)
+          navigate("/login");
+        }, 3000);
       } catch (error) {
-        const errorMsg = error?.response?.data?.message || "Password reset failed"
-        setMessage(errorMsg)
-        setShow(true)
-        showAlert("danger", errorMsg)
-        console.error("Error resetting password:", error.response?.data || error.message)
+        const errorMsg =
+          error?.response?.data?.message || "Password reset failed";
+        setMessage(errorMsg);
+        setShow(true);
+        showAlert("danger", errorMsg);
+        console.error(
+          "Error resetting password:",
+          error.response?.data || error.message
+        );
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   const resendOtp = async () => {
     if (validateEmail()) {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/forgot-password", { email })
-        setMessage("OTP resent successfully")
-        setShow(true)
-        showAlert("success", "OTP resent to your email")
+        const response = await axios.post(
+          `${BASEURL}/api/auth/forgot-password`,
+          { email }
+        );
+        setMessage("OTP resent successfully");
+        setShow(true);
+        showAlert("success", "OTP resent to your email");
 
         // For development/testing - if the backend returns the OTP
         if (response.data.otp) {
-          setDevOtp(response.data.otp)
-          console.log("Development OTP:", response.data.otp)
+          setDevOtp(response.data.otp);
+          console.log("Development OTP:", response.data.otp);
         }
       } catch (error) {
-        const errorMsg = error?.response?.data?.message || "Failed to resend OTP"
-        setMessage(errorMsg)
-        setShow(true)
-        showAlert("danger", errorMsg)
+        const errorMsg =
+          error?.response?.data?.message || "Failed to resend OTP";
+        setMessage(errorMsg);
+        setShow(true);
+        showAlert("danger", errorMsg);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   return (
     <>
       {loading && <Loader />}
-      <Container fluid className="d-flex align-items-center justify-content-center login-container">
+      <Container
+        fluid
+        className="d-flex align-items-center justify-content-center login-container"
+      >
         <Container fluid>
           <Row className="vh-100">
             <Col
@@ -213,14 +260,18 @@ function ForgotPassword() {
             >
               <div className="login-form-container">
                 <h1 className="mb-3 text-center loginheding">
-                  {showResetForm ? "Reset Password" : isOtpSent ? "Verify OTP" : "Forgot Password"}
+                  {showResetForm
+                    ? "Reset Password"
+                    : isOtpSent
+                    ? "Verify OTP"
+                    : "Forgot Password"}
                 </h1>
                 <p className="text-center">
                   {showResetForm
                     ? "Enter your new password"
                     : isOtpSent
-                      ? "Enter the OTP sent to your email"
-                      : "Enter your email to receive a password reset OTP"}
+                    ? "Enter the OTP sent to your email"
+                    : "Enter your email to receive a password reset OTP"}
                 </p>
 
                 {alertInfo.show && (
@@ -236,7 +287,8 @@ function ForgotPassword() {
                 {/* Development mode OTP display */}
                 {devOtp && (
                   <Alert variant="info" className="mb-3">
-                    <strong>Development Mode:</strong> Use this OTP for testing: <code>{devOtp}</code>
+                    <strong>Development Mode:</strong> Use this OTP for testing:{" "}
+                    <code>{devOtp}</code>
                   </Alert>
                 )}
 
@@ -255,9 +307,14 @@ function ForgotPassword() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                         />
-                        <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
+                        <FontAwesomeIcon
+                          icon={faEnvelope}
+                          className="input-icon"
+                        />
                       </div>
-                      {errors.email && <p className="text-danger">{errors.email}</p>}
+                      {errors.email && (
+                        <p className="text-danger">{errors.email}</p>
+                      )}
                     </div>
 
                     <div className="d-flex align-items-center justify-content-center mt-4">
@@ -285,11 +342,16 @@ function ForgotPassword() {
                           maxLength={6}
                         />
                       </div>
-                      {errors.otp && <p className="text-danger">{errors.otp}</p>}
+                      {errors.otp && (
+                        <p className="text-danger">{errors.otp}</p>
+                      )}
                     </div>
 
                     <div className="d-flex align-items-center justify-content-center mt-4">
-                      <Button className="cutomebutton" onClick={handleVerifyOtp}>
+                      <Button
+                        className="cutomebutton"
+                        onClick={handleVerifyOtp}
+                      >
                         Verify OTP
                       </Button>
                     </div>
@@ -297,7 +359,11 @@ function ForgotPassword() {
                     <div className="text-center mt-3">
                       <span
                         onClick={resendOtp}
-                        style={{ cursor: "pointer", color: "#007bff", textDecoration: "underline" }}
+                        style={{
+                          cursor: "pointer",
+                          color: "#007bff",
+                          textDecoration: "underline",
+                        }}
                       >
                         Resend OTP
                       </span>
@@ -327,11 +393,16 @@ function ForgotPassword() {
                           style={{ cursor: "pointer" }}
                         />
                       </div>
-                      {errors.newPassword && <p className="text-danger">{errors.newPassword}</p>}
+                      {errors.newPassword && (
+                        <p className="text-danger">{errors.newPassword}</p>
+                      )}
                     </div>
 
                     <div className="buttomsapcec">
-                      <label htmlFor="confirmPassword" className="title-heading">
+                      <label
+                        htmlFor="confirmPassword"
+                        className="title-heading"
+                      >
                         Confirm Password
                       </label>
                       <div className="input-group">
@@ -346,15 +417,22 @@ function ForgotPassword() {
                         <FontAwesomeIcon
                           icon={showConfirmPassword ? faEye : faEyeSlash}
                           className="input-icon"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           style={{ cursor: "pointer" }}
                         />
                       </div>
-                      {errors.confirmPassword && <p className="text-danger">{errors.confirmPassword}</p>}
+                      {errors.confirmPassword && (
+                        <p className="text-danger">{errors.confirmPassword}</p>
+                      )}
                     </div>
 
                     <div className="d-flex align-items-center justify-content-center mt-4">
-                      <Button className="cutomebutton" onClick={handleResetPassword}>
+                      <Button
+                        className="cutomebutton"
+                        onClick={handleResetPassword}
+                      >
                         Reset Password
                       </Button>
                     </div>
@@ -362,7 +440,10 @@ function ForgotPassword() {
                 )}
 
                 <div className="d-flex justify-content-center align-items-center mt-3">
-                  <p onClick={() => navigate("/login")} style={{ cursor: "pointer", color: "#007bff" }}>
+                  <p
+                    onClick={() => navigate("/login")}
+                    style={{ cursor: "pointer", color: "#007bff" }}
+                  >
                     Back to Login
                   </p>
                 </div>
@@ -392,7 +473,7 @@ function ForgotPassword() {
 
       <Footer />
     </>
-  )
+  );
 }
 
-export default ForgotPassword
+export default ForgotPassword;

@@ -14,7 +14,7 @@ const app = express()
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://142.93.220.230:3000", "https://gettrendy.in"],
+    origin: ["http://localhost:3000", "http://142.93.220.230:3000", "http://gettrendy.in:5000", "http://139.59.3.54:5000"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
       "Content-Type",
@@ -45,7 +45,7 @@ mongoose
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err))
 
- console.log('🔍 MONGO_URI =', process.env.MONGO_URI);
+//  console.log('🔍 MONGO_URI =', process.env.MONGO_URI);
  
 // Import Routes
 const authRoutes = require("./routes/authRoutes")

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API Configuration
-export const BASEURL = "https://api.gettrendy.in";
+export const BASEURL = "http://api.gettrendy.in:5000";
 
 // User Roles
 export const UserRoles = {

@@ -14,7 +14,8 @@ const app = express()
 // CORS configuration
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://142.93.220.230:3000", "http://gettrendy.in:5000", "http://139.59.3.54:5000"],
+    origin: ["http://localhost:3000", "http://142.93.220.230:3000",  "https://gettrendy.in",
+      "https://api.gettrendy.in"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
       "Content-Type",

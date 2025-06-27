@@ -44,7 +44,7 @@ const Hero = () => {
       <ProductCard />
       {/* <ProductPage /> */}
       <Subcategory />
-      {/* <Bestsellers /> */}
+       <Bestsellers /> 
       <Services />
       {/* <Videogallery /> */}
       {/* <Testimonials /> */}

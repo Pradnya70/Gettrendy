@@ -1,19 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Container, Row, Col, Form, Button, Image } from "react-bootstrap"
-import { useDispatch, useSelector } from "react-redux"
-import { useNavigate, useParams } from "react-router-dom"
-import { createProduct, updateProduct, getProductById } from "../../actions/productActions"
-import { listCategories } from "../../actions/categoryActions"
-import { listSubcategories } from "../../actions/subcategoryActions"
-import Loader from "../../components/Loader"
-import Message from "../../components/Message"
+import { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, Image } from "react-bootstrap";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  createProduct,
+  updateProduct,
+  getProductById,
+} from "../../actions/productActions";
+import { listCategories } from "../../actions/categoryActions";
+import { listSubcategories } from "../../actions/subcategoryActions";
+import Loader from "../../components/Loader";
+import Message from "../../components/Message";
 
 function AddProduct() {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const { id: productId } = useParams()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id: productId } = useParams();
 
   const [formData, setFormData] = useState({
     product_name: "",
@@ -28,36 +32,52 @@ function AddProduct() {
     sizes: [],
     colors: [],
     images: [],
-  })
+  });
 
-  const [imagePreviews, setImagePreviews] = useState([])
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const productDetails = useSelector((state) => state.productDetails)
-  const { loading, error, product } = productDetails
+  const productDetails = useSelector((state) => state.productDetails);
+  const { loading, error, product } = productDetails;
 
-  const categoryList = useSelector((state) => state.categoryList)
-  const { loading: loadingCategories, error: errorCategories, categories } = categoryList
+  const categoryList = useSelector((state) => state.categoryList);
+  const {
+    loading: loadingCategories,
+    error: errorCategories,
+    categories,
+  } = categoryList;
 
-  const subcategoryList = useSelector((state) => state.subcategoryList)
-  const { loading: loadingSubcategories, error: errorSubcategories, subcategories } = subcategoryList
+  const subcategoryList = useSelector((state) => state.subcategoryList);
+  const {
+    loading: loadingSubcategories,
+    error: errorSubcategories,
+    subcategories,
+  } = subcategoryList;
 
-  const productCreate = useSelector((state) => state.productCreate)
-  const { loading: loadingCreate, error: errorCreate, success: successCreate } = productCreate
+  const productCreate = useSelector((state) => state.productCreate);
+  const {
+    loading: loadingCreate,
+    error: errorCreate,
+    success: successCreate,
+  } = productCreate;
 
-  const productUpdate = useSelector((state) => state.productUpdate)
-  const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = productUpdate
+  const productUpdate = useSelector((state) => state.productUpdate);
+  const {
+    loading: loadingUpdate,
+    error: errorUpdate,
+    success: successUpdate,
+  } = productUpdate;
 
   useEffect(() => {
-    dispatch(listCategories())
-    dispatch(listSubcategories())
+    dispatch(listCategories());
+    dispatch(listSubcategories());
 
     if (productId) {
-      dispatch(getProductById(productId))
+      dispatch(getProductById(productId));
     }
-  }, [dispatch, productId])
+  }, [dispatch, productId]);
 
   useEffect(() => {
     if (product) {
@@ -74,130 +94,151 @@ function AddProduct() {
         sizes: product.sizes || [],
         colors: product.colors || [],
         images: [],
-      })
-      setImagePreviews(product.images || [])
+      });
+      setImagePreviews(product.images || []);
     }
 
     if (successCreate || successUpdate) {
       if (formData.bestseller) {
-        navigate("/admin-allproducts?bestseller=true")
+        navigate("/admin-allproducts?bestseller=true");
       } else if (formData.featured) {
-        navigate("/admin-allproducts?featured=true")
+        navigate("/admin-allproducts?featured=true");
       } else {
-        navigate("/admin-allproducts")
+        navigate("/admin-allproducts");
       }
     }
-  }, [product, productId, successCreate, successUpdate, navigate, formData.bestseller, formData.featured])
+  }, [
+    product,
+    productId,
+    successCreate,
+    successUpdate,
+    navigate,
+    formData.bestseller,
+    formData.featured,
+  ]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    console.log(`🔍 Input change: Name=${name}, Value=${value}, Checked=${checked}, Type=${type}`)
+    const { name, value, type, checked } = e.target;
+    console.log(
+      `🔍 Input change: Name=${name}, Value=${value}, Checked=${checked}, Type=${type}`
+    );
 
     setFormData((prevData) => {
       const newData = {
         ...prevData,
         [name]: type === "checkbox" ? checked : value,
-      }
-      console.log(`🔍 Updated formData:`, newData)
-      return newData
-    })
-  }
+      };
+      console.log(`🔍 Updated formData:`, newData);
+      return newData;
+    });
+  };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files)
-    const newImages = []
-    const newPreviews = []
+    const files = Array.from(e.target.files);
+    const newImages = [];
+    const newPreviews = [];
 
     files.forEach((file) => {
-      newImages.push(file)
-      newPreviews.push(URL.createObjectURL(file))
-    })
+      newImages.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+    });
 
     setFormData({
       ...formData,
       images: [...formData.images, ...newImages],
-    })
-    setImagePreviews([...imagePreviews, ...newPreviews])
-  }
+    });
+    setImagePreviews([...imagePreviews, ...newPreviews]);
+  };
 
   const handleRemoveImage = (index) => {
-    const newImages = [...formData.images]
-    newImages.splice(index, 1)
+    const newImages = [...formData.images];
+    newImages.splice(index, 1);
 
-    const newPreviews = [...imagePreviews]
-    newPreviews.splice(index, 1)
+    const newPreviews = [...imagePreviews];
+    newPreviews.splice(index, 1);
 
     setFormData({
       ...formData,
       images: newImages,
-    })
-    setImagePreviews(newPreviews)
-  }
+    });
+    setImagePreviews(newPreviews);
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (isSubmitting) return
-    setIsSubmitting(true)
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      console.log(`🚀 FORM SUBMIT DEBUG - Current formData:`, formData)
+      console.log(`🚀 FORM SUBMIT DEBUG - Current formData:`, formData);
 
-      const formDataToSend = new FormData()
-      formDataToSend.append("product_name", formData.product_name)
-      formDataToSend.append("product_description", formData.product_description)
-      formDataToSend.append("price", formData.price)
-      formDataToSend.append("discount_price", formData.discount_price)
-      formDataToSend.append("category", formData.category)
-      formDataToSend.append("subcategory", formData.subcategory)
-      formDataToSend.append("stock", formData.stock)
+      const formDataToSend = new FormData();
+      formDataToSend.append("product_name", formData.product_name);
+      formDataToSend.append(
+        "product_description",
+        formData.product_description
+      );
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("discount_price", formData.discount_price);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("subcategory", formData.subcategory);
+      formDataToSend.append("stock", formData.stock);
 
       // Convert boolean to string explicitly and use consistent field names
-      const featuredValue = formData.featured === true ? "true" : "false"
-      const bestsellerValue = formData.bestseller === true ? "true" : "false"
+      const featuredValue = formData.featured === true ? "true" : "false";
+      const bestsellerValue = formData.bestseller === true ? "true" : "false";
 
-      console.log(`🔍 Boolean conversion:`)
-      console.log(`- formData.featured (${typeof formData.featured}): ${formData.featured} -> ${featuredValue}`)
-      console.log(`- formData.bestseller (${typeof formData.bestseller}): ${formData.bestseller} -> ${bestsellerValue}`)
+      console.log(`🔍 Boolean conversion:`);
+      console.log(
+        `- formData.featured (${typeof formData.featured}): ${
+          formData.featured
+        } -> ${featuredValue}`
+      );
+      console.log(
+        `- formData.bestseller (${typeof formData.bestseller}): ${
+          formData.bestseller
+        } -> ${bestsellerValue}`
+      );
 
-      formDataToSend.append("featured", featuredValue)
-      formDataToSend.append("bestseller", bestsellerValue) // Use lowercase consistently
+      formDataToSend.append("featured", featuredValue);
+      formDataToSend.append("bestseller", bestsellerValue); // Use lowercase consistently
 
       // Handle sizes and colors
       if (formData.sizes && formData.sizes.length > 0) {
         formData.sizes.forEach((size) => {
-          formDataToSend.append("sizes", size)
-        })
+          formDataToSend.append("sizes", size);
+        });
       }
 
       if (formData.colors && formData.colors.length > 0) {
         formData.colors.forEach((color) => {
-          formDataToSend.append("colors", color)
-        })
+          formDataToSend.append("colors", color);
+        });
       }
 
       formData.images.forEach((image) => {
-        formDataToSend.append("images", image)
-      })
+        formDataToSend.append("images", image);
+      });
 
       // Debug: Log all FormData entries
-      console.log(`🔍 COMPLETE FormData being sent:`)
+      console.log(`🔍 COMPLETE FormData being sent:`);
       for (const pair of formDataToSend.entries()) {
-        console.log(`- ${pair[0]}: ${pair[1]} (type: ${typeof pair[1]})`)
+        console.log(`- ${pair[0]}: ${pair[1]} (type: ${typeof pair[1]})`);
       }
 
       if (productId) {
-        dispatch(updateProduct(productId, formDataToSend))
+        dispatch(updateProduct(productId, formDataToSend));
       } else {
-        dispatch(createProduct(formDataToSend))
+        dispatch(createProduct(formDataToSend));
       }
     } catch (error) {
-      console.error("Form submission error:", error)
-      setUploadError("Error submitting form. Please try again.")
+      console.error("Form submission error:", error);
+      setUploadError("Error submitting form. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Container>
@@ -217,10 +258,12 @@ function AddProduct() {
           >
             <h5>🔍 Debug Panel</h5>
             <div>
-              <strong>Featured:</strong> {String(formData.featured)} (type: {typeof formData.featured})
+              <strong>Featured:</strong> {String(formData.featured)} (type:{" "}
+              {typeof formData.featured})
             </div>
             <div>
-              <strong>Bestseller:</strong> {String(formData.bestseller)} (type: {typeof formData.bestseller})
+              <strong>Bestseller:</strong> {String(formData.bestseller)} (type:{" "}
+              {typeof formData.bestseller})
             </div>
           </div>
 
@@ -319,7 +362,13 @@ function AddProduct() {
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <div style={{ padding: "10px", backgroundColor: "#e9ecef", marginBottom: "10px" }}>
+                        <div
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#e9ecef",
+                            marginBottom: "10px",
+                          }}
+                        >
                           <strong>Checkbox Debug:</strong>
                           <div>Featured: {String(formData.featured)}</div>
                           <div>Bestseller: {String(formData.bestseller)}</div>
@@ -337,7 +386,7 @@ function AddProduct() {
                           type="checkbox"
                           label="Bestseller Product"
                           name="bestseller"
-                          id="bestsellerProductCheckbox"
+                          id="bestsellerProductCheckboxUnique"
                           checked={formData.bestseller}
                           onChange={handleInputChange}
                           className="mt-2"
@@ -384,7 +433,9 @@ function AddProduct() {
                         {loadingSubcategories ? (
                           <Loader />
                         ) : errorSubcategories ? (
-                          <Message variant="danger">{errorSubcategories}</Message>
+                          <Message variant="danger">
+                            {errorSubcategories}
+                          </Message>
                         ) : (
                           <Form.Control
                             as="select"
@@ -394,7 +445,10 @@ function AddProduct() {
                           >
                             <option value="">Select Subcategory</option>
                             {subcategories?.map((subcategory) => (
-                              <option key={subcategory._id} value={subcategory._id}>
+                              <option
+                                key={subcategory._id}
+                                value={subcategory._id}
+                              >
                                 {subcategory.subcategory_name}
                               </option>
                             ))}
@@ -417,16 +471,20 @@ function AddProduct() {
                           type="text"
                           placeholder="e.g., S, M, L, XL"
                           name="sizes"
-                          value={Array.isArray(formData.sizes) ? formData.sizes.join(", ") : formData.sizes}
+                          value={
+                            Array.isArray(formData.sizes)
+                              ? formData.sizes.join(", ")
+                              : formData.sizes
+                          }
                           onChange={(e) => {
                             const sizesArray = e.target.value
                               .split(",")
                               .map((size) => size.trim())
-                              .filter((size) => size)
+                              .filter((size) => size);
                             setFormData({
                               ...formData,
                               sizes: sizesArray,
-                            })
+                            });
                           }}
                         />
                       </Form.Group>
@@ -438,16 +496,20 @@ function AddProduct() {
                           type="text"
                           placeholder="e.g., Red, Blue, Green"
                           name="colors"
-                          value={Array.isArray(formData.colors) ? formData.colors.join(", ") : formData.colors}
+                          value={
+                            Array.isArray(formData.colors)
+                              ? formData.colors.join(", ")
+                              : formData.colors
+                          }
                           onChange={(e) => {
                             const colorsArray = e.target.value
                               .split(",")
                               .map((color) => color.trim())
-                              .filter((color) => color !== "")
+                              .filter((color) => color !== "");
                             setFormData({
                               ...formData,
                               colors: colorsArray,
-                            })
+                            });
                           }}
                         />
                       </Form.Group>
@@ -483,7 +545,11 @@ function AddProduct() {
                             src={preview || "/placeholder.svg"}
                             fluid
                             rounded
-                            style={{ height: "150px", objectFit: "cover", width: "100%" }}
+                            style={{
+                              height: "150px",
+                              objectFit: "cover",
+                              width: "100%",
+                            }}
                           />
                           <Button
                             variant="danger"
@@ -501,10 +567,22 @@ function AddProduct() {
               </CardContainer>
 
               <div className="d-flex gap-2 mb-4">
-                <Button variant="primary" type="submit" disabled={isSubmitting || loadingCreate || loadingUpdate}>
-                  {isSubmitting ? "Processing..." : productId ? "Update Product" : "Create Product"}
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={isSubmitting || loadingCreate || loadingUpdate}
+                >
+                  {isSubmitting
+                    ? "Processing..."
+                    : productId
+                    ? "Update Product"
+                    : "Create Product"}
                 </Button>
-                <Button variant="secondary" type="button" onClick={() => navigate("/admin-allproducts")}>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => navigate("/admin-allproducts")}
+                >
                   Cancel
                 </Button>
               </div>
@@ -513,7 +591,7 @@ function AddProduct() {
         </Col>
       </Row>
     </Container>
-  )
+  );
 }
 
 const CardContainer = ({ children }) => (
@@ -526,7 +604,7 @@ const CardContainer = ({ children }) => (
   >
     {children}
   </div>
-)
+);
 
 const CardHeader = ({ children }) => (
   <div
@@ -541,8 +619,10 @@ const CardHeader = ({ children }) => (
   >
     {children}
   </div>
-)
+);
 
-const CardBody = ({ children }) => <div style={{ padding: "10px" }}>{children}</div>
+const CardBody = ({ children }) => (
+  <div style={{ padding: "10px" }}>{children}</div>
+);
 
-export default AddProduct
+export default AddProduct;

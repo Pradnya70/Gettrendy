@@ -266,9 +266,6 @@ const Navigation = () => {
                 )}
               </NavDropdown>
 
-              <Navbar.Collapse id="basic-navbar-nav"></Navbar.Collapse>
-
-              {/* Contact */}
               <Nav.Link
                 href="/contact"
                 active={location.pathname === "/contact"}
@@ -288,7 +285,6 @@ const Navigation = () => {
                 &nbsp; Contact
               </Nav.Link>
 
-              {/* Wishlist */}
               <Nav.Link
                 href="/Wishlist"
                 active={location.pathname === "/Wishlist"}
@@ -371,6 +367,18 @@ const Navigation = () => {
                   <FaSignInAlt size={24} /> &nbsp; Login
                 </Nav.Link>
               )}
+
+              {/* Admin Dashboard link after cart and profile, only for admin */}
+              {typeof window !== "undefined" &&
+                localStorage.getItem("role") === "admin" && (
+                  <Nav.Link
+                    href="/admin-dashboard"
+                    active={location.pathname === "/admin-dashboard"}
+                    style={{ fontWeight: "bold" }}
+                  >
+                    Admin Dashboard
+                  </Nav.Link>
+                )}
             </Nav>
           </Navbar.Collapse>
         </Container>

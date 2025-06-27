@@ -132,10 +132,10 @@ function Register() {
             console.log("Redirecting user with role:", userRole);
             if (userRole === "admin") {
               console.log("Redirecting to admin dashboard");
-              navigate("/admin-dashboard");
+              navigate("/login");
             } else {
               console.log("Redirecting to user dashboard");
-              navigate("/dashboard");
+              navigate("/login");
             }
           }, 1500);
         }
@@ -300,7 +300,7 @@ function Register() {
                         />
                         User
                       </label>
-                      <label className="d-flex align-items-center">
+                      {/* <label className="d-flex align-items-center">
                         <input
                           type="radio"
                           value="admin"
@@ -309,7 +309,7 @@ function Register() {
                           className="me-2"
                         />
                         Admin
-                      </label>
+                      </label> */}
                     </div>
                   </div>
 

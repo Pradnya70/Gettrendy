@@ -1,58 +1,59 @@
-import Navigation from "./Componets/Client/Navigation/Navigation"
-import LoginPage from "./Componets/Client/Signup/LoginPage"
-import { Routes, Route, useLocation } from "react-router-dom"
-import Register from "./Componets/Client/Signup/Register"
-import Home from "./Componets/Client/Home/Home"
-import Contact from "./Componets/Client/Contact/Contact"
-import Shop from "./Componets/Client/Shop/Shop"
-import CartPage from "./Componets/Client/CartPage/CartPage"
-import Checkout from "./Componets/Client/Checkout/Checkout"
-import Videogallery from "./Componets/Client/Video-gallery/Videogallery"
-import WhatsAppIcon from "./Componets/Client/WhatsAppIcon/WhatsAppIcon"
-import Verification from "./Componets/Client/Verification/Verification"
-import Dashboard from "./Componets/Admin/Dashboard/Dashboard"
-import ProtectedRoute from "./Componets/AuthContext/ProtectedRoute"
-import AdminLayout from "./Componets/Admin/AdminLayout/AdminLayout"
-import Unauthorized from "./Componets/Admin/Unauthorized/Unauthorized"
-import SubCategory from "./Componets/Admin/SubCategory/SubCategory"
-import AllProducts from "./Componets/Admin/Products/AllProducts"
-import AddProduct from "./Componets/Admin/Products/AddProduct"
-import AddCategory from "./Componets/Admin/SubCategory/AddCategory"
-import AddMainCategory from "./Componets/Admin/Dashboard/AddMainCategory"
-import AboutUs from "./Componets/Client/AboutUs/AboutUs"
-import AllContacts from "./Componets/Admin/AllContacts/AllContacts"
-import AllReviews from "./Componets/Admin/AllReviews/AllReviews"
-import AddReview from "./Componets/Admin/AllReviews/AddReview"
-import AllUsers from "./Componets/Admin/AllUsers/AllUsers"
-import EditUser from "./Componets/Admin/AllUsers/EditUser"
-import Store from "./Componets/Admin/Store/Store"
-import AddEditStore from "./Componets/Admin/Store/AddEditStore"
-import PerticularProductPage from "./Componets/Client/ProductPage/PerticularProductPage"
-import AllInventory from "./Componets/Admin/Inventory/AllInventory"
-import InventoryCrud from "./Componets/Admin/Inventory/InventoryCrud"
-import StoreRegister from "./Componets/Admin/Store/StoreRegister"
-import StoreLogin from "./Componets/Admin/Store/StoreLogin"
-import Categories from "./Componets/Client/Categories/Categories"
-import Orders from "./Componets/Admin/Orders/Orders"
-import { ToastContainer } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
-import ProfilePage from "./Componets/Client/ProfilePage/ProfilePage"
-import MyOrders from "./Componets/Client/Orders/MyOrders"
-import PrivacyPolicy from "./Componets/Client/PrivacyPolicy/PrivacyPolicy"
-import CancellationReschedule from "./Componets/Client/Cancellation&Reschedule/CancellationReschedule"
-import OrderSummary from "./Componets/Client/OrderSummary/OrderSummary"
-import PaymentSuccess from "./Componets/Client/OrderSummary/PaymentSuccess"
-import DeliveryPartner from "./Componets/Admin/DeliveryPartner/DeliveryPartner"
-import AddEditDeliveryPartners from "./Componets/Admin/DeliveryPartner/AddEditDeliveryPartners"
-import ProductCard from "./Componets/Client/AllProducts/ProductCard"
-import DeliveryHome from "./Componets/DeliveryBoy/DeliveryHome/DeliveryHome"
-import TermsConditions from "./Componets/Client/Terms&Conditions/TermsConditions"
-import RazorpayButton from "./Componets/RazorpayButton"
-import Success from "./Componets/Client/Success/Success"
-import Shopping from "./Componets/Client/Shop/Shopping"
+import Navigation from "./Componets/Client/Navigation/Navigation";
+import LoginPage from "./Componets/Client/Signup/LoginPage";
+import { Routes, Route, useLocation } from "react-router-dom";
+import Register from "./Componets/Client/Signup/Register";
+import Home from "./Componets/Client/Home/Home";
+import Contact from "./Componets/Client/Contact/Contact";
+import Shop from "./Componets/Client/Shop/Shop";
+import CartPage from "./Componets/Client/CartPage/CartPage";
+import Checkout from "./Componets/Client/Checkout/Checkout";
+import Videogallery from "./Componets/Client/Video-gallery/Videogallery";
+import WhatsAppIcon from "./Componets/Client/WhatsAppIcon/WhatsAppIcon";
+import Verification from "./Componets/Client/Verification/Verification";
+import Dashboard from "./Componets/Admin/Dashboard/Dashboard";
+import ProtectedRoute from "./Componets/AuthContext/ProtectedRoute";
+import AdminLayout from "./Componets/Admin/AdminLayout/AdminLayout";
+import Unauthorized from "./Componets/Admin/Unauthorized/Unauthorized";
+import SubCategory from "./Componets/Admin/SubCategory/SubCategory";
+import AllProducts from "./Componets/Admin/Products/AllProducts";
+import AddProduct from "./Componets/Admin/Products/AddProduct";
+import AddCategory from "./Componets/Admin/SubCategory/AddCategory";
+import AddMainCategory from "./Componets/Admin/Dashboard/AddMainCategory";
+import AboutUs from "./Componets/Client/AboutUs/AboutUs";
+import AllContacts from "./Componets/Admin/AllContacts/AllContacts";
+import AllReviews from "./Componets/Admin/AllReviews/AllReviews";
+import AddReview from "./Componets/Admin/AllReviews/AddReview";
+import AllUsers from "./Componets/Admin/AllUsers/AllUsers";
+import EditUser from "./Componets/Admin/AllUsers/EditUser";
+import Store from "./Componets/Admin/Store/Store";
+import AddEditStore from "./Componets/Admin/Store/AddEditStore";
+import PerticularProductPage from "./Componets/Client/ProductPage/PerticularProductPage";
+import AllInventory from "./Componets/Admin/Inventory/AllInventory";
+import InventoryCrud from "./Componets/Admin/Inventory/InventoryCrud";
+import StoreRegister from "./Componets/Admin/Store/StoreRegister";
+import StoreLogin from "./Componets/Admin/Store/StoreLogin";
+import Categories from "./Componets/Client/Categories/Categories";
+import Orders from "./Componets/Admin/Orders/Orders";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ProfilePage from "./Componets/Client/ProfilePage/ProfilePage";
+import MyOrders from "./Componets/Client/Orders/MyOrders";
+import PrivacyPolicy from "./Componets/Client/PrivacyPolicy/PrivacyPolicy";
+import CancellationReschedule from "./Componets/Client/Cancellation&Reschedule/CancellationReschedule";
+import OrderSummary from "./Componets/Client/OrderSummary/OrderSummary";
+import PaymentSuccess from "./Componets/Client/OrderSummary/PaymentSuccess";
+import DeliveryPartner from "./Componets/Admin/DeliveryPartner/DeliveryPartner";
+import AddEditDeliveryPartners from "./Componets/Admin/DeliveryPartner/AddEditDeliveryPartners";
+import ProductCard from "./Componets/Client/AllProducts/ProductCard";
+import DeliveryHome from "./Componets/DeliveryBoy/DeliveryHome/DeliveryHome";
+import TermsConditions from "./Componets/Client/Terms&Conditions/TermsConditions";
+import RazorpayButton from "./Componets/RazorpayButton";
+import Success from "./Componets/Client/Success/Success";
+import Shopping from "./Componets/Client/Shop/Shopping";
+import ForgotPassword from "./Componets/Client/Signup/ForgotPassword";
 
 const App = () => {
-  const location = useLocation()
+  const location = useLocation();
 
   const isAdminRoute = () => {
     return (
@@ -61,8 +62,8 @@ const App = () => {
       location.pathname === "/categories" ||
       location.pathname === "/confirm-order" ||
       location.pathname === "/delivery-home"
-    )
-  }
+    );
+  };
 
   return (
     <>
@@ -77,7 +78,10 @@ const App = () => {
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/aboutUs" element={<AboutUs />} />
-        <Route path="/perticularproductpage" element={<PerticularProductPage />} />
+        <Route
+          path="/perticularproductpage"
+          element={<PerticularProductPage />}
+        />
         <Route path="/r" element={<RazorpayButton />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/cartPage" element={<CartPage />} />
@@ -91,7 +95,10 @@ const App = () => {
         <Route path="/profilePage" element={<ProfilePage />} />
         <Route path="/myOrders" element={<MyOrders />} />
         <Route path="/privacyPolicy" element={<PrivacyPolicy />} />
-        <Route path="/cancellation-Reschedule" element={<CancellationReschedule />} />
+        <Route
+          path="/cancellation-Reschedule"
+          element={<CancellationReschedule />}
+        />
         <Route path="/order-Summary" element={<OrderSummary />} />
         <Route path="/confirm-order" element={<PaymentSuccess />} />
         <Route path="/productCard" element={<ProductCard />} />
@@ -100,6 +107,7 @@ const App = () => {
         <Route path="/success" element={<Success />} />
         <Route path="/shopping" element={<Shopping />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
 
         {/* Admin Routes */}
         <Route
@@ -262,7 +270,7 @@ const App = () => {
       </Routes>
       <WhatsAppIcon />
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

@@ -409,7 +409,7 @@ const ProductCard = () => {
             <div className="section-line"></div>
             <div className="text-center">
               <h5>All Product Shop</h5>
-              <h1>Featured Products</h1>
+              <h1>Products</h1>
             </div>
             <div className="section-line"></div>
           </div>

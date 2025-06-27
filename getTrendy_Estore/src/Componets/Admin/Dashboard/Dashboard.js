@@ -9,13 +9,14 @@ import "ag-grid-community/styles/ag-theme-quartz.css"
 import { Pagination } from "@mui/material"
 import Loader from "../../Client/Loader/Loader"
 import { Button, Modal, Form, Row, Col, Card, Badge, Tabs, Tab } from "react-bootstrap"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import ApiService from "../../api/services/api-service"
 import API_CONFIG from "../../api/services/api-config"
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState("categories")
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState(() => location.state?.activeTab || "categories")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [showMessage, setShowMessage] = useState(false)
@@ -26,7 +27,7 @@ const Dashboard = () => {
 
   // Common function to handle back navigation
   const handleBack = () => {
-    window.history.back()
+    navigate("/")
   }
 
   // Common function to close message modal
@@ -97,8 +98,19 @@ const Dashboard = () => {
   const [categoryTotalPages, setCategoryTotalPages] = useState(1)
 
   const categoryColumnDefs = [
-    { headerName: "Sr No", field: "sr", sortable: true, filter: true, width: 80 },
-    { headerName: "Category Name", field: "category_name", sortable: true, filter: true },
+    {
+      headerName: "Sr No",
+      field: "sr",
+      sortable: true,
+      filter: true,
+      width: 80,
+    },
+    {
+      headerName: "Category Name",
+      field: "category_name",
+      sortable: true,
+      filter: true,
+    },
     {
       headerName: "Category Image",
       field: "category_image",
@@ -109,10 +121,18 @@ const Dashboard = () => {
           src={params.data.category_image ? BASEURL + params.data.category_image : "/placeholder.svg"}
           alt="category"
           style={{ height: "50px", width: "50px", objectFit: "cover" }}
+          onError={(e) => {
+            e.target.src = "/placeholder.svg"
+          }}
         />
       ),
     },
-    { headerName: "Description", field: "category_description", sortable: true, filter: true },
+    {
+      headerName: "Description",
+      field: "category_description",
+      sortable: true,
+      filter: true,
+    },
     {
       headerName: "Action",
       field: "_id",
@@ -123,12 +143,18 @@ const Dashboard = () => {
             icon={faPenToSquare}
             title="Edit"
             className="action-icon"
-            onClick={() => navigate("/admin-main-category", { state: { mainCategoryId: params.value } })}
+            style={{ cursor: "pointer", color: "#007bff" }}
+            onClick={() =>
+              navigate("/admin-main-category", {
+                state: { mainCategoryId: params.value },
+              })
+            }
           />
           <FontAwesomeIcon
             icon={faTrash}
             title="Delete"
             className="action-icon"
+            style={{ cursor: "pointer", color: "#dc3545" }}
             onClick={() => handleOpenDelete(params.value, "category")}
           />
         </div>
@@ -156,6 +182,7 @@ const Dashboard = () => {
     } catch (error) {
       setLoading(false)
       console.error("Error fetching categories:", error)
+      showMessageAlert("Error fetching categories")
     }
   }
 
@@ -170,8 +197,19 @@ const Dashboard = () => {
   const [subcategoryTotalPages, setSubcategoryTotalPages] = useState(1)
 
   const subcategoryColumnDefs = [
-    { headerName: "Sr No", field: "sr", sortable: true, filter: true, width: 80 },
-    { headerName: "Subcategory Name", field: "subcategory_name", sortable: true, filter: true },
+    {
+      headerName: "Sr No",
+      field: "sr",
+      sortable: true,
+      filter: true,
+      width: 80,
+    },
+    {
+      headerName: "Subcategory Name",
+      field: "subcategory_name",
+      sortable: true,
+      filter: true,
+    },
     {
       headerName: "Parent Category",
       field: "parent_category",
@@ -183,18 +221,32 @@ const Dashboard = () => {
     },
     {
       headerName: "Image",
-      field: "subcategory_image",
+      field: "subcategory_image", // This should match the database field name
       sortable: false,
       filter: false,
-      cellRenderer: (params) => (
-        <img
-          src={params.data.subcategory_image ? BASEURL + params.data.subcategory_image : "/placeholder.svg"}
-          alt="subcategory"
-          style={{ height: "50px", width: "50px", objectFit: "cover" }}
-        />
-      ),
+      cellRenderer: (params) => {
+        console.log("Subcategory data:", params.data) // Debug log
+        console.log("Image field:", params.data.subcategory_image) // Debug log
+
+        return (
+          <img
+            src={params.data.subcategory_image ? BASEURL + params.data.subcategory_image : "/placeholder.svg"}
+            alt="subcategory"
+            style={{ height: "50px", width: "50px", objectFit: "cover" }}
+            onError={(e) => {
+              console.error("Image load error for:", params.data.subcategory_image)
+              e.target.src = "/placeholder.svg"
+            }}
+          />
+        )
+      },
     },
-    { headerName: "Description", field: "subcategory_description", sortable: true, filter: true },
+    {
+      headerName: "Description",
+      field: "subcategory_description",
+      sortable: true,
+      filter: true,
+    },
     {
       headerName: "Action",
       field: "_id",
@@ -205,12 +257,18 @@ const Dashboard = () => {
             icon={faPenToSquare}
             title="Edit"
             className="action-icon"
-            onClick={() => navigate("/admin-category", { state: { categoryID: params.value } })}
+            style={{ cursor: "pointer", color: "#007bff" }}
+            onClick={() =>
+              navigate("/admin-category", {
+                state: { categoryID: params.value },
+              })
+            }
           />
           <FontAwesomeIcon
             icon={faTrash}
             title="Delete"
             className="action-icon"
+            style={{ cursor: "pointer", color: "#dc3545" }}
             onClick={() => handleOpenDelete(params.value, "subcategory")}
           />
         </div>
@@ -225,11 +283,14 @@ const Dashboard = () => {
       const response = await ApiService.getSubcategories(subcategoryPage, subcategoryLimit)
 
       if (response && response.data) {
+        console.log("Subcategories API response:", response.data) // Debug log
+
         const dataWithSr = response.data.rows.map((item, index) => ({
           ...item,
           sr: (subcategoryPage - 1) * subcategoryLimit + index + 1,
         }))
 
+        console.log("Processed subcategories:", dataWithSr) // Debug log
         setSubcategories(dataWithSr)
         setSubcategoryTotalPages(response.data.pages_count)
       }
@@ -238,6 +299,7 @@ const Dashboard = () => {
     } catch (error) {
       setLoading(false)
       console.error("Error fetching subcategories:", error)
+      showMessageAlert("Error fetching subcategories")
     }
   }
 
@@ -263,7 +325,13 @@ const Dashboard = () => {
   const [availableColors, setAvailableColors] = useState([])
 
   const productColumnDefs = [
-    { headerName: "Sr No", field: "sr", sortable: true, filter: true, width: 80 },
+    {
+      headerName: "Sr No",
+      field: "sr",
+      sortable: true,
+      filter: true,
+      width: 80,
+    },
     {
       headerName: "Image",
       field: "images",
@@ -277,13 +345,21 @@ const Dashboard = () => {
             src={BASEURL + images[0] || "/placeholder.svg"}
             alt="product"
             style={{ height: "50px", width: "50px", objectFit: "cover" }}
+            onError={(e) => {
+              e.target.src = "/placeholder.svg"
+            }}
           />
         ) : (
           <div>No Image</div>
         )
       },
     },
-    { headerName: "Product Name", field: "product_name", sortable: true, filter: true },
+    {
+      headerName: "Product Name",
+      field: "product_name",
+      sortable: true,
+      filter: true,
+    },
     {
       headerName: "Price",
       field: "price",
@@ -330,12 +406,14 @@ const Dashboard = () => {
             icon={faPenToSquare}
             title="Edit"
             className="action-icon"
+            style={{ cursor: "pointer", color: "#007bff" }}
             onClick={() => navigate("/admin-product", { state: { productId: params.value } })}
           />
           <FontAwesomeIcon
             icon={faTrash}
             title="Delete"
             className="action-icon"
+            style={{ cursor: "pointer", color: "#dc3545" }}
             onClick={() => handleOpenDelete(params.value, "product")}
           />
         </div>
@@ -363,6 +441,7 @@ const Dashboard = () => {
     } catch (error) {
       setLoading(false)
       console.error("Error fetching products:", error)
+      showMessageAlert("Error fetching products")
     }
   }
 
@@ -414,6 +493,56 @@ const Dashboard = () => {
     setProductPage(value)
   }
 
+  // ==================== USERS ====================
+  const [users, setUsers] = useState([])
+  const [userPage, setUserPage] = useState(1)
+  const [userLimit, setUserLimit] = useState(10)
+  const [userTotalPages, setUserTotalPages] = useState(1)
+
+  const userColumnDefs = [
+    {
+      headerName: "Sr No",
+      field: "sr",
+      sortable: true,
+      filter: true,
+      width: 80,
+    },
+    { headerName: "Name", field: "name", sortable: true, filter: true },
+    { headerName: "Email", field: "email", sortable: true, filter: true },
+    { headerName: "Role", field: "role", sortable: true, filter: true },
+    {
+      headerName: "Created At",
+      field: "createdAt",
+      sortable: true,
+      filter: true,
+      valueFormatter: (params) => new Date(params.value).toLocaleString(),
+    },
+  ]
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await ApiService.getUsers(userPage, userLimit)
+      if (response && response.data) {
+        const dataWithSr = response.data.rows.map((item, index) => ({
+          ...item,
+          sr: (userPage - 1) * userLimit + index + 1,
+        }))
+        setUsers(dataWithSr)
+        setUserTotalPages(response.data.pages_count)
+      }
+      setLoading(false)
+    } catch (error) {
+      setLoading(false)
+      console.error("Error fetching users:", error)
+      showMessageAlert("Error fetching users")
+    }
+  }
+
+  const handleUserPageChange = (event, value) => {
+    setUserPage(value)
+  }
+
   // Load data based on active tab
   useEffect(() => {
     if (activeTab === "categories") {
@@ -423,8 +552,10 @@ const Dashboard = () => {
     } else if (activeTab === "products") {
       fetchProducts()
       getProductFilterOptions()
+    } else if (activeTab === "users") {
+      fetchUsers()
     }
-  }, [activeTab, categoryPage, subcategoryPage, productPage])
+  }, [activeTab, categoryPage, subcategoryPage, productPage, userPage])
 
   // Default column definition for AG Grid
   const defaultColDef = {
@@ -440,7 +571,7 @@ const Dashboard = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <Button variant="outline-secondary" onClick={handleBack} className="me-2">
-            <FontAwesomeIcon icon={faArrowLeft} /> Back
+            <FontAwesomeIcon icon={faArrowLeft} /> Back to Home
           </Button>
           <h2 className="d-inline-block ms-3">Admin Dashboard</h2>
         </div>
@@ -672,6 +803,24 @@ const Dashboard = () => {
               onChange={handleProductPageChange}
               color="primary"
             />
+          </div>
+        </Tab>
+
+        <Tab eventKey="users" title="Users">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h3>Users Management</h3>
+          </div>
+          <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
+            <AgGridReact
+              rowData={users}
+              columnDefs={userColumnDefs}
+              defaultColDef={defaultColDef}
+              pagination={false}
+              domLayout="autoHeight"
+            />
+          </div>
+          <div className="d-flex justify-content-center mt-3">
+            <Pagination count={userTotalPages} page={userPage} onChange={handleUserPageChange} color="primary" />
           </div>
         </Tab>
       </Tabs>

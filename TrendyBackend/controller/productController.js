@@ -10,20 +10,31 @@ const multer = require("multer")
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = "uploads/products"
+    console.log("📁 Creating upload directory:", uploadDir)
+
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true })
+      console.log("✅ Upload directory created")
     }
     cb(null, uploadDir)
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "-"))
+    const filename = Date.now() + "-" + file.originalname.replace(/\s+/g, "-")
+    console.log("📄 Generated filename:", filename)
+    cb(null, filename)
   },
 })
 
 const fileFilter = (req, file, cb) => {
+  console.log("🔍 File filter check:")
+  console.log("  - Original name:", file.originalname)
+  console.log("  - Mimetype:", file.mimetype)
+
   if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
+    console.log("❌ File rejected: Invalid file type")
     return cb(new Error("Only image files are allowed!"), false)
   }
+  console.log("✅ File accepted")
   cb(null, true)
 }
 
@@ -35,6 +46,29 @@ const upload = multer({
     files: 3, // Maximum 3 files
   },
 })
+
+// Helper function to delete old image files
+const deleteOldImages = (imagePaths) => {
+  if (Array.isArray(imagePaths)) {
+    imagePaths.forEach((imagePath) => {
+      if (imagePath) {
+        const fullPath = path.join(__dirname, "..", imagePath)
+        console.log("🗑️ Attempting to delete old image:", fullPath)
+
+        if (fs.existsSync(fullPath)) {
+          try {
+            fs.unlinkSync(fullPath)
+            console.log("✅ Old image deleted successfully")
+          } catch (error) {
+            console.error("❌ Error deleting old image:", error)
+          }
+        } else {
+          console.log("⚠️ Old image file not found:", fullPath)
+        }
+      }
+    })
+  }
+}
 
 // Helper function to convert string to boolean
 const stringToBoolean = (value) => {
@@ -91,7 +125,7 @@ const getAllProducts = async (req, res) => {
 
     // Filter for bestseller products
     if (req.query.bestseller === "true") {
-      filter.Bestseller = true
+      filter.bestseller = true
     }
 
     console.log("Product filter applied:", filter)
@@ -181,6 +215,10 @@ const getProductById = async (req, res) => {
 // Create a new product
 const createProduct = async (req, res) => {
   try {
+    console.log("\n🆕 Creating new product...")
+    console.log("📝 Request body:", req.body)
+    console.log("📁 Files received:", req.files)
+
     const {
       product_name,
       product_description,
@@ -192,13 +230,8 @@ const createProduct = async (req, res) => {
       colors,
       stock,
       featured,
-      bestseller, // Use lowercase consistently
+      bestseller,
     } = req.body
-
-    console.log("🔍 Backend (createProduct): Full req.body received:", req.body)
-    console.log("🔍 Backend (createProduct): Raw values:")
-    console.log(`- featured: "${featured}" (type: ${typeof featured})`)
-    console.log(`- bestseller: "${bestseller}" (type: ${typeof bestseller})`)
 
     // Validate required fields
     if (!product_name || !price || !category) {
@@ -255,6 +288,7 @@ const createProduct = async (req, res) => {
       req.files.forEach((file) => {
         images.push(`/uploads/products/${file.filename}`)
       })
+      console.log("✅ Images processed:", images)
     }
 
     // Parse sizes and colors
@@ -286,10 +320,6 @@ const createProduct = async (req, res) => {
     const isFeatured = stringToBoolean(featured)
     const isBestseller = stringToBoolean(bestseller)
 
-    console.log("🔍 Backend (createProduct): Boolean conversion results:")
-    console.log(`- isFeatured: ${isFeatured} (from "${featured}")`)
-    console.log(`- isBestseller: ${isBestseller} (from "${bestseller}")`)
-
     const product = new Product({
       product_name,
       product_description: product_description || "",
@@ -302,7 +332,7 @@ const createProduct = async (req, res) => {
       colors: parsedColors,
       stock: Number.parseInt(stock) || 0,
       featured: isFeatured,
-      Bestseller: isBestseller, // Database field name is 'Bestseller' with capital B
+      bestseller: isBestseller,
     })
 
     await product.save()
@@ -312,9 +342,7 @@ const createProduct = async (req, res) => {
       .populate("category", "category_name")
       .populate("subcategory", "subcategory_name")
 
-    console.log("🔍 Backend (createProduct): Product saved successfully:")
-    console.log(`- featured: ${populatedProduct.featured}`)
-    console.log(`- Bestseller: ${populatedProduct.Bestseller}`)
+    console.log("✅ Product created successfully:", populatedProduct._id)
 
     res.status(201).json({
       success: true,
@@ -334,8 +362,11 @@ const createProduct = async (req, res) => {
 // Update a product
 const updateProduct = async (req, res) => {
   try {
-    console.log("🔍 Backend: Full req.body received:", req.body)
+    console.log("\n✏️ Updating product...")
     const productId = req.params.id
+    console.log("📝 Product ID:", productId)
+    console.log("📝 Request body:", req.body)
+    console.log("📁 New files received:", req.files)
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
@@ -352,6 +383,9 @@ const updateProduct = async (req, res) => {
       })
     }
 
+    console.log("📋 Existing product found:", product.product_name)
+    console.log("🖼️ Existing images:", product.images)
+
     const {
       product_name,
       product_description,
@@ -363,13 +397,10 @@ const updateProduct = async (req, res) => {
       colors,
       stock,
       featured,
-      bestseller, // Use lowercase consistently
+      bestseller,
       remove_images,
+      replace_all_images, // New flag to indicate if we should replace all images
     } = req.body
-
-    console.log("🔍 Backend (updateProduct): Raw field values:")
-    console.log(`- featured: "${featured}" (type: ${typeof featured})`)
-    console.log(`- bestseller: "${bestseller}" (type: ${typeof bestseller})`)
 
     // Validate category if provided
     if (category && !mongoose.Types.ObjectId.isValid(category)) {
@@ -410,34 +441,68 @@ const updateProduct = async (req, res) => {
     // Handle image updates
     let updatedImages = [...product.images]
 
-    // Remove specified images
-    if (remove_images) {
-      const imagesToRemove = typeof remove_images === "string" ? [remove_images] : remove_images
+    // If replace_all_images is true, delete all existing images and use only new ones
+    if (replace_all_images === "true" || replace_all_images === true) {
+      console.log("🔄 Replacing all images...")
 
-      updatedImages = updatedImages.filter((img) => !imagesToRemove.includes(img))
-
-      // Delete files from filesystem
-      imagesToRemove.forEach((img) => {
-        const filePath = path.join(__dirname, "..", img)
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath)
-        }
-      })
-    }
-
-    // Add new images (ensure total doesn't exceed 3)
-    if (req.files && req.files.length > 0) {
-      const totalImages = updatedImages.length + req.files.length
-      if (totalImages > 3) {
-        return res.status(400).json({
-          success: false,
-          message: `Cannot add ${req.files.length} images. Maximum 3 images allowed. Current: ${updatedImages.length}`,
-        })
+      // Delete all existing images
+      if (product.images && product.images.length > 0) {
+        console.log("🗑️ Deleting all existing images:", product.images)
+        deleteOldImages(product.images)
       }
 
-      req.files.forEach((file) => {
-        updatedImages.push(`/uploads/products/${file.filename}`)
-      })
+      // Start with empty array
+      updatedImages = []
+
+      // Add new images if provided
+      if (req.files && req.files.length > 0) {
+        if (req.files.length > 3) {
+          return res.status(400).json({
+            success: false,
+            message: "Maximum 3 images allowed",
+          })
+        }
+
+        req.files.forEach((file) => {
+          updatedImages.push(`/uploads/products/${file.filename}`)
+        })
+        console.log("✅ New images added:", updatedImages)
+      }
+    } else {
+      // Handle selective image removal and addition (existing logic)
+
+      // Remove specified images
+      if (remove_images) {
+        const imagesToRemove = typeof remove_images === "string" ? [remove_images] : remove_images
+
+        console.log("🗑️ Removing specific images:", imagesToRemove)
+
+        // Filter out images to remove
+        const imagesToKeep = updatedImages.filter((img) => !imagesToRemove.includes(img))
+
+        // Delete files from filesystem
+        const actualImagesToRemove = updatedImages.filter((img) => imagesToRemove.includes(img))
+        deleteOldImages(actualImagesToRemove)
+
+        updatedImages = imagesToKeep
+        console.log("✅ Images after removal:", updatedImages)
+      }
+
+      // Add new images (ensure total doesn't exceed 3)
+      if (req.files && req.files.length > 0) {
+        const totalImages = updatedImages.length + req.files.length
+        if (totalImages > 3) {
+          return res.status(400).json({
+            success: false,
+            message: `Cannot add ${req.files.length} images. Maximum 3 images allowed. Current: ${updatedImages.length}`,
+          })
+        }
+
+        req.files.forEach((file) => {
+          updatedImages.push(`/uploads/products/${file.filename}`)
+        })
+        console.log("✅ Images after addition:", updatedImages)
+      }
     }
 
     // Parse sizes and colors
@@ -475,41 +540,37 @@ const updateProduct = async (req, res) => {
       isFeatured = stringToBoolean(featured)
     }
 
-    let isBestseller = product.Bestseller
+    let isBestseller = product.bestseller
     if (bestseller !== undefined) {
       isBestseller = stringToBoolean(bestseller)
     }
 
-    console.log("🔍 Backend (updateProduct): Boolean conversion results:")
-    console.log(`- isFeatured: ${isFeatured} (from "${featured}")`)
-    console.log(`- isBestseller: ${isBestseller} (from "${bestseller}")`)
+    // Prepare update data
+    const updateData = {
+      product_name: product_name || product.product_name,
+      product_description: product_description !== undefined ? product_description : product.product_description,
+      price: price ? Number.parseFloat(price) : product.price,
+      discount_price: discount_price ? Number.parseFloat(discount_price) : product.discount_price,
+      category: category || product.category,
+      subcategory: subcategory !== undefined ? (subcategory === "" ? null : subcategory) : product.subcategory,
+      images: updatedImages,
+      sizes: parsedSizes,
+      colors: parsedColors,
+      stock: stock !== undefined ? Number.parseInt(stock) : product.stock,
+      featured: isFeatured,
+      bestseller: isBestseller,
+      updatedAt: Date.now(),
+    }
+
+    console.log("💾 Final update data:", updateData)
 
     // Update product
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      {
-        product_name: product_name || product.product_name,
-        product_description: product_description !== undefined ? product_description : product.product_description,
-        price: price ? Number.parseFloat(price) : product.price,
-        discount_price: discount_price ? Number.parseFloat(discount_price) : product.discount_price,
-        category: category || product.category,
-        subcategory: subcategory !== undefined ? (subcategory === "" ? null : subcategory) : product.subcategory,
-        images: updatedImages,
-        sizes: parsedSizes,
-        colors: parsedColors,
-        stock: stock !== undefined ? Number.parseInt(stock) : product.stock,
-        featured: isFeatured,
-        Bestseller: isBestseller, // Database field name is 'Bestseller' with capital B
-        updatedAt: Date.now(),
-      },
-      { new: true, runValidators: true },
-    )
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true, runValidators: true })
       .populate("category", "category_name")
       .populate("subcategory", "subcategory_name")
 
-    console.log("🔍 Backend (updateProduct): Product updated successfully:")
-    console.log(`- featured: ${updatedProduct.featured}`)
-    console.log(`- Bestseller: ${updatedProduct.Bestseller}`)
+    console.log("✅ Product updated successfully")
+    console.log("🖼️ Final images:", updatedProduct.images)
 
     res.status(200).json({
       success: true,
@@ -530,6 +591,7 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id
+    console.log("🗑️ Deleting product:", productId)
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({
@@ -547,14 +609,13 @@ const deleteProduct = async (req, res) => {
     }
 
     // Delete associated images
-    product.images.forEach((img) => {
-      const filePath = path.join(__dirname, "..", img)
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath)
-      }
-    })
+    if (product.images && product.images.length > 0) {
+      deleteOldImages(product.images)
+    }
 
     await Product.findByIdAndDelete(productId)
+
+    console.log("✅ Product deleted successfully")
 
     res.status(200).json({
       success: true,
@@ -637,8 +698,8 @@ const getBestsellerProducts = async (req, res) => {
     const limit = Number.parseInt(req.query.limit) || 10
     const skip = (page - 1) * limit
 
-    const count = await Product.countDocuments({ Bestseller: true })
-    const products = await Product.find({ Bestseller: true })
+    const count = await Product.countDocuments({ bestseller: true })
+    const products = await Product.find({ bestseller: true })
       .populate("category", "category_name")
       .populate("subcategory", "subcategory_name")
       .sort({ createdAt: -1 })

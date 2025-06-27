@@ -109,7 +109,7 @@ const Login = () => {
 
               if (userData.role === "admin") {
                 console.log("Redirecting to admin dashboard")
-                navigate("/admin-dashboard", { replace: true })
+                navigate("/", { replace: true })
               } else {
                 console.log("Redirecting to user dashboard or home")
                 navigate(from, { replace: true })

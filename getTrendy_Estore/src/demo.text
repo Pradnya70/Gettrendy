@@ -1,0 +1,19 @@
+    login and rejecter  page first colum 
+    
+      <Col
+              md={6}
+              className="d-flex justify-content-center align-items-center flex-column register-image-col"
+            >
+              <div>
+                <img
+                  src="Images/forwardicon.png"
+                  onClick={() => navigate("/")}
+                  className="pointer"
+                />
+              </div>
+              <img
+                src="Images/register.png"
+                alt="Registration illustration"
+                className="login-image"
+              />
+            </Col> 

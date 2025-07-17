@@ -1,0 +1,112 @@
+.custom-testimonials-container-main {
+    max-width: 1200px;
+    /* Restrict container width */
+    padding-top: 50px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.custom-testimonial-slide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #F4F4F4;
+    border-radius: 50px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    min-height: 500px;
+
+}
+
+.custom-testimonial-image {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.custom-testimonial-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.custom-testimonial-content {
+    max-width: 600px;
+    text-align: left;
+    padding-left: 20px;
+}
+
+.custom-testimonial-rating {
+    color: gold;
+    font-size: 20px;
+}
+
+.custom-testimonial-content p {
+    font-size: 18px;
+    color: #666;
+    margin: 15px 0;
+}
+
+.custom-testimonial-content h4 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.custom-testimonial-role {
+    font-size: 14px;
+    color: #999;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .custom-testimonial-slide {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .custom-testimonial-image {
+        margin-bottom: 20px;
+    }
+
+    .custom-testimonial-content {
+        padding-left: 0;
+        text-align: center;
+    }
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    width: 5%;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-control-prev {
+    left: -30px;
+    /* Adjust position as needed */
+}
+
+.carousel-control-next {
+    right: -30px;
+    /* Adjust position as needed */
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+    color: black !important;
+    /* Change icon color if necessary */
+    font-size: 24px;
+    /* Change icon size if necessary */
+}

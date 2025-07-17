@@ -1,0 +1,38 @@
+.bg-blue-600 {
+    background-color: blue;
+}
+
+.bg-green-600 {
+    background-color: green;
+}
+
+.bg-white-1 {
+    background-color: #ffffff !important;
+}
+
+img {
+    width: 100%;
+    height: auto;
+}
+
+.img-width {
+    width: 300px;
+}
+
+.card {
+
+    border: 1px solid #e0e0e0;
+    background-color: #fff !important;
+
+}
+
+.section {
+    margin-top: 120px;
+    margin-bottom: 120px;
+}
+
+.card-align {
+    align-items: center;
+    text-align: center;
+    margin: auto;
+}

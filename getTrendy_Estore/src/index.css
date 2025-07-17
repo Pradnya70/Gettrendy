@@ -1,0 +1,134 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap'); */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+code {
+  font-family: "Poppins", sans-serif !important;
+}
+
+.button {
+  background-color: #E9272D !important;
+  border: none !important;
+  height: 44px;
+  width: 168px;
+  border-radius: 20px !important;
+  color: white !important;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.css-litcis-MuiButtonBase-root-MuiPaginationItem-root.Mui-selected {
+  background: #E9272D !important;
+  color: white;
+}
+
+.backicon {
+  font-size: 35px;
+}
+
+.table-heading h1 {
+  font-weight: bold;
+}
+
+.action-icon {
+  cursor: pointer;
+  color: #E9272D;
+}
+
+.custom-pagination .MuiPaginationItem-root {
+  color: black;
+  background-color: white;
+}
+
+.custom-pagination .MuiPaginationItem-root:hover {
+  background-color: #E9272D;
+}
+
+.custom-pagination .MuiPaginationItem-page.Mui-selected {
+  color: white;
+  background-color: #E9272D;
+}
+
+.custom-pagination .MuiPaginationItem-page.Mui-selected:hover {
+  background-color: #E9272D;
+}
+
+.custom-pagination .MuiPaginationItem-page {
+  color: black;
+}
+
+.custom-pagination .MuiPaginationItem-page:hover {
+  background-color: #E9272D;
+  color: white;
+}
+
+.custom-pagination .MuiPaginationItem-ellipsis {
+  color: white;
+}
+
+.search-colum {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  overflow: hidden;
+}
+
+.search-colum input {
+  padding-left: 30px;
+  height: 40px;
+  border: 1px solid #E9272D;
+  border-radius: 10px;
+}
+
+.search-icon {
+  position: relative;
+  left: 25px;
+  color: red;
+
+}
+
+.filter-btn {
+  background: white !important;
+  border: 1px solid red !important;
+  color: red !important;
+}
+
+.action-icon {
+  cursor: pointer;
+  color: red;
+}
+
+.bg-filler {
+  padding: 20px;
+  width: 100%;
+}
+
+.css-ptck8z-MuiButtonBase-root-MuiPaginationItem-root.Mui-selected {
+  background-color: #E9272D !important;
+  color: white !important;
+}
+
+.css-1l5xwdx-MuiButtonBase-root-MuiPaginationItem-root.Mui-selected {
+  background-color: #E9272D !important;
+  color: white !important;
+}
+
+.css-2ge3ma.Mui-selected {
+  background-color: #E9272D !important;
+  color: white !important;
+}
+
+.css-bz1iy.Mui-selected {
+  background-color: #E9272D !important;
+  color: white !important;
+}

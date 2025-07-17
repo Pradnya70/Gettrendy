@@ -1,0 +1,103 @@
+.about-us-hero-section {
+    background-image: url('../../../../public/Images/bg.jpg');
+    min-height: 700px;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    margin-bottom: 150px;
+    margin-top: 100px;
+
+}
+
+.hero-text-div {
+    background-color: rgba(255, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    /* Applies blur effect */
+    -webkit-backdrop-filter: blur(10px);
+    max-width: 700px;
+
+}
+
+.hero-text-div h1, .hero-text-div p {
+
+    font-family: "Lato", sans-serif !important;
+
+}
+
+.hero-text-div h1 {
+    font-size: 60px;
+    font-weight: 600;
+    color: #f7cf1a;
+}
+
+.hero-text-div p {
+    font-size: 20px;
+    color: white;
+}
+
+.our-mission-section p {
+
+    font-size: 18px;
+
+}
+
+.our-mission-section {
+    max-width: 1320px;
+    margin: auto;
+    margin-bottom: 150px;
+}
+
+.our-mission-section h2, .teams-work-section h2 {
+    font-size: 40px;
+    font-weight: 600;
+    color: #f7cf1a;
+}
+
+.teams-work-section {
+    max-width: 1320px;
+}
+
+.feature-box {
+    border: 2px solid rgba(128, 128, 128, 0.416);
+}
+
+.feature-box:hover {
+    border: 2px solid rgb(128, 128, 128);
+    box-shadow: rgba(100, 100, 111, 0.5) 0px 7px 29px 0px;
+}
+
+
+@media screen and (max-width: 767px) {
+
+
+    .about-us-hero-section {
+
+        min-height: auto;
+        padding-top: 200px;
+        background-position: bottom;
+
+    }
+
+
+
+    .hero-text-div h1, .our-mission-section h2, .teams-work-section h2 {
+        font-size: 30px;
+
+    }
+
+    .hero-text-div p {
+        font-size: 18px;
+
+    }
+
+
+
+}
+
+@media screen and (max-width: 1200px) {
+
+    .about-us-hero-section, .our-mission-section {
+        margin-bottom: 50px;
+    }
+
+}

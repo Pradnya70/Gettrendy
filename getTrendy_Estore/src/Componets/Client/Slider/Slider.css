@@ -1,0 +1,111 @@
+.slider-container {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 1200px;
+    overflow: hidden;
+    position: relative;
+    padding: 0 50px;
+}
+
+
+.swiper-button-next,
+.swiper-button-prev {
+    border: 1px solid #E9272D;
+    padding: 10px;
+    border-radius: 50%;
+    color: black !important;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    /* Absolutely positioned */
+    top: 50%;
+    /* Center vertically */
+    transform: translateY(-50%);
+    /* Adjust for vertical centering */
+    z-index: 10;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 16px !important;
+    line-height: 1;
+}
+
+.swiper-button-next {
+    right: 20px;
+    /* Space from the right */
+}
+
+.swiper-button-prev {
+    left: 20px;
+    /* Space from the left */
+}
+
+.hoverIncrease {
+    padding: 20px;
+    text-align: center;
+    display: grid;
+    justify-content: center;
+    transition-duration: .3s;
+}
+
+.category-card {
+    /* width: 260px; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease-in-out;
+    margin: 10px;
+    /* Space around cards */
+    z-index: 1;
+}
+
+.swiper-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.swiper-slide {
+    display: flex;
+    justify-content: center;
+    padding: 0 30px;
+}
+
+.category-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 15px 15px 0 0;
+}
+
+.category-label {
+    color: #000;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 10px;
+    text-align: center;
+    background-color: #fff;
+    width: 100%;
+    border-radius: 0 0 15px 15px;
+}
+
+@media (max-width: 768px) {
+    .category-card {
+        width: 10rem;
+        height: auto;
+    }
+
+    .category-image {
+        height: 150px;
+    }
+
+    .category-label {
+        font-size: 16px;
+    }
+}

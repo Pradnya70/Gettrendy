@@ -1,0 +1,73 @@
+.verification-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+    background-color: #f9f9f9;
+    padding: 20px;
+
+}
+
+.opt-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    padding: 50px;
+}
+
+.verification-container h1 {
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.otp-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    /* Ensures inputs wrap on smaller screens */
+}
+
+.otp-input {
+    width: 50px !important;
+    height: 50px;
+    margin: 5px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+/* Adjust input size for smaller screens */
+@media (max-width: 600px) {
+    .otp-input {
+        width: 40px !important;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .otp-separator {
+        margin: 0 3px;
+    }
+    .opt-form{
+        padding: 20px;
+    }
+}
+
+@media (max-width: 400px) {
+    .otp-input {
+        width: 35px !important;
+        height: 35px;
+        font-size: 14px;
+    }
+
+    .otp-separator {
+        margin: 0 2px;
+    }
+    .opt-form{
+        padding: 20px;
+    }
+}

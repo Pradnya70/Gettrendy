@@ -178,14 +178,14 @@ const Navigation = () => {
         fixed="top"
         className="navigation text-white bg-navbar"
       >
-        <Container>
+        <Container style={{ maxWidth: "1450px" }} >
           <Navbar.Brand href="/">
             <div className="logo-img">
               <img src="/Images/logo.jpg" alt="GetTrendy Logo" />
             </div>
           </Navbar.Brand>
 
-          <div className="cart-div">
+          {/* <div className="cart-div">
             <div className="cart-menu">
               {isAuthenticated ? (
                 <Nav.Link href="#">
@@ -209,10 +209,10 @@ const Navigation = () => {
               ) : null}
               <Navbar.Toggle aria-controls="navbar-nav" />
             </div>
-          </div>
+          </div> */}
 
           <Navbar.Collapse id="navbar-nav" className="justify-content-between">
-            <Nav className="me-auto mx-auto">
+            <Nav className="me-auto mx-auto" style={{  }} >
               <Nav.Link href="/" active={location.pathname === "/"}>
                 <svg
                   width="25"
@@ -246,7 +246,7 @@ const Navigation = () => {
               </Nav.Link>
 
               {/* Categories Dropdown */}
-              <NavDropdown title="Categories" id="categories-dropdown">
+              <NavDropdown title="Categories" id="categories-dropdown"  style={{ margin: "20px 0px"}}>
                 {allCategoryList && allCategoryList.length > 0 ? (
                   allCategoryList.map((category) => (
                     <NavDropdown.Item
@@ -305,9 +305,7 @@ const Navigation = () => {
                 </svg>
                 &nbsp;
               </Nav.Link>
-            </Nav>
-
-            <Nav className="align-items-center">
+                <Nav className="align-items-center">
               <div className="cart-div">
                 {/* Cart */}
                 {isAuthenticated && (
@@ -376,10 +374,13 @@ const Navigation = () => {
                     active={location.pathname === "/admin-dashboard"}
                     style={{ fontWeight: "bold" }}
                   >
-                    Admin Dashboard
+                    <button className="btn btn-primary">Admin <br /> Dashboard</button>
                   </Nav.Link>
                 )}
             </Nav>
+            </Nav>
+
+          
           </Navbar.Collapse>
         </Container>
       </Navbar>

@@ -17,7 +17,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BASEURL}/api/category?limit=6`); // Limit to 6 categories for display
+      const response = await axios.get(`${BASEURL}/api/category?limit=12`); // Limit to 6 categories for display
 
       if (response && response.data) {
         setCategories(response.data.rows || []);
@@ -48,11 +48,12 @@ const Categories = () => {
           {categories.length > 0 ? (
             categories.map((category) => (
               <Col
+              
                 lg={2}
                 md={4}
                 sm={6}
                 key={category.id}
-                className="mb-4"
+                className="mb-4 m-auto"
                 style={{ padding: "0px" }}
               >
                 <Card

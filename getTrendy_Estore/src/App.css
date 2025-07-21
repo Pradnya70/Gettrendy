@@ -49,3 +49,22 @@
   }
 }
 
+
+/* Add navbar responsive styles here */
+@media (min-width: 1400px) {
+.my-container-xxl, .my-container-xl, .my-container-lg, .my-container-md, .my-container-sm, .my-container {
+    max-width: 1450px !important;
+    margin: auto;
+    display: flex;
+}
+}
+
+.Thumbnail-list {
+    width: 110px !important;
+    height: 120px !important;
+    object-fit: cover;
+    border: 1px solid rgb(221, 221, 221);
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 10px;
+}

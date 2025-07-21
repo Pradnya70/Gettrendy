@@ -13,7 +13,7 @@ const ProductPage = () => {
     <div className="container my-5 ProductPage-container">
       <div className="row">
         {/* Left Section */}
-        <div className="col-lg-4 col-md-12">
+        {/* <div className="col-lg-4 col-md-12">
           <div className="promo-banner">
             <h4>Weekend Sales</h4>
             <h2>Get Up to 26% Off on Weekend!</h2>
@@ -31,7 +31,7 @@ const ProductPage = () => {
               className="img-fluid mt-3"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right Section - Products */}
         <div className="col-lg-4 col-md-6 mt-3">

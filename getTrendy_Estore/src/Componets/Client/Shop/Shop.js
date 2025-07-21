@@ -737,7 +737,7 @@ const Shop = () => {
                               >
                                 View Details
                               </Button>
-                              {inCartStatus[product._id] === true ? (
+                              {/* {inCartStatus[product._id] === true ? (
                                 <Button
                                   variant="success"
                                   onClick={() => handleRemoveFromCart(product)}
@@ -758,7 +758,7 @@ const Shop = () => {
                                     ? "Adding..."
                                     : "Add to Cart"}
                                 </Button>
-                              )}
+                              )} */}
                             </div>
                           </Card.Body>
                         </Card>

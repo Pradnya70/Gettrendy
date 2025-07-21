@@ -7,20 +7,19 @@ import { Button, Col, Container, Form, Row, Card, Modal } from "react-bootstrap"
 import { useLocation, useNavigate } from "react-router-dom"
 import Loader from "../../Client/Loader/Loader"
 import ApiService from "../../api/services/api-service"
-import { BASEURL } from "../../Client/Comman/CommanConstans"
+import { getImageUrl } from "../../Client/Comman/CommanConstans"
 
 const AddCategory = () => {
   const navigate = useNavigate()
   const location = useLocation()
-
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [showMessage, setShowMessage] = useState(false)
   const [categoryId, setCategoryId] = useState(null)
   const [mainCategories, setMainCategories] = useState([])
   const [previewImage, setPreviewImage] = useState(null)
+  const [currentImage, setCurrentImage] = useState(null)
   const [errors, setErrors] = useState({})
-
   const [formData, setFormData] = useState({
     subcategory_name: "",
     subcategory_description: "",
@@ -48,6 +47,12 @@ const AddCategory = () => {
 
     if (files && files[0]) {
       setFormData({ ...formData, [name]: files[0] })
+
+      // Clean up previous preview URL
+      if (previewImage && previewImage.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage)
+      }
+
       // Create preview URL for the new image
       const previewUrl = URL.createObjectURL(files[0])
       setPreviewImage(previewUrl)
@@ -121,6 +126,12 @@ const AddCategory = () => {
         formDataToSend.append("subcategory_logo", formData.subcategory_logo)
       }
 
+      // Log FormData contents for debugging
+      console.log("FormData contents:")
+      for (const pair of formDataToSend.entries()) {
+        console.log(pair[0] + ": " + pair[1])
+      }
+
       let response
 
       if (categoryId) {
@@ -144,6 +155,14 @@ const AddCategory = () => {
     } catch (error) {
       setLoading(false)
       console.error("Error saving subcategory:", error)
+
+      // More detailed error logging
+      if (error.response) {
+        console.error("Error response:", error.response.data)
+        console.error("Error status:", error.response.status)
+        console.error("Error headers:", error.response.headers)
+      }
+
       showMessageAlert(`Error: ${error.response?.data?.message || error.message}`)
     }
   }
@@ -153,7 +172,6 @@ const AddCategory = () => {
     try {
       setLoading(true)
       console.log("Fetching subcategory with ID:", id)
-
       const response = await ApiService.getSubcategoryById(id)
 
       if (response && response.data && response.data.data) {
@@ -168,14 +186,14 @@ const AddCategory = () => {
           subcategory_logo: null, // Don't load the actual file object, just show preview
         })
 
-        // Set preview image if available
+        // Set current and preview image if available
         if (subcategory.subcategory_logo) {
-          const imageUrl = `${BASEURL}${subcategory.subcategory_logo}`
-          console.log("Setting preview image:", imageUrl)
+          const imageUrl = getImageUrl(subcategory.subcategory_logo)
+          console.log("Setting current image:", imageUrl)
+          setCurrentImage(subcategory.subcategory_logo)
           setPreviewImage(imageUrl)
         }
       }
-
       setLoading(false)
     } catch (error) {
       setLoading(false)
@@ -211,7 +229,6 @@ const AddCategory = () => {
   return (
     <>
       {loading && <Loader />}
-
       <Container className="py-4">
         <div className="d-flex align-items-center mb-4">
           <Button variant="outline-secondary" onClick={handleBack} className="me-3">
@@ -238,6 +255,7 @@ const AddCategory = () => {
                     <Form.Control.Feedback type="invalid">{errors.subcategory_name}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
+
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Parent Category*</Form.Label>
@@ -297,6 +315,7 @@ const AddCategory = () => {
                     </div>
                   )}
                 </Col>
+
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Description</Form.Label>

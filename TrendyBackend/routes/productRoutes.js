@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router()
-const { adminAuth } = require("../middleware/auth")
 const productController = require("../controller/productController")
+const { adminAuth } = require("../middleware/authMiddleware") // Fixed import path
 
 // Public routes
 router.get("/", productController.getAllProducts)

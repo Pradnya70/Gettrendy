@@ -18,41 +18,85 @@ import {
   FaRegUserCircle,
   FaTruck,
 } from "react-icons/fa";
-
 import "./Navigation.css";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BASEURL, authUtils, cartUtils } from "../Comman/CommanConstans";
+import {
+  BASEURL,
+  authUtils,
+  cartUtils,
+  getImageUrl,
+} from "../Comman/CommanConstans";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
 
 const Navigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
+  // All useState, useEffect, etc.
   const [allCategoryList, setAllCategoryList] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [cartQuantity, setCartQuantity] = useState(0);
   const [show, setShow] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [navbarExpanded, setNavbarExpanded] = useState(false);
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Check if user is authenticated
-  const isAuthenticated = authUtils.isAuthenticated();
-  const userToken = authUtils.getToken();
-  const userName = authUtils.getUserName() || "";
-  const userProfileImage = authUtils.getProfileImage() || "";
+  // Helper to determine if current route is admin
+  const isAdminRoute = () => {
+    return (
+      location.pathname.startsWith("/admin-") ||
+      location.pathname === "/unauthorized" ||
+      location.pathname === "/categories" ||
+      location.pathname === "/confirm-order" ||
+      location.pathname === "/delivery-home"
+    );
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchCartItems();
+
+    // Listen for auth changes
+    const handleAuthChange = () => {
+      fetchCartItems();
+    };
+
+    // Listen for cart changes
+    const handleCartChange = () => {
+      fetchCartItems();
+    };
+
+    window.addEventListener("auth-changed", handleAuthChange);
+    window.addEventListener("cart-changed", handleCartChange);
+
+    return () => {
+      window.removeEventListener("auth-changed", handleAuthChange);
+      window.removeEventListener("cart-changed", handleCartChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const totalQuantity =
+      cartItems?.reduce((sum, item) => {
+        const quantity = item?.quantity || 0;
+        return sum + quantity;
+      }, 0) || 0;
+    setCartQuantity(totalQuantity);
+  }, [cartItems]);
+
+  // Conditional rendering AFTER all hooks
+  if (isAdminRoute()) {
+    return null;
+  }
 
   // Fetch categories
   const fetchCategories = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${BASEURL}/api/category`);
-
       if (response && response.data) {
         // Handle different response formats
         if (response.data.rows) {
@@ -89,39 +133,14 @@ const Navigation = () => {
     }
   };
 
-  // Initial data loading
-  useEffect(() => {
-    fetchCategories();
-    fetchCartItems();
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
-    // Listen for auth changes
-    const handleAuthChange = () => {
-      fetchCartItems();
-    };
-
-    // Listen for cart changes
-    const handleCartChange = () => {
-      fetchCartItems();
-    };
-
-    window.addEventListener("auth-changed", handleAuthChange);
-    window.addEventListener("cart-changed", handleCartChange);
-
-    return () => {
-      window.removeEventListener("auth-changed", handleAuthChange);
-      window.removeEventListener("cart-changed", handleCartChange);
-    };
-  }, []);
-
-  // Update cart quantity when cartItems change
-  useEffect(() => {
-    const totalQuantity =
-      cartItems?.reduce((sum, item) => {
-        const quantity = item?.quantity || 0;
-        return sum + quantity;
-      }, 0) || 0;
-    setCartQuantity(totalQuantity);
-  }, [cartItems]);
+  // Check if user is authenticated
+  const isAuthenticated = authUtils.isAuthenticated();
+  const userToken = authUtils.getToken();
+  const userName = authUtils.getUserName() || "";
+  const userProfileImage = authUtils.getProfileImage() || "";
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -160,6 +179,11 @@ const Navigation = () => {
     return category.category_name || category.name || "Category";
   };
 
+  // Fixed navbar toggle handler - this is the key fix
+  const handleNavbarToggle = () => {
+    setNavbarExpanded(!navbarExpanded);
+  };
+
   return (
     <div>
       <ToastContainer
@@ -173,8 +197,11 @@ const Navigation = () => {
         draggable
         pauseOnHover
       />
+
       <Navbar
         expand="lg"
+        expanded={navbarExpanded}
+        onToggle={handleNavbarToggle}
         fixed="top"
         className="navigation text-white bg-navbar"
       >
@@ -207,10 +234,11 @@ const Navigation = () => {
                   />
                 </Nav.Link>
               ) : null}
-              <Navbar.Toggle aria-controls="navbar-nav" />
             </div>
           </div> */}
 
+          {/* Always render Navbar.Toggle and Navbar.Collapse together */}
+          <Navbar.Toggle aria-controls="navbar-nav" />
           <Navbar.Collapse id="navbar-nav" className="justify-content-between">
             <Nav className="me-auto mx-auto" style={{  }} >
               <Nav.Link href="/" active={location.pathname === "/"}>
@@ -331,7 +359,9 @@ const Navigation = () => {
                     <div className="user-profile-nav">
                       {userProfileImage ? (
                         <img
-                          src={`${BASEURL}${userProfileImage}`}
+                          src={
+                            getImageUrl(userProfileImage) || "/placeholder.svg"
+                          }
                           alt={userName}
                           className="user-profile-image"
                           onError={(e) => {
@@ -384,6 +414,7 @@ const Navigation = () => {
           </Navbar.Collapse>
         </Container>
       </Navbar>
+
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Alert</Modal.Title>
@@ -420,16 +451,15 @@ const Navigation = () => {
                   <Row className="align-items-center g-5">
                     <Col xs={4} className="text-center">
                       <img
-                        src={`${BASEURL}${item.image || item.product_image}`}
+                        src={getImageUrl(item.image || item.product_image)}
                         alt={item.name || item.product_name}
                         className="shop-img"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "/Images/placeholder.jpg";
+                          e.target.src = "/placeholder.svg";
                         }}
                       />
                     </Col>
-
                     <Col xs={8}>
                       <div className="product-card-desc">
                         <p className="rating">

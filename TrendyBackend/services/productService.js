@@ -1,117 +1,164 @@
-const Product = require('../models/Product');
-const User = require('../models/User'); // For user-specific product operations
+import api from "../utils/api"
 
-// Create a new product (admin only)
-const createProduct = async (productData) => {
+export const productService = {
+  // Get all products with filters
+  getAllProducts: async (params = {}) => {
     try {
-        const newProduct = new Product(productData);
-        await newProduct.save();
-        return newProduct;
-    } catch (err) {
-        throw new Error('Error creating product: ' + err.message);
+      const response = await api.get("/products", { params })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
+  },
 
-// Get all products (public)
-const getAllProducts = async () => {
+  // Get single product
+  getProductById: async (id) => {
     try {
-        const products = await Product.find();
-        return products;
-    } catch (err) {
-        throw new Error('Error fetching products: ' + err.message);
+      const response = await api.get(`/products/${id}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
+  },
 
-// Get a specific product by ID (public)
-const getProductById = async (productId) => {
+  // Create product with images (Admin only)
+  createProduct: async (productData) => {
     try {
-        const product = await Product.findById(productId);
-        if (!product) {
-            throw new Error('Product not found');
-        }
-        return product;
-    } catch (err) {
-        throw new Error('Error fetching product: ' + err.message);
-    }
-};
+      const formData = new FormData()
 
-// Update a product (admin only)
-const updateProduct = async (productId, productData) => {
+      // Add text fields
+      formData.append("product_name", productData.product_name)
+      formData.append("product_description", productData.product_description || "")
+      formData.append("price", productData.price)
+      formData.append("discount_price", productData.discount_price || productData.price)
+      formData.append("category", productData.category)
+      formData.append("subcategory", productData.subcategory || "")
+      formData.append("stock", productData.stock || 0)
+      formData.append("featured", productData.featured || false)
+      formData.append("bestseller", productData.bestseller || false)
+
+      // Add sizes and colors as comma-separated strings
+      if (productData.sizes && productData.sizes.length > 0) {
+        formData.append("sizes", productData.sizes.join(","))
+      }
+      if (productData.colors && productData.colors.length > 0) {
+        formData.append("colors", productData.colors.join(","))
+      }
+
+      // Add images (max 3)
+      if (productData.images && productData.images.length > 0) {
+        productData.images.forEach((image, index) => {
+          if (index < 3) {
+            // Max 3 images
+            formData.append("images", image)
+          }
+        })
+      }
+
+      const response = await api.post("/products", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  // Update product with images (Admin only)
+  updateProduct: async (id, productData) => {
     try {
-        const product = await Product.findByIdAndUpdate(productId, productData, { new: true });
-        if (!product) {
-            throw new Error('Product not found');
-        }
-        return product;
-    } catch (err) {
-        throw new Error('Error updating product: ' + err.message);
-    }
-};
+      const formData = new FormData()
 
-// Delete a product (admin only)
-const deleteProduct = async (productId) => {
+      // Add text fields
+      if (productData.product_name) formData.append("product_name", productData.product_name)
+      if (productData.product_description !== undefined)
+        formData.append("product_description", productData.product_description)
+      if (productData.price) formData.append("price", productData.price)
+      if (productData.discount_price) formData.append("discount_price", productData.discount_price)
+      if (productData.category) formData.append("category", productData.category)
+      if (productData.subcategory !== undefined) formData.append("subcategory", productData.subcategory)
+      if (productData.stock !== undefined) formData.append("stock", productData.stock)
+      if (productData.featured !== undefined) formData.append("featured", productData.featured)
+      if (productData.bestseller !== undefined) formData.append("bestseller", productData.bestseller)
+
+      // Add sizes and colors
+      if (productData.sizes) {
+        formData.append("sizes", Array.isArray(productData.sizes) ? productData.sizes.join(",") : productData.sizes)
+      }
+      if (productData.colors) {
+        formData.append("colors", Array.isArray(productData.colors) ? productData.colors.join(",") : productData.colors)
+      }
+
+      // Handle image operations
+      if (productData.replace_all_images) {
+        formData.append("replace_all_images", "true")
+      }
+
+      if (productData.remove_images && productData.remove_images.length > 0) {
+        productData.remove_images.forEach((imageUrl) => {
+          formData.append("remove_images", imageUrl)
+        })
+      }
+
+      // Add new images
+      if (productData.new_images && productData.new_images.length > 0) {
+        productData.new_images.forEach((image, index) => {
+          if (index < 3) {
+            formData.append("images", image)
+          }
+        })
+      }
+
+      const response = await api.put(`/products/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
+    }
+  },
+
+  // Delete product (Admin only)
+  deleteProduct: async (id) => {
     try {
-        const product = await Product.findByIdAndDelete(productId);
-        if (!product) {
-            throw new Error('Product not found');
-        }
-        return product;
-    } catch (err) {
-        throw new Error('Error deleting product: ' + err.message);
+      const response = await api.delete(`/products/${id}`)
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
+  },
 
-// Get products for a specific user (if users can have products associated with their accounts)
-const getUserProducts = async (userId) => {
+  // Get featured products
+  getFeaturedProducts: async (params = {}) => {
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-
-        // Assuming that products are linked to the user (e.g., through a `userId` field in the product model)
-        const userProducts = await Product.find({ user: userId });
-        return userProducts;
-    } catch (err) {
-        throw new Error('Error fetching user products: ' + err.message);
+      const response = await api.get("/products/featured", { params })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
+  },
 
-// Search products based on query (e.g., by name, category, price range, etc.)
-const searchProducts = async (searchQuery) => {
+  // Get bestseller products
+  getBestsellerProducts: async (params = {}) => {
     try {
-        const products = await Product.find({
-            $or: [
-                { name: { $regex: searchQuery, $options: 'i' } },
-                { category: { $regex: searchQuery, $options: 'i' } },
-                { description: { $regex: searchQuery, $options: 'i' } } // Added description field for better search
-            ]
-        });
-        return products;
-    } catch (err) {
-        throw new Error('Error searching for products: ' + err.message);
+      const response = await api.get("/products/bestseller", { params })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
+  },
 
-// Get products by price range (public)
-const getProductsByPriceRange = async (minPrice, maxPrice) => {
+  // Get product filters
+  getProductFilters: async () => {
     try {
-        const products = await Product.find({
-            price: { $gte: minPrice, $lte: maxPrice }
-        });
-        return products;
-    } catch (err) {
-        throw new Error('Error fetching products by price range: ' + err.message);
+      const response = await api.get("/products/filters/options")
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error.message
     }
-};
-
-module.exports = {
-    createProduct,
-    getAllProducts,
-    getProductById,
-    updateProduct,
-    deleteProduct,
-    getUserProducts,
-    searchProducts,
-    getProductsByPriceRange // New method for filtering by price
-};
+  },
+}

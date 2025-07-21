@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faHeart, faStar } from "@fortawesome/free-solid-svg-icons"
 import { Breadcrumb, Button, Form } from "react-bootstrap"
@@ -26,7 +25,6 @@ const PerticularProductPage = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(false)
-  const [selectedImage, setSelectedImage] = useState("");
 
   const [formData, setFormData] = useState({
     rating: 0,
@@ -221,56 +219,25 @@ const PerticularProductPage = () => {
           <Breadcrumb.Item active>{productData.product_name || productData.name}</Breadcrumb.Item>
         </Breadcrumb>
         <div className="row">
-         <div className="col-md-7">
-  <div className="product-image d-flex">
-    {/* Thumbnails */}
-    {productData.images && productData.images.length > 0 && (
-      <div className="thumbnail-list me-3">
-        {productData.images.map((img, index) => (
-          <img
-            key={index}
-            src={`${BASEURL}${img}`}
-            alt={`Thumbnail ${index}`}
-            className={`thumbnail-img mb-2 ${selectedImage === img ? "active" : ""}`}
-            style={{
-              width: "60px",
-              height: "60px",
-              objectFit: "cover",
-              border: selectedImage === img ? "2px solid #007bff" : "1px solid #ddd",
-              cursor: "pointer",
-              borderRadius: "4px",
-            }}
-            onClick={() => setSelectedImage(img)}
-            onError={(e) => (e.target.src = "/Images/placeholder.jpg")}
-          />
-        ))}
-      </div>
-    )}
-
-    {/* Main Image */}
-    <div className="Product-image">
-      <img
-        src={
-          selectedImage
-            ? `${BASEURL}${selectedImage}`
-            : productData.images && productData.images.length > 0
-            ? `${BASEURL}${productData.images[0]}`
-            : "/Images/placeholder.jpg"
-        }
-        alt={productData.product_name || productData.name || "Product"}
-        onError={(e) => (e.target.src = "/Images/placeholder.jpg")}
-        style={{
-          width: "100%",
-          
-          objectFit: "contain",
-          borderRadius: "6px",
-        }}
-      />
-    </div>
-  </div>
-</div>
-
-          <div className="col-md-5">
+          <div className="col-md-6">
+            <div className="product-image">
+              <div>
+                <img
+                  src={
+                    productData.images && productData.images.length > 0
+                      ? `${BASEURL}${productData.images[0]}`
+                      : "/Images/placeholder.jpg"
+                  }
+                  alt={productData.product_name || productData.name || "Product"}
+                  onError={(e) => {
+                    e.target.onerror = null
+                    e.target.src = "/Images/placeholder.jpg"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="col-md-6">
             <div className="product-details">
               <p className="product-category">{renderCategory()}</p>
               <h3 className="product-title">{productData.product_name || productData.name}</h3>

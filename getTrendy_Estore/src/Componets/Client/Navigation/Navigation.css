@@ -1,6 +1,496 @@
 /* Navbar text styling */
 .navbar-nav .nav-link,
 .navbar-nav .dropdown-toggle {
+  margin-right: 20px;
+  font-weight: bold;
+  color: #4f4f4f;
+  /* Full opacity */
+  opacity: 1;
+  /* Ensure full opacity */
+}
+
+/* Hover effect for dropdown items */
+.navbar-nav .dropdown-item:hover {
+  background-color: rgb(0, 0, 0);
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+}
+
+.logo-img img {
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+}
+
+.heart-icon {
+  transition: fill 0.3s ease;
+  cursor: pointer;
+}
+
+.heart-icon:hover {
+  fill: red;
+}
+
+/* Active link styling */
+.navbar-nav .nav-link.active {
+  color: rgb(214, 20, 20) !important;
+  background-color: rgba(255, 252, 252, 0.2);
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  border-radius: 20px;
+}
+
+/* Dropdown items */
+.navbar-nav .dropdown-menu .dropdown-item {
+  font-weight: bold;
+  padding: 10px 15px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #000000;
+  min-height: 40px;
+  width: 100%;
+}
+
+/* Category icon styling */
+.category-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #666;
+}
+
+/* Category name styling */
+/* 1. Make the dropdown item a flex row */
+.category-item {
+  display: flex !important;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  min-width: 200px;
+}
+
+.category-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Force image + text side by side */
+.category-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 160px !important;
+  padding: 8px 12px !important;
+}
+
+/* Image sizing */
+.category-image {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Text visibility */
+.category-name {
+  flex: 1 !important;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #000 !important;
+  font-size: 0.95rem;
+}
+
+/* Nav profile image */
+.nav-profile-image {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+/* Adjusting overall navbar appearance */
+.navbar {
+  font-size: 18px;
+  color: rgb(0, 0, 0);
+  font-weight: bold !important;
+}
+
+/* 
+.navigation {
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+} */
+
+/* Styling for the sidebar */
+.sidebar {
+  margin-top: 100px;
+  height: 100vh;
+  /* Full height of the viewport */
+  width: 300px;
+  /* Sidebar width */
+  position: fixed;
+  top: 0;
+  right: -300px;
+  /* Initially hidden (off-screen) */
+  background-color: white;
+  overflow-y: auto;
+  /* Enable scrolling for the entire sidebar */
+  padding-top: 60px;
+  transition: 0.4s;
+  color: rgb(255, 255, 255);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  /* Align items in column */
+}
+
+.sidebar-open {
+  right: 0;
+  /* Slide the sidebar in */
+}
+
+.sidebar h2,
+.sidebar p {
+  /* margin: 20px; */
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: 30px;
+  color: black;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.open-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.open-btn:hover {
+  background-color: #0056b3;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Semi-transparent background */
+  z-index: 500;
+  /* Below the sidebar */
+}
+
+.sidebar-open {
+  right: 0;
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  /* Align title to the left and button to the right */
+  align-items: center;
+  /* Vertically center the items */
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  /* Optional: Add a border at the bottom */
+}
+
+.cart-header h2 {
+  font-weight: bold;
+}
+
+.cart-title {
+  margin: 0;
+  /* Remove default margin for better alignment */
+}
+
+.cart-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.cart-close-btn:hover {
+  color: rgb(0, 0, 0);
+}
+
+/* Cart Item container */
+.cart-items-container {
+  max-height: 350px;
+  /* Adjust this height to fit 5 items */
+  overflow-y: auto;
+  /* Scroll when items exceed the height */
+  padding: 10px;
+}
+
+.cart-item {
+  padding: 10px;
+  height: 120px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Cart Item Image */
+.cart-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Product details styling */
+.product-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.product-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.rating {
+  color: #f39c12;
+  /* Example color for stars */
+  margin-bottom: 5px;
+}
+
+.quantity {
+  font-size: 14px;
+  color: #333;
+}
+
+.end-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+.end-section button {
+  padding: 10px;
+  background-color: #000000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.end-section button:hover {
+  background-color: #000000;
+}
+
+.dropdown-content {
+  max-height: 300px;
+  /* Set maximum height */
+  overflow-y: auto;
+  /* Enable vertical scrolling */
+  display: flex;
+  /* Use flexbox to align items */
+  flex-direction: column;
+  /* Align items in a column */
+  padding: 10px;
+  /* Add padding for aesthetics */
+}
+
+.dropdown-item {
+  margin-bottom: 10px;
+  /* Space between categories */
+}
+
+.subcategory {
+  display: flex;
+  flex-direction: column;
+  /* Display subcategories in a column */
+  padding: 5px 0;
+  /* Padding for subcategories */
+}
+
+.subcategory-item {
+  padding: 5px;
+  /* Padding for individual subcategory items */
+  cursor: pointer;
+  /* Change cursor to pointer */
+  transition: background 0.2s;
+  /* Smooth background transition */
+}
+
+.subcategory-item:hover {
+  background-color: #f1f1f1;
+  /* Highlight on hover */
+}
+
+.dropdown-content {
+  padding: 10px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+}
+
+.category-image,
+.subcategory-image {
+  margin-right: 8px;
+  border-radius: 50px;
+}
+
+.subcategory {
+  margin-left: 20px;
+  /* Indent subcategories */
+}
+
+.subcategory-item {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 1080px) {
+  .sidebar {
+    width: 300px;
+    /* Ensure the width is 300px for large screens */
+    right: -300px;
+    /* Ensure it's properly hidden off-screen initially */
+  }
+
+  .sidebar-open {
+    right: 0;
+    /* Open properly on large screens */
+  }
+}
+
+@media (max-width: 991.98px) {
+  .navbar-light .navbar-toggler-icon {
+    /* background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%280, 0, 0, 0.5%29' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important; */
+    background-image: url("../../../../public//Images/burger-menu.svg") !important;
+    margin-left: 10px;
+  }
+}
+
+.bg-navbar {
+  background-color: #ffffff;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-link {
+    padding-left: 20px !important;
+  }
+}
+
+.navbar {
+  box-shadow: none;
+  --mdb-navbar-box-shadow: none !important;
+}
+
+.cart {
+  margin-top: 10px;
+}
+
+.small-cart {
+  font-size: 16px;
+  margin-right: -26px !important;
+}
+
+.large-cart {
+  font-size: 10px;
+  margin-right: -26px !important;
+}
+
+@media (min-width: 991px) {
+
+  .cart-mobile,
+  .cart-img-mobile {
+    display: none;
+  }
+}
+
+@media (max-width: 991px) {
+
+  .cart-desktop,
+  .cart-img-desktop {
+    display: none;
+  }
+}
+
+.cart-menu {
+  display: flex;
+}
+
+.navbar-toggler-icon {
+  margin-top: 7px;
+}
+
+.nav-link,
+.nav-link {
+  border-radius: 1000px;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  display: flex !important;
+  align-items: center;
+}
+
+.cart-div .nav-link:focus,
+.cart-div .nav-link:hover,
+.cart-div .nav-link,
+.navbar-nav .cart-div .nav-link.active {
+  padding-left: 25px !important;
+  padding-right: 13px !important;
+  border-radius: 1000px;
+  padding-top: 3px;
+  display: block !important;
+}
+
+.nav-link:focus,
+.nav-link:hover {
+  color: rgb(0, 0, 0) !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 1000px;
+}
+
+.navbar-nav .show>.nav-link,
+.navbar-nav .nav-link.active {
+  color: #16181b !important;
+}
+
+.navbar-nav .dropdown-item:hover {
+  background-color: transparent !important;
+}
+
+@media (min-width: 991px) and (max-width: 1200px) {
+
+  .navbar-nav .nav-link,
+  .navbar-nav .dropdown-toggle {
+    font-size: 16px;
+  }
+}
+/* Navbar text styling */
+.navbar-nav .nav-link,
+.navbar-nav .dropdown-toggle {
   margin-right: 0px;
   font-weight: bold;
   color: #4f4f4f;

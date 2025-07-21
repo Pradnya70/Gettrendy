@@ -520,7 +520,7 @@ exports.getAllUsers = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
-      User.find({}, "name email role createdAt")
+      User.find({}, "name email phone role createdAt")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),

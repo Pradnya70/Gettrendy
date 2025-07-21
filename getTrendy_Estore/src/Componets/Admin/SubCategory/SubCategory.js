@@ -1,165 +1,195 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { Button, Col, Container, Form, Row, Card, Modal } from "react-bootstrap"
-import { useLocation, useNavigate } from "react-router-dom"
-import Loader from "../../Client/Loader/Loader"
-import axios from "axios"
-import { BASEURL } from "../../Client/Comman/CommanConstans"
-import { useAuth } from "../../AuthContext/AuthContext"
+import { useState, useEffect } from "react";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  Button,
+  Col,
+  Container,
+  Form,
+  Row,
+  Card,
+  Modal,
+} from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
+import Loader from "../../Client/Loader/Loader";
+import axios from "axios";
+import { BASEURL, getImageUrl } from "../../Client/Comman/CommanConstans";
+import { useAuth } from "../../AuthContext/AuthContext";
 
 const AddCategory = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { userToken } = useAuth()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { userToken } = useAuth();
 
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
-  const [showMessage, setShowMessage] = useState(false)
-  const [categoryId, setCategoryId] = useState(null)
-  const [mainCategories, setMainCategories] = useState([])
-  const [previewImage, setPreviewImage] = useState(null)
-  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showMessage, setShowMessage] = useState(false);
+  const [categoryId, setCategoryId] = useState(null);
+  const [mainCategories, setMainCategories] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
     subcategory_name: "",
     subcategory_description: "",
     parent_category: "",
     subcategory_image: null,
-  })
+  });
 
   // Handle back button
   const handleBack = () => {
-    window.history.back()
-  }
+    window.history.back();
+  };
 
   // Close message modal
-  const handleCloseMessage = () => setShowMessage(false)
+  const handleCloseMessage = () => setShowMessage(false);
 
   // Show message
   const showMessageAlert = (msg) => {
-    setMessage(msg)
-    setShowMessage(true)
-  }
+    setMessage(msg);
+    setShowMessage(true);
+  };
 
   // Handle input change
   const handleInputChange = (e) => {
-    const { name, value, files } = e.target
+    const { name, value, files } = e.target;
 
     if (files) {
-      setFormData({ ...formData, [name]: files[0] })
-      setPreviewImage(URL.createObjectURL(files[0]))
+      setFormData({ ...formData, [name]: files[0] });
+      setPreviewImage(URL.createObjectURL(files[0]));
     } else {
-      setFormData({ ...formData, [name]: value })
+      setFormData({ ...formData, [name]: value });
     }
 
     // Clear error for this field when user makes changes
     if (errors[name]) {
-      setErrors({ ...errors, [name]: "" })
+      setErrors({ ...errors, [name]: "" });
     }
-  }
+  };
 
   // Fetch all main categories
   const fetchMainCategories = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const headers = {
         "x-access-token": userToken,
-      }
-      const response = await axios.get(`${BASEURL}/api/category?limit=100`, { headers })
+      };
+      const response = await axios.get(`${BASEURL}/api/category?limit=100`, {
+        headers,
+      });
       if (response && response.data && response.data.rows) {
-        setMainCategories(response.data.rows)
+        setMainCategories(response.data.rows);
       }
-      setLoading(false)
+      setLoading(false);
     } catch (error) {
-      setLoading(false)
-      console.error("Error fetching main categories:", error)
-      showMessageAlert(`Error: ${error.response?.data?.message || error.message}`)
+      setLoading(false);
+      console.error("Error fetching main categories:", error);
+      showMessageAlert(
+        `Error: ${error.response?.data?.message || error.message}`
+      );
     }
-  }
+  };
 
   // Validate form
   const validate = () => {
-    const newErrors = {}
+    const newErrors = {};
 
-    if (!formData.subcategory_name) newErrors.subcategory_name = "Subcategory name is required"
-    if (!formData.subcategory_description) newErrors.subcategory_description = "Description is required"
-    if (!formData.parent_category) newErrors.parent_category = "Parent category is required"
+    if (!formData.subcategory_name)
+      newErrors.subcategory_name = "Subcategory name is required";
+    if (!formData.subcategory_description)
+      newErrors.subcategory_description = "Description is required";
+    if (!formData.parent_category)
+      newErrors.parent_category = "Parent category is required";
 
     // Only require image for new subcategories
     if (!categoryId && !formData.subcategory_image) {
-      newErrors.subcategory_image = "Subcategory image is required"
+      newErrors.subcategory_image = "Subcategory image is required";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validate()) {
-      showMessageAlert("Please correct the errors before submitting")
-      return
+      showMessageAlert("Please correct the errors before submitting");
+      return;
     }
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       // Create FormData object for the API request
-      const formDataToSend = new FormData()
-      formDataToSend.append("subcategory_name", formData.subcategory_name)
-      formDataToSend.append("subcategory_description", formData.subcategory_description)
-      formDataToSend.append("parent_category", formData.parent_category)
+      const formDataToSend = new FormData();
+      formDataToSend.append("subcategory_name", formData.subcategory_name);
+      formDataToSend.append(
+        "subcategory_description",
+        formData.subcategory_description
+      );
+      formDataToSend.append("parent_category", formData.parent_category);
 
       if (formData.subcategory_image) {
-        formDataToSend.append("subcategory_image", formData.subcategory_image)
+        formDataToSend.append("subcategory_image", formData.subcategory_image);
       }
 
       const headers = {
         "x-access-token": userToken,
         "Content-Type": "multipart/form-data",
-      }
+      };
 
-      let response
+      let response;
 
       if (categoryId) {
         // Update existing subcategory
-        response = await axios.put(`${BASEURL}/api/subcategory/${categoryId}`, formDataToSend, { headers })
-        showMessageAlert("Subcategory updated successfully")
+        response = await axios.put(
+          `${BASEURL}/api/subcategory/${categoryId}`,
+          formDataToSend,
+          { headers }
+        );
+        showMessageAlert("Subcategory updated successfully");
       } else {
         // Create new subcategory
-        response = await axios.post(`${BASEURL}/api/subcategory`, formDataToSend, { headers })
-        showMessageAlert("Subcategory added successfully")
+        response = await axios.post(
+          `${BASEURL}/api/subcategory`,
+          formDataToSend,
+          { headers }
+        );
+        showMessageAlert("Subcategory added successfully");
       }
 
-      setLoading(false)
+      setLoading(false);
 
       // Navigate back to dashboard after a short delay
       setTimeout(() => {
-        navigate("/admin-dashboard")
-      }, 2000)
+        navigate("/admin-dashboard");
+      }, 2000);
     } catch (error) {
-      setLoading(false)
-      console.error("Error saving subcategory:", error)
-      showMessageAlert(`Error: ${error.response?.data?.message || error.message}`)
+      setLoading(false);
+      console.error("Error saving subcategory:", error);
+      showMessageAlert(
+        `Error: ${error.response?.data?.message || error.message}`
+      );
     }
-  }
+  };
 
   // Fetch subcategory by ID
   const fetchSubcategoryById = async (id) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const headers = {
         "x-access-token": userToken,
-      }
-      const response = await axios.get(`${BASEURL}/api/subcategory/${id}`, { headers })
+      };
+      const response = await axios.get(`${BASEURL}/api/subcategory/${id}`, {
+        headers,
+      });
 
       if (response && response.data && response.data.data) {
-        const subcategory = response.data.data
+        const subcategory = response.data.data;
 
         // Set form data from subcategory
         setFormData({
@@ -167,33 +197,35 @@ const AddCategory = () => {
           subcategory_description: subcategory.subcategory_description || "",
           parent_category: subcategory.parent_category?._id || "",
           subcategory_image: null, // We don't load the actual file object, just the URL
-        })
+        });
 
         // Set preview image if available
         if (subcategory.subcategory_image) {
-          setPreviewImage(BASEURL + subcategory.subcategory_image)
+          setPreviewImage(subcategory.subcategory_image);
         }
       }
 
-      setLoading(false)
+      setLoading(false);
     } catch (error) {
-      setLoading(false)
-      console.error("Error fetching subcategory:", error)
-      showMessageAlert(`Error: ${error.response?.data?.message || error.message}`)
+      setLoading(false);
+      console.error("Error fetching subcategory:", error);
+      showMessageAlert(
+        `Error: ${error.response?.data?.message || error.message}`
+      );
     }
-  }
+  };
 
   // Initialize component
   useEffect(() => {
-    fetchMainCategories()
+    fetchMainCategories();
 
     // Check if we're editing an existing subcategory
-    const categoryIdFromState = location?.state?.categoryID
+    const categoryIdFromState = location?.state?.categoryID;
     if (categoryIdFromState) {
-      setCategoryId(categoryIdFromState)
-      fetchSubcategoryById(categoryIdFromState)
+      setCategoryId(categoryIdFromState);
+      fetchSubcategoryById(categoryIdFromState);
     }
-  }, [location])
+  }, [location]);
 
   return (
     <>
@@ -201,10 +233,16 @@ const AddCategory = () => {
 
       <Container className="py-4">
         <div className="d-flex align-items-center mb-4">
-          <Button variant="outline-secondary" onClick={handleBack} className="me-3">
+          <Button
+            variant="outline-secondary"
+            onClick={handleBack}
+            className="me-3"
+          >
             <FontAwesomeIcon icon={faArrowLeft} />
           </Button>
-          <h2 className="mb-0">{categoryId ? "Edit Subcategory" : "Add New Subcategory"}</h2>
+          <h2 className="mb-0">
+            {categoryId ? "Edit Subcategory" : "Add New Subcategory"}
+          </h2>
         </div>
 
         <Card>
@@ -221,7 +259,9 @@ const AddCategory = () => {
                       onChange={handleInputChange}
                       isInvalid={!!errors.subcategory_name}
                     />
-                    <Form.Control.Feedback type="invalid">{errors.subcategory_name}</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.subcategory_name}
+                    </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -240,7 +280,9 @@ const AddCategory = () => {
                         </option>
                       ))}
                     </Form.Select>
-                    <Form.Control.Feedback type="invalid">{errors.parent_category}</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.parent_category}
+                    </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
               </Row>
@@ -248,7 +290,9 @@ const AddCategory = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Subcategory Image{!categoryId && "*"}</Form.Label>
+                    <Form.Label>
+                      Subcategory Image{!categoryId && "*"}
+                    </Form.Label>
                     <Form.Control
                       type="file"
                       name="subcategory_image"
@@ -256,13 +300,15 @@ const AddCategory = () => {
                       accept="image/*"
                       isInvalid={!!errors.subcategory_image}
                     />
-                    <Form.Control.Feedback type="invalid">{errors.subcategory_image}</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.subcategory_image}
+                    </Form.Control.Feedback>
                   </Form.Group>
 
                   {previewImage && (
                     <div className="mt-2">
                       <img
-                        src={previewImage || "/placeholder.svg"}
+                        src={getImageUrl(previewImage)}
                         alt="Subcategory Preview"
                         className="img-thumbnail"
                         style={{ maxHeight: "150px" }}
@@ -281,13 +327,19 @@ const AddCategory = () => {
                       onChange={handleInputChange}
                       isInvalid={!!errors.subcategory_description}
                     />
-                    <Form.Control.Feedback type="invalid">{errors.subcategory_description}</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.subcategory_description}
+                    </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
               </Row>
 
               <div className="d-flex justify-content-end mt-3">
-                <Button variant="secondary" onClick={handleBack} className="me-2">
+                <Button
+                  variant="secondary"
+                  onClick={handleBack}
+                  className="me-2"
+                >
                   Cancel
                 </Button>
                 <Button variant="primary" type="submit">
@@ -302,7 +354,9 @@ const AddCategory = () => {
       {/* Message Modal */}
       <Modal show={showMessage} onHide={handleCloseMessage}>
         <Modal.Header closeButton>
-          <Modal.Title>{message.includes("Error") ? "Error" : "Success"}</Modal.Title>
+          <Modal.Title>
+            {message.includes("Error") ? "Error" : "Success"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>{message}</Modal.Body>
         <Modal.Footer>
@@ -312,7 +366,7 @@ const AddCategory = () => {
         </Modal.Footer>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default AddCategory
+export default AddCategory;

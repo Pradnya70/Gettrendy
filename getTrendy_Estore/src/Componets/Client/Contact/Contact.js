@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Contact.css"; // Import your CSS file for styling
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 import Footer from "../Footer/Footer";
@@ -9,6 +9,32 @@ import { useAuth } from "../../AuthContext/AuthContext";
 import { Form } from "react-bootstrap";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Button, Badge } from "react-bootstrap";
+import ApiService from "../../api/services/api-service";
+
+const ViewContactMessagesButton = ({ email, onClick, refreshKey }) => {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    ApiService.getContactsByEmail(email).then((res) => {
+      if (res.data && res.data.contacts) {
+        const unread = res.data.contacts.filter((msg) => !msg.read).length;
+        setUnreadCount(unread);
+      }
+    });
+  }, [email, refreshKey]);
+
+  return (
+    <Button variant="info" size="sm" onClick={onClick}>
+      View Messages
+      {unreadCount > 0 && (
+        <Badge bg="danger" className="ms-2">
+          {unreadCount}
+        </Badge>
+      )}
+    </Button>
+  );
+};
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -50,20 +76,12 @@ const Contact = () => {
       const payload = {
         name: formData.name,
         email: formData.email,
-        subject: formData.message,
-        message: formData.subject,
+        subject: formData.subject,
+        message: formData.message,
       };
 
       try {
-        const response = await axios.post(
-          `${BASEURL}/products/contact`,
-          payload,
-          {
-            headers: {
-              "x-access-token": userToken,
-            },
-          }
-        );
+        const response = await axios.post(`${BASEURL}/api/contact`, payload);
         if (response.data) {
           setMessage("Thank You For The Message");
           toast.success("Thank You For The Message");

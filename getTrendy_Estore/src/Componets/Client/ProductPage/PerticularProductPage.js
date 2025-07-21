@@ -8,7 +8,7 @@ import "./PerticularProductPage.css"
 import { FaFacebook, FaLinkedin, FaQuestion, FaStar, FaTelegram, FaTwitter } from "react-icons/fa"
 import Footer from "../Footer/Footer"
 import { useLocation, useNavigate } from "react-router-dom"
-import { BASEURL, authUtils, cartUtils } from "../Comman/CommanConstans"
+import { BASEURL, authUtils, cartUtils, getImageUrl } from "../Comman/CommanConstans"
 import axios from "axios"
 import { ToastContainer, toast } from "react-toastify"
 
@@ -25,14 +25,12 @@ const PerticularProductPage = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(false)
-  
   const [formData, setFormData] = useState({
     rating: 0,
     name: "",
     email: "",
     description: "",
   })
-
   const [errors, setErrors] = useState({})
 
   const handleInputChange = (e) => {
@@ -108,11 +106,9 @@ const PerticularProductPage = () => {
     try {
       setLoading(true)
       const response = await axios.get(`${BASEURL}/api/products/${id}`)
-
       if (response.data) {
         const product = response.data.data || response.data
         setProductData(product)
-
         // Set default size and color
         if (product.sizes && product.sizes.length > 0) {
           setSelectedSize(product.sizes[0])
@@ -218,30 +214,27 @@ const PerticularProductPage = () => {
           <Breadcrumb.Item href="/shop">{renderCategory()}</Breadcrumb.Item>
           <Breadcrumb.Item active>{productData.product_name || productData.name}</Breadcrumb.Item>
         </Breadcrumb>
+
         <div className="row">
           <div className="col-md-6">
             <div className="product-image">
               <div>
                 <img
-                  src={
-                    productData.images && productData.images.length > 0
-                      ? `${BASEURL}${productData.images[0]}`
-                      : "/Images/placeholder.jpg"
-                  }
+                  src={getImageUrl(productData.images && productData.images.length > 0 ? productData.images[0] : null)}
                   alt={productData.product_name || productData.name || "Product"}
                   onError={(e) => {
                     e.target.onerror = null
-                    e.target.src = "/Images/placeholder.jpg"
+                    e.target.src = "/placeholder.svg"
                   }}
                 />
               </div>
             </div>
           </div>
+
           <div className="col-md-6">
             <div className="product-details">
               <p className="product-category">{renderCategory()}</p>
               <h3 className="product-title">{productData.product_name || productData.name}</h3>
-
               <p className="stock-status">
                 <span className="badge bg-success">
                   {productData.stock > 0 ? `In Stock (${productData.stock})` : "Out of Stock"}
@@ -328,6 +321,7 @@ const PerticularProductPage = () => {
                     +
                   </button>
                 </div>
+
                 <Button
                   className="btn button add-to-cart"
                   onClick={handleAddToCart}
@@ -359,6 +353,7 @@ const PerticularProductPage = () => {
           </div>
         </div>
       </div>
+
       <div className="container">
         <h6 className="h6-title">DESCRIPTION</h6>
         <h3>{productData.product_name || productData.name}</h3>
@@ -377,6 +372,7 @@ const PerticularProductPage = () => {
               </h1>
               <p>({reviews.length} Reviews)</p>
             </div>
+
             <div className="rating-review">
               <h3>Rating & Review</h3>
               {reviews.length > 0 ? (
@@ -400,6 +396,7 @@ const PerticularProductPage = () => {
               )}
             </div>
           </div>
+
           <div className="review-form-section">
             <h3>Review this product</h3>
             <p>Your email address will not be published. Required fields are marked *</p>
@@ -427,6 +424,7 @@ const PerticularProductPage = () => {
                   </div>
                 )}
               </div>
+
               <div className="form-group">
                 <Form.Group className="mb-3 mt-3" controlId="formUserName">
                   <label className="mb-2 mt-2">Your Name</label>
@@ -480,6 +478,7 @@ const PerticularProductPage = () => {
           </div>
         </div>
       </div>
+
       <Footer />
       <ToastContainer
         position="top-center"

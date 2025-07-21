@@ -7,7 +7,7 @@ import Pagination from "@mui/material/Pagination"
 import Stack from "@mui/material/Stack"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
-import { BASEURL } from "../Comman/CommanConstans"
+import { BASEURL, getImageUrl } from "../Comman/CommanConstans"
 import Loader from "../Loader/Loader"
 import { useAuth } from "../../AuthContext/AuthContext"
 import { useCart } from "../../CartContext/CartContext"
@@ -21,7 +21,6 @@ const Bestsellers = () => {
   const [pagesCountAll, setPagesCountAll] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-
   const navigate = useNavigate()
 
   const handleNavigate = () => {
@@ -34,12 +33,10 @@ const Bestsellers = () => {
       setLoading(true)
       setError(null)
 
-      console.log(
-        "Fetching bestsellers from:",
-        `${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&bestseller=true`,
-      )
+      // Use the dedicated bestseller endpoint
+      console.log("Fetching bestsellers from:", `${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}`)
 
-      const response = await axios.get(`${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&bestseller=true`)
+      const response = await axios.get(`${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}`)
 
       setLoading(false)
 
@@ -114,6 +111,13 @@ const Bestsellers = () => {
     setPageAll(value)
   }
 
+  const discountAmount = (price, rate) => {
+    if (!price) return 0
+    const amount = (price * rate) / 100
+    const originalPrice = price + amount
+    return originalPrice.toFixed(2)
+  }
+
   useEffect(() => {
     getAllProducts()
   }, [pageAll])
@@ -134,7 +138,6 @@ const Bestsellers = () => {
               <h5>More to Discover</h5>
               <h1>Bestsellers of the week</h1>
             </div>
-
             <div className="section-line"></div>
           </div>
 
@@ -156,28 +159,26 @@ const Bestsellers = () => {
               <img src="/Images/teshirt6.png" alt="Vegetable Bag" className="img-fluid mt-3" />
             </div>
           </Col>
+
           <Col md={8}>
             <div>
               <Row>
                 {allProducts && allProducts.length > 0 ? (
                   allProducts.map((product) => (
                     <Col lg={4} md={6} sm={12} key={product.id || product._id} className="mb-5">
-                      <Card className=" ">
+                      <Card className="">
                         <div className="product-image-container">
                           <Card.Img
                             variant="top"
-                            src={
-                              product.product_image
-                                ? `${BASEURL}/uploads/${product.product_image}`
-                                : product.images && product.images.length > 0
-                                  ? `${BASEURL}${product.images[0]}`
-                                  : `${BASEURL}/uploads/placeholder.png`
-                            }
+                            src={getImageUrl(
+                              product.product_image ||
+                                (product.images && product.images.length > 0 ? product.images[0] : null),
+                            )}
                             alt={product.product_name}
                             className="particular-product-image"
                             onError={(e) => {
                               console.log("Image error:", e)
-                              e.target.src = `${BASEURL}/uploads/placeholder.png`
+                              e.target.src = "/placeholder.svg"
                             }}
                           />
                         </div>
@@ -186,11 +187,24 @@ const Bestsellers = () => {
                           <Card.Text className="product-description">
                             {truncateText(product.description || product.product_description, 100)}
                           </Card.Text>
-                          <div className="product-price mb-2">
-                            <span className="current-price">${product.discount_price || product.price}</span>
-                            {product.discount_price && product.discount_price < product.price && (
-                              <span className="original-price ms-2">${product.price}</span>
-                            )}
+                          <div className="price-section">
+                            <div>
+                              <span className="price">₹{product.discount_price || product.price}.00</span>
+                              {product.discount_price && product.discount_price < product.price && (
+                                <span className="original-price">₹{product.price}.00</span>
+                              )}
+                              {!product.discount_price && (
+                                <span className="original-price">₹{discountAmount(product.price, 23)}</span>
+                              )}
+                            </div>
+                            <div>
+                              <span className="discount">
+                                {product.discount_price
+                                  ? Math.round(((product.price - product.discount_price) / product.price) * 100)
+                                  : 23}
+                                % Off
+                              </span>
+                            </div>
                           </div>
                           <div className="button-section text-center">
                             <Button
@@ -222,6 +236,7 @@ const Bestsellers = () => {
                 )}
               </Row>
             </div>
+
             {allProducts && allProducts.length > 0 && (
               <div className="display-start mb-5">
                 <Stack spacing={2}>

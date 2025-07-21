@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BASEURL } from "../Comman/CommanConstans";
+// import { BASEURL } from "../Comman/CommanConstans";
+import { BASEURL, getImageUrl } from "../Comman/CommanConstans";
 import Loader from "../Loader/Loader";
 import "./Categories.css";
 import Aos from "aos";
@@ -17,7 +18,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BASEURL}/api/category?limit=12`); // Limit to 6 categories for display
+      const response = await axios.get(`${BASEURL}/api/category?limit=100`); // Limit to 6 categories for display
 
       if (response && response.data) {
         setCategories(response.data.rows || []);
@@ -64,7 +65,7 @@ const Categories = () => {
                   <div className="category-image-container">
                     <Card.Img
                       variant="top"
-                      src={BASEURL + category.category_image}
+                      src={getImageUrl(category.category_image)}
                       alt={category.category_name}
                       className="category-image"
                     />

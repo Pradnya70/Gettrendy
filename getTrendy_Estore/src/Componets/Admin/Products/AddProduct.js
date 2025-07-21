@@ -7,13 +7,11 @@ import { Button, Col, Container, Form, Row, Card, Modal, Alert } from "react-boo
 import { useLocation, useNavigate } from "react-router-dom"
 import Loader from "../../Client/Loader/Loader"
 import ApiService from "../../api/services/api-service"
-import API_CONFIG from "../../api/services/api-config"
+import { getImageUrl } from "../../Client/Comman/CommanConstans"
 
 const AddProduct = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const BASEURL = API_CONFIG.baseURL
-
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [showMessage, setShowMessage] = useState(false)
@@ -23,8 +21,8 @@ const AddProduct = () => {
   const [filteredSubcategories, setFilteredSubcategories] = useState([])
   const [previewImages, setPreviewImages] = useState([])
   const [existingImages, setExistingImages] = useState([])
+  const [imagesToDelete, setImagesToDelete] = useState([])
   const [errors, setErrors] = useState({})
-
   const [formData, setFormData] = useState({
     product_name: "",
     product_description: "",
@@ -66,7 +64,6 @@ const AddProduct = () => {
     } else if (type === "file") {
       // Handle multiple file uploads
       const fileArray = Array.from(files)
-
       // Check total image limit (existing + new)
       const totalImages = existingImages.length + formData.images.length + fileArray.length
       if (totalImages > 3) {
@@ -87,7 +84,6 @@ const AddProduct = () => {
     } else if (name === "category") {
       // When category changes, filter subcategories and update form
       setFormData({ ...formData, [name]: value, subcategory: "" })
-
       // Filter subcategories based on selected category
       const filtered = subcategories.filter((subcategory) => subcategory.parent_category === value)
       setFilteredSubcategories(filtered)
@@ -107,16 +103,19 @@ const AddProduct = () => {
 
   // Remove existing image
   const removeExistingImage = (index) => {
+    const imageToDelete = existingImages[index]
     const newExistingImages = [...existingImages]
     newExistingImages.splice(index, 1)
     setExistingImages(newExistingImages)
+
+    // Track images to delete
+    setImagesToDelete([...imagesToDelete, imageToDelete])
   }
 
   // Remove new preview image
   const removeNewImage = (index) => {
     const newImages = [...formData.images]
     newImages.splice(index, 1)
-
     const newPreviews = [...previewImages]
     URL.revokeObjectURL(newPreviews[index]) // Clean up the URL
     newPreviews.splice(index, 1)
@@ -132,23 +131,33 @@ const AddProduct = () => {
     if (!formData.product_name || formData.product_name.trim() === "") {
       newErrors.product_name = "Product name is required"
     }
+
     if (!formData.product_description || formData.product_description.trim() === "") {
       newErrors.product_description = "Description is required"
     }
+
     if (!formData.price) {
       newErrors.price = "Price is required"
     }
-    if (formData.price && isNaN(formData.price)) {
-      newErrors.price = "Price must be a number"
+
+    if (formData.price && (isNaN(formData.price) || Number(formData.price) <= 0)) {
+      newErrors.price = "Price must be a valid positive number"
     }
-    if (formData.discount_price && isNaN(formData.discount_price)) {
-      newErrors.discount_price = "Discount price must be a number"
+
+    if (formData.discount_price && (isNaN(formData.discount_price) || Number(formData.discount_price) <= 0)) {
+      newErrors.discount_price = "Discount price must be a valid positive number"
     }
+
+    if (formData.discount_price && formData.price && Number(formData.discount_price) >= Number(formData.price)) {
+      newErrors.discount_price = "Discount price must be less than regular price"
+    }
+
     if (!formData.category) {
       newErrors.category = "Category is required"
     }
-    if (formData.stock && isNaN(formData.stock)) {
-      newErrors.stock = "Stock must be a number"
+
+    if (formData.stock && (isNaN(formData.stock) || Number(formData.stock) < 0)) {
+      newErrors.stock = "Stock must be a valid non-negative number"
     }
 
     // Check image requirements
@@ -177,10 +186,11 @@ const AddProduct = () => {
       const formDataToSend = new FormData()
       formDataToSend.append("product_name", formData.product_name.trim())
       formDataToSend.append("product_description", formData.product_description.trim())
-      formDataToSend.append("price", formData.price)
+      formDataToSend.append("price", Number(formData.price))
 
-      if (formData.discount_price) {
-        formDataToSend.append("discount_price", formData.discount_price)
+      // Only send discount_price if it's provided and not empty
+      if (formData.discount_price && formData.discount_price.trim() !== "") {
+        formDataToSend.append("discount_price", Number(formData.discount_price))
       }
 
       formDataToSend.append("category", formData.category)
@@ -189,7 +199,7 @@ const AddProduct = () => {
         formDataToSend.append("subcategory", formData.subcategory)
       }
 
-      formDataToSend.append("stock", formData.stock || 0)
+      formDataToSend.append("stock", Number(formData.stock) || 0)
       formDataToSend.append("bestseller", formData.bestseller)
 
       // Add sizes and colors
@@ -203,8 +213,8 @@ const AddProduct = () => {
 
       // Handle images for update
       if (productId) {
-        // If we're updating and want to replace all images
-        if (formData.images.length > 0) {
+        // If we have new images or deleted existing images, replace all
+        if (formData.images.length > 0 || imagesToDelete.length > 0) {
           formDataToSend.append("replace_all_images", "true")
         }
       }
@@ -249,7 +259,6 @@ const AddProduct = () => {
   const fetchCategories = async () => {
     try {
       const response = await ApiService.getCategories(1, 100)
-
       if (response && response.data) {
         setCategories(response.data.rows || [])
       }
@@ -262,7 +271,6 @@ const AddProduct = () => {
   const fetchSubcategories = async () => {
     try {
       const response = await ApiService.getSubcategories(1, 100)
-
       if (response && response.data) {
         setSubcategories(response.data.rows || [])
       }
@@ -276,7 +284,6 @@ const AddProduct = () => {
     try {
       setLoading(true)
       console.log("Fetching product with ID:", id)
-
       const response = await ApiService.getProductById(id)
 
       if (response && response.data && response.data.data) {
@@ -287,8 +294,8 @@ const AddProduct = () => {
         setFormData({
           product_name: product.product_name || "",
           product_description: product.product_description || "",
-          price: product.price || "",
-          discount_price: product.discount_price || "",
+          price: product.price?.toString() || "",
+          discount_price: product.discount_price?.toString() || "",
           category: product.category?._id || "",
           subcategory: product.subcategory?._id || "",
           stock: product.stock?.toString() || "0",
@@ -299,20 +306,21 @@ const AddProduct = () => {
         })
 
         // Filter subcategories based on selected category
-        if (product.category?._id) {
+        if (product.category?._id && subcategories.length > 0) {
           const filtered = subcategories.filter((subcategory) => subcategory.parent_category === product.category._id)
           setFilteredSubcategories(filtered)
         }
 
-        // Set existing images from product
+        // Set existing images from product using getImageUrl helper
         if (product.images && product.images.length > 0) {
-          const imageUrls = product.images.map((img) => BASEURL + img)
+          const imageUrls = product.images.map((img) => getImageUrl(img))
           setExistingImages(imageUrls)
           console.log("Setting existing images:", imageUrls)
         }
 
-        // Reset preview images for new uploads
+        // Reset preview images and images to delete
         setPreviewImages([])
+        setImagesToDelete([])
       }
 
       setLoading(false)
@@ -325,19 +333,24 @@ const AddProduct = () => {
 
   // Initialize component
   useEffect(() => {
-    fetchCategories()
-    fetchSubcategories()
+    const initializeComponent = async () => {
+      await fetchCategories()
+      await fetchSubcategories()
+    }
+    initializeComponent()
+  }, [])
 
-    // Check if we're editing an existing product
+  // Handle product loading after subcategories are loaded
+  useEffect(() => {
     const productIdFromState = location?.state?.productId
-    if (productIdFromState) {
+    if (productIdFromState && subcategories.length > 0) {
       console.log("Editing product with ID:", productIdFromState)
       setProductId(productIdFromState)
       fetchProductById(productIdFromState)
-    } else {
+    } else if (!productIdFromState) {
       console.log("Creating new product")
     }
-  }, [location])
+  }, [location, subcategories])
 
   // Update filtered subcategories when subcategories are loaded
   useEffect(() => {
@@ -361,7 +374,6 @@ const AddProduct = () => {
   return (
     <>
       {loading && <Loader />}
-
       <Container className="py-4">
         <div className="d-flex align-items-center mb-4">
           <Button variant="outline-secondary" onClick={handleBack} className="me-3">
@@ -395,10 +407,11 @@ const AddProduct = () => {
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label>Price*</Form.Label>
+                        <Form.Label>Regular Price*</Form.Label>
                         <Form.Control
                           type="number"
                           step="0.01"
+                          min="0.01"
                           name="price"
                           value={formData.price}
                           onChange={handleInputChange}
@@ -414,6 +427,7 @@ const AddProduct = () => {
                         <Form.Control
                           type="number"
                           step="0.01"
+                          min="0.01"
                           name="discount_price"
                           value={formData.discount_price}
                           onChange={handleInputChange}
@@ -421,12 +435,12 @@ const AddProduct = () => {
                           placeholder="0.00"
                         />
                         <Form.Control.Feedback type="invalid">{errors.discount_price}</Form.Control.Feedback>
+                        <Form.Text className="text-muted">Optional. Must be less than regular price.</Form.Text>
                       </Form.Group>
                     </Col>
                   </Row>
                 </Col>
               </Row>
-
               <Row>
                 <Col md={12}>
                   <Form.Group className="mb-3">
@@ -505,6 +519,7 @@ const AddProduct = () => {
                     <Form.Label>Stock</Form.Label>
                     <Form.Control
                       type="number"
+                      min="0"
                       name="stock"
                       value={formData.stock}
                       onChange={handleInputChange}

@@ -1,74 +1,56 @@
 const SubCategory = require("../models/SubCategory")
 const Category = require("../models/Category")
 const mongoose = require("mongoose")
-const multer = require("multer")
-const fs = require("fs")
-const path = require("path")
+const cloudinary = require("../utils/cloudinary")
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "uploads/subcategories"
-    console.log("📁 Creating upload directory:", uploadDir)
+// Helper function to extract public_id from Cloudinary URL
+const extractPublicIdFromUrl = (url) => {
+  try {
+    if (!url || typeof url !== "string") return null
 
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-      console.log("✅ Upload directory created")
+    // Handle both HTTP and HTTPS URLs
+    // Example URL: https://res.cloudinary.com/your-cloud/image/upload/v1234567890/getTrendy/subcategories/subcategory_1234567890_name.jpg
+    const urlParts = url.split("/")
+    const uploadIndex = urlParts.findIndex((part) => part === "upload")
+
+    if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+      // Get everything after version (v1234567890)
+      const pathAfterVersion = urlParts.slice(uploadIndex + 2).join("/")
+      // Remove file extension
+      const publicId = pathAfterVersion.replace(/\.[^/.]+$/, "")
+      return publicId
     }
-    cb(null, uploadDir)
-  },
-  filename: (req, file, cb) => {
-    const filename = Date.now() + "-" + file.originalname.replace(/\s+/g, "-")
-    console.log("📄 Generated filename:", filename)
-    cb(null, filename)
-  },
-})
 
-const fileFilter = (req, file, cb) => {
-  console.log("🔍 File filter check:")
-  console.log("  - Original name:", file.originalname)
-  console.log("  - Mimetype:", file.mimetype)
-
-  // Accept images only
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
-    console.log("❌ File rejected: Invalid file type")
-    return cb(new Error("Only image files are allowed!"), false)
+    return null
+  } catch (error) {
+    console.error("Error extracting public_id:", error)
+    return null
   }
-  console.log("✅ File accepted")
-  cb(null, true)
 }
 
-exports.upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-})
+// Helper function to delete image from Cloudinary
+const deleteCloudinaryImage = async (imageUrl) => {
+  try {
+    if (!imageUrl || typeof imageUrl !== "string") return
 
-// Helper function to delete old image file
-const deleteOldImage = (imagePath) => {
-  if (imagePath) {
-    const fullPath = path.join(__dirname, "..", imagePath)
-    console.log("🗑️ Attempting to delete old image:", fullPath)
+    // Extract public_id from Cloudinary URL
+    const publicId = extractPublicIdFromUrl(imageUrl)
 
-    if (fs.existsSync(fullPath)) {
-      try {
-        fs.unlinkSync(fullPath)
-        console.log("✅ Old image deleted successfully")
-      } catch (error) {
-        console.error("❌ Error deleting old image:", error)
-      }
-    } else {
-      console.log("⚠️ Old image file not found:", fullPath)
+    if (publicId) {
+      console.log("🗑️ Deleting image from Cloudinary:", publicId)
+      const result = await cloudinary.cloudinary.uploader.destroy(publicId)
+      console.log("✅ Image deleted:", result)
+      return result
     }
+  } catch (error) {
+    console.error("❌ Error deleting image from Cloudinary:", error)
   }
 }
 
 // Get all subcategories
-exports.getAllSubCategories = async (req, res) => {
+const getAllSubCategories = async (req, res) => {
   try {
     console.log("📋 Getting all subcategories...")
-
     const { page = 1, limit = 50, parent_category } = req.query
 
     const pageNum = Math.max(1, Number(page))
@@ -112,7 +94,7 @@ exports.getAllSubCategories = async (req, res) => {
 }
 
 // Get subcategory by ID
-exports.getSubCategoryById = async (req, res) => {
+const getSubCategoryById = async (req, res) => {
   try {
     const { id } = req.params
     console.log("🔍 Getting subcategory by ID:", id)
@@ -150,7 +132,7 @@ exports.getSubCategoryById = async (req, res) => {
 }
 
 // Create new subcategory (admin only)
-exports.createSubCategory = async (req, res) => {
+const createSubCategory = async (req, res) => {
   try {
     console.log("\n🆕 Creating new subcategory...")
     console.log("📝 Request body:", req.body)
@@ -161,6 +143,12 @@ exports.createSubCategory = async (req, res) => {
     // Validation
     if (!subcategory_name || subcategory_name.trim() === "") {
       console.log("❌ Validation failed: subcategory_name is required")
+
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Subcategory name is required",
@@ -169,6 +157,12 @@ exports.createSubCategory = async (req, res) => {
 
     if (!parent_category || parent_category.trim() === "") {
       console.log("❌ Validation failed: parent_category is required")
+
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Parent category is required",
@@ -178,6 +172,12 @@ exports.createSubCategory = async (req, res) => {
     // Validate parent category exists
     if (!mongoose.Types.ObjectId.isValid(parent_category)) {
       console.log("❌ Validation failed: Invalid parent_category ID")
+
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Invalid parent category ID",
@@ -188,18 +188,45 @@ exports.createSubCategory = async (req, res) => {
     const parentCategoryExists = await Category.findById(parent_category)
     if (!parentCategoryExists) {
       console.log("❌ Parent category not found in database")
+
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Parent category not found",
       })
     }
+
     console.log("✅ Parent category found:", parentCategoryExists.category_name)
 
-    // Process uploaded image
+    // Check if subcategory already exists in this parent category
+    const existingSubCategory = await SubCategory.findOne({
+      subcategory_name: { $regex: new RegExp(`^${subcategory_name.trim()}$`, "i") },
+      parent_category,
+    })
+
+    if (existingSubCategory) {
+      console.log("❌ Subcategory already exists in this category")
+
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Subcategory with this name already exists in this category",
+      })
+    }
+
+    // Process uploaded image from Cloudinary
     let subcategory_logo = null
-    if (req.file) {
-      subcategory_logo = `/uploads/subcategories/${req.file.filename}`
-      console.log("✅ File processed successfully:", subcategory_logo)
+    if (req.file && req.file.path) {
+      subcategory_logo = req.file.path // Cloudinary URL
+      console.log("✅ File processed successfully from Cloudinary:", subcategory_logo)
     } else {
       console.log("⚠️ No file uploaded")
     }
@@ -228,6 +255,12 @@ exports.createSubCategory = async (req, res) => {
     })
   } catch (error) {
     console.error("❌ Create subcategory error:", error)
+
+    // Clean up uploaded image if creation fails
+    if (req.file && req.file.path) {
+      await deleteCloudinaryImage(req.file.path)
+    }
+
     res.status(500).json({
       success: false,
       message: "Error creating subcategory",
@@ -237,7 +270,7 @@ exports.createSubCategory = async (req, res) => {
 }
 
 // Update subcategory (admin only)
-exports.updateSubCategory = async (req, res) => {
+const updateSubCategory = async (req, res) => {
   try {
     console.log("\n✏️ Updating subcategory...")
     const { id } = req.params
@@ -247,6 +280,11 @@ exports.updateSubCategory = async (req, res) => {
     console.log("📁 New file received:", req.file)
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Invalid subcategory ID",
@@ -256,6 +294,11 @@ exports.updateSubCategory = async (req, res) => {
     // Find the existing subcategory
     const existingSubCategory = await SubCategory.findById(id)
     if (!existingSubCategory) {
+      // Clean up uploaded image if subcategory not found
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(404).json({
         success: false,
         message: "Subcategory not found",
@@ -265,8 +308,38 @@ exports.updateSubCategory = async (req, res) => {
     console.log("📋 Existing subcategory found:", existingSubCategory.subcategory_name)
     console.log("🖼️ Existing image:", existingSubCategory.subcategory_logo)
 
+    // Validate required fields
+    if (!subcategory_name || subcategory_name.trim() === "") {
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Subcategory name is required",
+      })
+    }
+
+    if (!parent_category || parent_category.trim() === "") {
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Parent category is required",
+      })
+    }
+
     // Validate parent category if provided
     if (parent_category && !mongoose.Types.ObjectId.isValid(parent_category)) {
+      // Clean up uploaded image if validation fails
+      if (req.file && req.file.path) {
+        await deleteCloudinaryImage(req.file.path)
+      }
+
       return res.status(400).json({
         success: false,
         message: "Invalid parent category ID",
@@ -276,6 +349,11 @@ exports.updateSubCategory = async (req, res) => {
     if (parent_category) {
       const parentCategoryExists = await Category.findById(parent_category)
       if (!parentCategoryExists) {
+        // Clean up uploaded image if validation fails
+        if (req.file && req.file.path) {
+          await deleteCloudinaryImage(req.file.path)
+        }
+
         return res.status(400).json({
           success: false,
           message: "Parent category not found",
@@ -283,32 +361,57 @@ exports.updateSubCategory = async (req, res) => {
       }
     }
 
+    // Check if another subcategory with the same name exists in the same category
+    if (subcategory_name && subcategory_name.trim() !== existingSubCategory.subcategory_name) {
+      const duplicateSubCategory = await SubCategory.findOne({
+        subcategory_name: { $regex: new RegExp(`^${subcategory_name.trim()}$`, "i") },
+        parent_category: parent_category || existingSubCategory.parent_category,
+        _id: { $ne: id },
+      })
+
+      if (duplicateSubCategory) {
+        // Clean up uploaded image if validation fails
+        if (req.file && req.file.path) {
+          await deleteCloudinaryImage(req.file.path)
+        }
+
+        return res.status(400).json({
+          success: false,
+          message: "Subcategory with this name already exists in this category",
+        })
+      }
+    }
+
     // Handle image update
     let subcategory_logo = existingSubCategory.subcategory_logo
 
-    if (req.file) {
+    if (req.file && req.file.path) {
       console.log("🔄 New image uploaded, processing...")
 
-      // Delete old image if it exists
+      // Delete old image from Cloudinary if it exists
       if (existingSubCategory.subcategory_logo) {
-        console.log("🗑️ Deleting old image:", existingSubCategory.subcategory_logo)
-        deleteOldImage(existingSubCategory.subcategory_logo)
+        console.log("🗑️ Deleting old image from Cloudinary:", existingSubCategory.subcategory_logo)
+        await deleteCloudinaryImage(existingSubCategory.subcategory_logo)
       }
 
-      // Set new image path
-      subcategory_logo = `/uploads/subcategories/${req.file.filename}`
-      console.log("✅ New image path set:", subcategory_logo)
+      // Set new image URL from Cloudinary
+      subcategory_logo = req.file.path
+      console.log("✅ New image URL set:", subcategory_logo)
     } else {
       console.log("⚠️ No new image uploaded, keeping existing image")
     }
 
     // Prepare update data
     const updateData = {
-      subcategory_name: subcategory_name || existingSubCategory.subcategory_name,
+      subcategory_name: subcategory_name ? subcategory_name.trim() : existingSubCategory.subcategory_name,
       subcategory_description:
-        subcategory_description !== undefined ? subcategory_description : existingSubCategory.subcategory_description,
+        subcategory_description !== undefined
+          ? subcategory_description
+            ? subcategory_description.trim()
+            : ""
+          : existingSubCategory.subcategory_description,
       parent_category: parent_category || existingSubCategory.parent_category,
-      subcategory_logo, // This will be either the new image path or the existing one
+      subcategory_logo,
     }
 
     console.log("💾 Final update data:", updateData)
@@ -320,7 +423,7 @@ exports.updateSubCategory = async (req, res) => {
     }).populate("parent_category", "category_name")
 
     console.log("✅ Subcategory updated successfully")
-    console.log("🖼️ Final image path:", subcategory.subcategory_logo)
+    console.log("🖼️ Final image URL:", subcategory.subcategory_logo)
 
     res.status(200).json({
       success: true,
@@ -329,6 +432,12 @@ exports.updateSubCategory = async (req, res) => {
     })
   } catch (error) {
     console.error("❌ Update subcategory error:", error)
+
+    // Clean up uploaded image if update fails
+    if (req.file && req.file.path) {
+      await deleteCloudinaryImage(req.file.path)
+    }
+
     res.status(500).json({
       success: false,
       message: "Error updating subcategory",
@@ -338,7 +447,7 @@ exports.updateSubCategory = async (req, res) => {
 }
 
 // Delete subcategory (admin only)
-exports.deleteSubCategory = async (req, res) => {
+const deleteSubCategory = async (req, res) => {
   try {
     const { id } = req.params
     console.log("🗑️ Deleting subcategory:", id)
@@ -350,8 +459,7 @@ exports.deleteSubCategory = async (req, res) => {
       })
     }
 
-    const subcategory = await SubCategory.findByIdAndDelete(id)
-
+    const subcategory = await SubCategory.findById(id)
     if (!subcategory) {
       return res.status(404).json({
         success: false,
@@ -359,10 +467,13 @@ exports.deleteSubCategory = async (req, res) => {
       })
     }
 
-    // Delete subcategory image if exists
+    // Delete subcategory image from Cloudinary if exists
     if (subcategory.subcategory_logo) {
-      deleteOldImage(subcategory.subcategory_logo)
+      await deleteCloudinaryImage(subcategory.subcategory_logo)
     }
+
+    // Delete subcategory from database
+    await SubCategory.findByIdAndDelete(id)
 
     console.log("✅ Subcategory deleted successfully")
 
@@ -378,4 +489,12 @@ exports.deleteSubCategory = async (req, res) => {
       error: error.message,
     })
   }
+}
+
+module.exports = {
+  getAllSubCategories,
+  getSubCategoryById,
+  createSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
 }

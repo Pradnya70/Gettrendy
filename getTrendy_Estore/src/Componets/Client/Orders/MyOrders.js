@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { AgGridReact } from "ag-grid-react"
-import "ag-grid-community/styles/ag-grid.css"
-import "ag-grid-community/styles/ag-theme-quartz.css"
-import axios from "axios"
-import { BASEURL, authUtils } from "../Comman/CommanConstans"
-import Footer from "../Footer/Footer"
-import { Pagination, Stack } from "@mui/material"
-import { toast } from "react-toastify"
+import { useEffect, useState } from "react";
+import { AgGridReact } from "ag-grid-react";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
+import axios from "axios";
+import { BASEURL, authUtils } from "../Comman/CommanConstans";
+import Footer from "../Footer/Footer";
+import { Pagination, Stack } from "@mui/material";
+import { toast } from "react-toastify";
 
 const MyOrders = () => {
-  const [allOrders, setAllOrders] = useState([])
-  const [totalRows, setTotalRows] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [totalPages, setTotalPages] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [page, setPage] = useState(1)
+  const [allOrders, setAllOrders] = useState([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [page, setPage] = useState(1);
 
   const columnDefs = [
     {
@@ -42,9 +42,9 @@ const MyOrders = () => {
       width: 200,
       valueFormatter: (params) => {
         if (params.value && Array.isArray(params.value)) {
-          return `${params.value.length} item(s)`
+          return `${params.value.length} item(s)`;
         }
-        return "0 items"
+        return "0 items";
       },
     },
     {
@@ -77,27 +77,44 @@ const MyOrders = () => {
       width: 120,
       valueFormatter: (params) => {
         if (params.value) {
-          return new Date(params.value).toLocaleDateString()
+          return new Date(params.value).toLocaleDateString();
         }
-        return ""
+        return "";
       },
     },
-  ]
+    {
+      headerName: "Receipt",
+      field: "orderId", // or "_id" if you want to use MongoDB's _id
+      width: 150,
+      cellRenderer: (params) => {
+        // Use orderId if available, otherwise fallback to _id
+        const orderId = params.data.orderId || params.data._id;
+        return (
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => handleDownloadReceipt(orderId)}
+          >
+            Download Receipt
+          </button>
+        );
+      },
+    },
+  ];
 
   const defaultColDef = {
     flex: 1,
     minWidth: 100,
     resizable: true,
-  }
+  };
 
   const getAllOrders = async () => {
     try {
-      setLoading(true)
-      const token = authUtils.getToken()
+      setLoading(true);
+      const token = authUtils.getToken();
 
       if (!token) {
-        toast.error("Please login to view your orders")
-        return
+        toast.error("Please login to view your orders");
+        return;
       }
 
       const response = await axios.get(`${BASEURL}/api/orders/myorders`, {
@@ -108,52 +125,64 @@ const MyOrders = () => {
           page,
           limit,
         },
-      })
+      });
 
       if (response.data) {
-        console.log("Orders response:", response.data)
+        console.log("Orders response:", response.data);
 
-        let orders = []
+        let orders = [];
         if (Array.isArray(response.data)) {
-          orders = response.data
-        } else if (response.data.orders && Array.isArray(response.data.orders)) {
-          orders = response.data.orders
+          orders = response.data;
+        } else if (
+          response.data.orders &&
+          Array.isArray(response.data.orders)
+        ) {
+          orders = response.data.orders;
         } else if (response.data.rows && Array.isArray(response.data.rows)) {
-          orders = response.data.rows
+          orders = response.data.rows;
         }
 
         const dataWithSr = orders.map((item, index) => ({
           ...item,
           sr: (page - 1) * limit + index + 1,
-        }))
+        }));
 
-        setAllOrders(dataWithSr)
-        setTotalRows(response.data.count || orders.length)
-        setTotalPages(response.data.pages_count || Math.ceil(orders.length / limit))
+        setAllOrders(dataWithSr);
+        setTotalRows(response.data.count || orders.length);
+        setTotalPages(
+          response.data.pages_count || Math.ceil(orders.length / limit)
+        );
       }
     } catch (error) {
-      console.error("Error fetching orders:", error)
-      toast.error("Failed to fetch orders")
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to fetch orders");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePageChange = (event, value) => {
-    setPage(value)
-  }
+    setPage(value);
+  };
+
+  const handleDownloadReceipt = (orderId) => {
+    window.open(`${BASEURL}/api/orders/receipt/${orderId}`, "_blank");
+  };
 
   useEffect(() => {
     if (!authUtils.isAuthenticated()) {
-      toast.warning("Please login to view your orders")
-      return
+      toast.warning("Please login to view your orders");
+      return;
     }
-    getAllOrders()
-  }, [page, limit])
+    getAllOrders();
+  }, [page, limit]);
 
   return (
     <>
-      <div className="container" style={{ marginTop: "150px", marginBottom: "20px" }}>
+      <div
+        className="container"
+        style={{ marginTop: "150px", marginBottom: "20px" }}
+      >
         <div className="row">
           <h3 className="mb-3" style={{ fontWeight: "bold" }}>
             My Orders
@@ -166,7 +195,10 @@ const MyOrders = () => {
             </div>
           ) : (
             <>
-              <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
+              <div
+                className="ag-theme-quartz"
+                style={{ height: 500, width: "100%" }}
+              >
                 <AgGridReact
                   rowData={allOrders}
                   columnDefs={columnDefs}
@@ -195,7 +227,7 @@ const MyOrders = () => {
       </div>
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default MyOrders
+export default MyOrders;

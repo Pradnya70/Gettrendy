@@ -64,6 +64,7 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const uploadRoute = require("./routes/uploadRoutes");
 const userRoutes = require("./routes/userRoutes");
 const razorpayRoutes = require("./routes/razorpayRoutes");
+const contactRoutes = require("./routes/contactRoutes");
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -77,6 +78,7 @@ app.use("/api/issues", issueRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/razorpay", razorpayRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

@@ -2,71 +2,53 @@ const Product = require("../models/Product")
 const Category = require("../models/Category")
 const SubCategory = require("../models/SubCategory")
 const mongoose = require("mongoose")
-const fs = require("fs")
-const path = require("path")
-const multer = require("multer")
+const cloudinary = require("../utils/cloudinary")
+const { productUpload } = require("../middleware/multer")
 
-// Configure multer for file uploads (max 3 images)
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "uploads/products"
-    console.log("📁 Creating upload directory:", uploadDir)
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-      console.log("✅ Upload directory created")
-    }
-    cb(null, uploadDir)
-  },
-  filename: (req, file, cb) => {
-    const filename = Date.now() + "-" + file.originalname.replace(/\s+/g, "-")
-    console.log("📄 Generated filename:", filename)
-    cb(null, filename)
-  },
-})
-
-const fileFilter = (req, file, cb) => {
-  console.log("🔍 File filter check:")
-  console.log("  - Original name:", file.originalname)
-  console.log("  - Mimetype:", file.mimetype)
-
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
-    console.log("❌ File rejected: Invalid file type")
-    return cb(new Error("Only image files are allowed!"), false)
-  }
-  console.log("✅ File accepted")
-  cb(null, true)
-}
-
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 3, // Maximum 3 files
-  },
-})
-
-// Helper function to delete old image files
-const deleteOldImages = (imagePaths) => {
-  if (Array.isArray(imagePaths)) {
-    imagePaths.forEach((imagePath) => {
-      if (imagePath) {
-        const fullPath = path.join(__dirname, "..", imagePath)
-        console.log("🗑️ Attempting to delete old image:", fullPath)
-
-        if (fs.existsSync(fullPath)) {
-          try {
-            fs.unlinkSync(fullPath)
-            console.log("✅ Old image deleted successfully")
-          } catch (error) {
-            console.error("❌ Error deleting old image:", error)
-          }
-        } else {
-          console.log("⚠️ Old image file not found:", fullPath)
+// Helper function to delete images from Cloudinary
+const deleteCloudinaryImages = async (imageUrls) => {
+  if (Array.isArray(imageUrls) && imageUrls.length > 0) {
+    const deletePromises = imageUrls.map(async (imageUrl) => {
+      try {
+        // Extract public_id from Cloudinary URL
+        const publicId = extractPublicIdFromUrl(imageUrl)
+        if (publicId) {
+          console.log("🗑️ Deleting image from Cloudinary:", publicId)
+          const result = await cloudinary.uploader.destroy(publicId)
+          console.log("✅ Image deleted:", result)
+          return result
         }
+      } catch (error) {
+        console.error("❌ Error deleting image:", error)
+        return null
       }
     })
+
+    await Promise.all(deletePromises)
+  }
+}
+
+// Helper function to extract public_id from Cloudinary URL
+const extractPublicIdFromUrl = (url) => {
+  try {
+    if (!url || typeof url !== "string") return null
+
+    // Handle both HTTP and HTTPS URLs
+    const urlParts = url.split("/")
+    const uploadIndex = urlParts.findIndex((part) => part === "upload")
+
+    if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+      // Get everything after version (v1234567890)
+      const pathAfterVersion = urlParts.slice(uploadIndex + 2).join("/")
+      // Remove file extension
+      const publicId = pathAfterVersion.replace(/\.[^/.]+$/, "")
+      return publicId
+    }
+
+    return null
+  } catch (error) {
+    console.error("Error extracting public_id:", error)
+    return null
   }
 }
 
@@ -133,11 +115,9 @@ const getAllProducts = async (req, res) => {
     const count = await Product.countDocuments(filter)
 
     let sortOptions = { createdAt: -1 }
-
     if (req.query.sortBy) {
       const sortBy = req.query.sortBy
       const sortOrder = req.query.sortOrder === "desc" ? -1 : 1
-
       if (sortBy === "name") {
         sortOptions = { product_name: sortOrder }
       } else if (sortBy === "price") {
@@ -275,7 +255,7 @@ const createProduct = async (req, res) => {
       }
     }
 
-    // Process uploaded images (max 3)
+    // Process uploaded images from Cloudinary (max 3)
     const images = []
     if (req.files && req.files.length > 0) {
       if (req.files.length > 3) {
@@ -286,9 +266,11 @@ const createProduct = async (req, res) => {
       }
 
       req.files.forEach((file) => {
-        images.push(`/uploads/products/${file.filename}`)
+        // file.path contains the Cloudinary URL
+        images.push(file.path)
       })
-      console.log("✅ Images processed:", images)
+
+      console.log("✅ Images processed from Cloudinary:", images)
     }
 
     // Parse sizes and colors
@@ -327,7 +309,7 @@ const createProduct = async (req, res) => {
       discount_price: discount_price ? Number.parseFloat(discount_price) : Number.parseFloat(price),
       category,
       subcategory: subcategory && subcategory !== "" ? subcategory : null,
-      images,
+      images, // Cloudinary URLs
       sizes: parsedSizes,
       colors: parsedColors,
       stock: Number.parseInt(stock) || 0,
@@ -399,7 +381,7 @@ const updateProduct = async (req, res) => {
       featured,
       bestseller,
       remove_images,
-      replace_all_images, // New flag to indicate if we should replace all images
+      replace_all_images,
     } = req.body
 
     // Validate category if provided
@@ -445,10 +427,10 @@ const updateProduct = async (req, res) => {
     if (replace_all_images === "true" || replace_all_images === true) {
       console.log("🔄 Replacing all images...")
 
-      // Delete all existing images
+      // Delete all existing images from Cloudinary
       if (product.images && product.images.length > 0) {
-        console.log("🗑️ Deleting all existing images:", product.images)
-        deleteOldImages(product.images)
+        console.log("🗑️ Deleting all existing images from Cloudinary:", product.images)
+        await deleteCloudinaryImages(product.images)
       }
 
       // Start with empty array
@@ -464,25 +446,24 @@ const updateProduct = async (req, res) => {
         }
 
         req.files.forEach((file) => {
-          updatedImages.push(`/uploads/products/${file.filename}`)
+          updatedImages.push(file.path) // Cloudinary URL
         })
-        console.log("✅ New images added:", updatedImages)
+
+        console.log("✅ New images added from Cloudinary:", updatedImages)
       }
     } else {
-      // Handle selective image removal and addition (existing logic)
-
+      // Handle selective image removal and addition
       // Remove specified images
       if (remove_images) {
         const imagesToRemove = typeof remove_images === "string" ? [remove_images] : remove_images
-
         console.log("🗑️ Removing specific images:", imagesToRemove)
 
         // Filter out images to remove
         const imagesToKeep = updatedImages.filter((img) => !imagesToRemove.includes(img))
 
-        // Delete files from filesystem
+        // Delete files from Cloudinary
         const actualImagesToRemove = updatedImages.filter((img) => imagesToRemove.includes(img))
-        deleteOldImages(actualImagesToRemove)
+        await deleteCloudinaryImages(actualImagesToRemove)
 
         updatedImages = imagesToKeep
         console.log("✅ Images after removal:", updatedImages)
@@ -499,8 +480,9 @@ const updateProduct = async (req, res) => {
         }
 
         req.files.forEach((file) => {
-          updatedImages.push(`/uploads/products/${file.filename}`)
+          updatedImages.push(file.path) // Cloudinary URL
         })
+
         console.log("✅ Images after addition:", updatedImages)
       }
     }
@@ -553,7 +535,7 @@ const updateProduct = async (req, res) => {
       discount_price: discount_price ? Number.parseFloat(discount_price) : product.discount_price,
       category: category || product.category,
       subcategory: subcategory !== undefined ? (subcategory === "" ? null : subcategory) : product.subcategory,
-      images: updatedImages,
+      images: updatedImages, // Cloudinary URLs
       sizes: parsedSizes,
       colors: parsedColors,
       stock: stock !== undefined ? Number.parseInt(stock) : product.stock,
@@ -608,9 +590,9 @@ const deleteProduct = async (req, res) => {
       })
     }
 
-    // Delete associated images
+    // Delete associated images from Cloudinary
     if (product.images && product.images.length > 0) {
-      deleteOldImages(product.images)
+      await deleteCloudinaryImages(product.images)
     }
 
     await Product.findByIdAndDelete(productId)
@@ -662,6 +644,7 @@ const getFeaturedProducts = async (req, res) => {
     const skip = (page - 1) * limit
 
     const count = await Product.countDocuments({ featured: true })
+
     const products = await Product.find({ featured: true })
       .populate("category", "category_name")
       .populate("subcategory", "subcategory_name")
@@ -699,6 +682,7 @@ const getBestsellerProducts = async (req, res) => {
     const skip = (page - 1) * limit
 
     const count = await Product.countDocuments({ bestseller: true })
+
     const products = await Product.find({ bestseller: true })
       .populate("category", "category_name")
       .populate("subcategory", "subcategory_name")
@@ -729,7 +713,7 @@ const getBestsellerProducts = async (req, res) => {
 }
 
 module.exports = {
-  upload,
+  upload: productUpload,
   getAllProducts,
   getProductById,
   createProduct,

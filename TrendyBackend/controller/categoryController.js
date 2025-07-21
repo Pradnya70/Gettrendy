@@ -1,82 +1,59 @@
 const Category = require("../models/Category")
 const mongoose = require("mongoose")
-const multer = require("multer")
-const fs = require("fs")
-const path = require("path")
+const cloudinary = require("../utils/cloudinary")
+const { categoryUpload } = require("../middleware/multer")
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "uploads/categories"
-    console.log("📁 Creating upload directory:", uploadDir)
+// Helper function to delete image from Cloudinary
+const deleteCloudinaryImage = async (imageUrl) => {
+  try {
+    if (!imageUrl || typeof imageUrl !== "string") return
 
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-      console.log("✅ Upload directory created")
+    // Extract public_id from Cloudinary URL
+    const publicId = extractPublicIdFromUrl(imageUrl)
+    if (publicId) {
+      console.log("🗑️ Deleting image from Cloudinary:", publicId)
+      const result = await cloudinary.uploader.destroy(publicId)
+      console.log("✅ Image deleted:", result)
+      return result
     }
-    cb(null, uploadDir)
-  },
-  filename: (req, file, cb) => {
-    const filename = Date.now() + "-" + file.originalname.replace(/\s+/g, "-")
-    console.log("📄 Generated filename:", filename)
-    cb(null, filename)
-  },
-})
-
-const fileFilter = (req, file, cb) => {
-  console.log("🔍 File filter check:")
-  console.log("  - Original name:", file.originalname)
-  console.log("  - Mimetype:", file.mimetype)
-
-  // Accept images only
-  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
-    console.log("❌ File rejected: Invalid file type")
-    return cb(new Error("Only image files are allowed!"), false)
+  } catch (error) {
+    console.error("❌ Error deleting image from Cloudinary:", error)
   }
-  console.log("✅ File accepted")
-  cb(null, true)
 }
 
-exports.upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-})
+// Helper function to extract public_id from Cloudinary URL
+const extractPublicIdFromUrl = (url) => {
+  try {
+    if (!url || typeof url !== "string") return null
 
-// Helper function to delete old image file
-const deleteOldImage = (imagePath) => {
-  if (imagePath) {
-    const fullPath = path.join(__dirname, "..", imagePath)
-    console.log("🗑️ Attempting to delete old image:", fullPath)
+    const urlParts = url.split("/")
+    const uploadIndex = urlParts.findIndex((part) => part === "upload")
 
-    if (fs.existsSync(fullPath)) {
-      try {
-        fs.unlinkSync(fullPath)
-        console.log("✅ Old image deleted successfully")
-      } catch (error) {
-        console.error("❌ Error deleting old image:", error)
-      }
-    } else {
-      console.log("⚠️ Old image file not found:", fullPath)
+    if (uploadIndex !== -1 && uploadIndex + 2 < urlParts.length) {
+      const pathAfterVersion = urlParts.slice(uploadIndex + 2).join("/")
+      const publicId = pathAfterVersion.replace(/\.[^/.]+$/, "")
+      return publicId
     }
+
+    return null
+  } catch (error) {
+    console.error("Error extracting public_id:", error)
+    return null
   }
 }
 
 // Get all categories
-exports.getAllCategories = async (req, res) => {
+const getAllCategories = async (req, res) => {
   try {
     console.log("📋 Getting all categories...")
-
     const { page = 1, limit = 50 } = req.query
-
     const pageNum = Math.max(1, Number(page))
     const limitNum = Math.max(1, Math.min(100, Number(limit)))
     const skip = (pageNum - 1) * limitNum
 
     const categories = await Category.find({}).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean()
 
-    const totalCount = await Category.countDocuments({})
+    const totalCount = await Category.countDocuments()
     const totalPages = Math.ceil(totalCount / limitNum)
 
     console.log(`✅ Found ${categories.length} categories`)
@@ -100,7 +77,7 @@ exports.getAllCategories = async (req, res) => {
 }
 
 // Get category by ID
-exports.getCategoryById = async (req, res) => {
+const getCategoryById = async (req, res) => {
   try {
     const { id } = req.params
     console.log("🔍 Getting category by ID:", id)
@@ -138,7 +115,7 @@ exports.getCategoryById = async (req, res) => {
 }
 
 // Create new category (admin only)
-exports.createCategory = async (req, res) => {
+const createCategory = async (req, res) => {
   try {
     console.log("\n🆕 Creating new category...")
     console.log("📝 Request body:", req.body)
@@ -155,11 +132,24 @@ exports.createCategory = async (req, res) => {
       })
     }
 
-    // Process uploaded image
+    // Check if category already exists
+    const existingCategory = await Category.findOne({
+      category_name: { $regex: new RegExp(`^${category_name.trim()}$`, "i") },
+    })
+
+    if (existingCategory) {
+      console.log("❌ Category already exists:", category_name)
+      return res.status(400).json({
+        success: false,
+        message: "Category with this name already exists",
+      })
+    }
+
+    // Process uploaded image from Cloudinary
     let category_image = null
     if (req.file) {
-      category_image = `/uploads/categories/${req.file.filename}`
-      console.log("✅ File processed successfully:", category_image)
+      category_image = req.file.path // Cloudinary URL
+      console.log("✅ File processed successfully from Cloudinary:", category_image)
     } else {
       console.log("⚠️ No file uploaded")
     }
@@ -193,7 +183,7 @@ exports.createCategory = async (req, res) => {
 }
 
 // Update category (admin only)
-exports.updateCategory = async (req, res) => {
+const updateCategory = async (req, res) => {
   try {
     console.log("\n✏️ Updating category...")
     const { id } = req.params
@@ -221,21 +211,36 @@ exports.updateCategory = async (req, res) => {
     console.log("📋 Existing category found:", existingCategory.category_name)
     console.log("🖼️ Existing image:", existingCategory.category_image)
 
+    // Check if new category name already exists (excluding current category)
+    if (category_name && category_name.trim() !== existingCategory.category_name) {
+      const duplicateCategory = await Category.findOne({
+        category_name: { $regex: new RegExp(`^${category_name.trim()}$`, "i") },
+        _id: { $ne: id },
+      })
+
+      if (duplicateCategory) {
+        return res.status(400).json({
+          success: false,
+          message: "Category with this name already exists",
+        })
+      }
+    }
+
     // Handle image update
     let category_image = existingCategory.category_image
 
     if (req.file) {
       console.log("🔄 New image uploaded, processing...")
 
-      // Delete old image if it exists
+      // Delete old image from Cloudinary if it exists
       if (existingCategory.category_image) {
-        console.log("🗑️ Deleting old image:", existingCategory.category_image)
-        deleteOldImage(existingCategory.category_image)
+        console.log("🗑️ Deleting old image from Cloudinary:", existingCategory.category_image)
+        await deleteCloudinaryImage(existingCategory.category_image)
       }
 
-      // Set new image path
-      category_image = `/uploads/categories/${req.file.filename}`
-      console.log("✅ New image path set:", category_image)
+      // Set new image URL from Cloudinary
+      category_image = req.file.path
+      console.log("✅ New image URL set:", category_image)
     } else {
       console.log("⚠️ No new image uploaded, keeping existing image")
     }
@@ -245,7 +250,7 @@ exports.updateCategory = async (req, res) => {
       category_name: category_name || existingCategory.category_name,
       category_description:
         category_description !== undefined ? category_description : existingCategory.category_description,
-      category_image, // This will be either the new image path or the existing one
+      category_image,
     }
 
     console.log("💾 Final update data:", updateData)
@@ -257,7 +262,7 @@ exports.updateCategory = async (req, res) => {
     })
 
     console.log("✅ Category updated successfully")
-    console.log("🖼️ Final image path:", category.category_image)
+    console.log("🖼️ Final image URL:", category.category_image)
 
     res.status(200).json({
       success: true,
@@ -275,7 +280,7 @@ exports.updateCategory = async (req, res) => {
 }
 
 // Delete category (admin only)
-exports.deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params
     console.log("🗑️ Deleting category:", id)
@@ -296,9 +301,9 @@ exports.deleteCategory = async (req, res) => {
       })
     }
 
-    // Delete category image if exists
+    // Delete category image from Cloudinary if exists
     if (category.category_image) {
-      deleteOldImage(category.category_image)
+      await deleteCloudinaryImage(category.category_image)
     }
 
     console.log("✅ Category deleted successfully")
@@ -315,4 +320,13 @@ exports.deleteCategory = async (req, res) => {
       error: error.message,
     })
   }
+}
+
+module.exports = {
+  upload: categoryUpload,
+  getAllCategories,
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 }

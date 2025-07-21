@@ -25,7 +25,7 @@ const PerticularProductPage = () => {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(false)
-
+  
   const [formData, setFormData] = useState({
     rating: 0,
     name: "",

@@ -206,16 +206,13 @@
 }
 
 @media (max-width: 768px) {
-  .categories-container {
-    padding: 1rem;
-  }
-
-  .categories-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
   .category-image {
-    height: 150px;
+    height: 250px;
+    object-fit: cover;
+  }
+
+  .category-card {
+    margin: 0;
+    box-shadow: none;
   }
 }

@@ -286,7 +286,7 @@ function Register() {
                       <p className="text-danger">{errors.confirmPassword}</p>
                     )}
                   </div>
-
+{/* 
                   <div className="buttomsapcec">
                     <label className="title-heading">Account Type</label>
                     <div className="d-flex gap-4">
@@ -300,18 +300,8 @@ function Register() {
                         />
                         User
                       </label>
-                      {/* <label className="d-flex align-items-center">
-                        <input
-                          type="radio"
-                          value="admin"
-                          checked={role === "admin"}
-                          onChange={() => setRole("admin")}
-                          className="me-2"
-                        />
-                        Admin
-                      </label> */}
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <Form.Check
@@ -319,6 +309,7 @@ function Register() {
                       label="I agree to the Terms and Conditions"
                       onChange={(e) => setCheck(e.target.checked)}
                       checked={check}
+                       className="terms-checkbox"
                     />
                   </div>
                   <div className="d-flex align-items-center justify-content-center">

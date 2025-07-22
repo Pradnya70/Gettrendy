@@ -20,7 +20,7 @@ const Shop = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(8);
+  const [limit, setLimit] = useState(9);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [pagesCount, setPagesCount] = useState(1);
   const [products, setProducts] = useState([]);
@@ -562,7 +562,7 @@ const Shop = () => {
                 </div>
 
                 {/* Top Rated Products */}
-                <div className="filter-section">
+                {/* <div className="filter-section">
                   <h4>Top Rated Products</h4>
                   {topRatedProducts.map((product) => (
                     <div key={product.id} className="top-rated-item">
@@ -593,7 +593,7 @@ const Shop = () => {
                       </Row>
                     </div>
                   ))}
-                </div>
+                </div> */}
 
                 {/* Reset Filter */}
                 <div className="filter-section">

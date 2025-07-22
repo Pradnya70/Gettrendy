@@ -16,7 +16,7 @@ const Bestsellers = () => {
   const { userToken } = useAuth()
   const { addToCart } = useCart()
   const [pageAll, setPageAll] = useState(1)
-  const [limitAll, setLimitAll] = useState(3)
+  const [limitAll, setLimitAll] = useState(4)
   const [allProducts, setAllProducts] = useState([])
   const [pagesCountAll, setPagesCountAll] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -144,7 +144,7 @@ const Bestsellers = () => {
           {/* Display error message if there is one */}
           {error && <div className="alert alert-danger text-center mb-4">Error: {error}</div>}
 
-          <Col md={4}>
+          {/* <Col md={4}>
             <div className="promo-banner">
               <h4>Weekend Sales</h4>
               <h2>Unlock Up to 26% Off on Premium Products!</h2>
@@ -158,14 +158,14 @@ const Bestsellers = () => {
               <br />
               <img src="/Images/teshirt6.png" alt="Vegetable Bag" className="img-fluid mt-3" />
             </div>
-          </Col>
+          </Col> */}
 
-          <Col md={8}>
+          <Col lg={12} md={12}>
             <div>
               <Row>
                 {allProducts && allProducts.length > 0 ? (
                   allProducts.map((product) => (
-                    <Col lg={4} md={6} sm={12} key={product.id || product._id} className="mb-5">
+                    <Col lg={3} md={4} sm={12} key={product.id || product._id} className="mb-5">
                       <Card className="">
                         <div className="product-image-container">
                           <Card.Img

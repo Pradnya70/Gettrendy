@@ -1,17 +1,16 @@
+import "../../../../src/App.css"
 import React, { useState } from "react";
 import {
   MDBFooter,
   MDBContainer,
   MDBRow,
   MDBCol,
-  MDBIcon,
+  
 } from "mdb-react-ui-kit";
 import {
-  FaEnvelope,
   FaFacebook,
   FaGoogle,
   FaInstagram,
-  FaTwitter,
 } from "react-icons/fa";
 import { FaLinkedinIn, FaLocationPinLock } from "react-icons/fa6";
 import { BsFillTelephoneInboundFill } from "react-icons/bs";
@@ -78,7 +77,7 @@ const Footer = () => {
         </section>
 
          <section
-          className="d-flex justify-content-center align-items-baseline space-between  border-top border-bottom"
+          className="lg-d-flex justify-content-center align-items-baseline space-between  border-top border-bottom"
           style={{  }}
         >
           

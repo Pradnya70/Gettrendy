@@ -18,6 +18,12 @@
   }
 }
 
+@media (min-width: 991px) {
+  .lg-d-flex {
+    display: flex;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
@@ -68,3 +74,4 @@
     border-radius: 4px;
     margin-right: 10px;
 }
+

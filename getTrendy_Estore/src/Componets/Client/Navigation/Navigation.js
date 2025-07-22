@@ -377,9 +377,9 @@ const Navigation = () => {
                   }
                   id="user-nav-dropdown"
                 >
-                  <NavDropdown.Item onClick={() => navigate("/dashboard")}>
+                  {/* <NavDropdown.Item onClick={() => navigate("/dashboard")}>
                     <FaRegUserCircle size={20} /> &nbsp; Dashboard
-                  </NavDropdown.Item>
+                  </NavDropdown.Item> */}
                   <NavDropdown.Item onClick={() => navigate("/profilePage")}>
                     <FaRegUserCircle size={20} /> &nbsp; Profile
                   </NavDropdown.Item>

@@ -19,8 +19,8 @@ const Services = () => {
                   <TbTruckDelivery className="icon service-icon" />
                 </span>
               </div>
-              <div>
-                <strong className="ml-10">Faster Delivery</strong>
+              <div className="ml-10">
+                <strong >Faster Delivery</strong>
               </div>
             </div>
           </Col>
@@ -37,7 +37,7 @@ const Services = () => {
               </div>
             </div>
           </Col>
-          <Col className="margin-btm">
+          <Col className="">
             <div className="service-colum">
               <div>
                 <span>
@@ -50,7 +50,7 @@ const Services = () => {
               </div>
             </div>
           </Col>
-          <Col className="margin-btm">
+          <Col className="">
             <div className="service-colum">
               <div>
                 <span>

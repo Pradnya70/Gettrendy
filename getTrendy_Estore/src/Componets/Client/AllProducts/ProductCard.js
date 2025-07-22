@@ -161,7 +161,7 @@ const ProductCard = () => {
                 <Col
                   lg={3}
                   md={6}
-                  sm={12}
+                  sm={6}
                   key={product.id || product._id}
                   className="mb-5 d-flex justify-content-center"
                 >

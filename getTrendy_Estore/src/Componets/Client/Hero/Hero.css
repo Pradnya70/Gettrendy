@@ -10,11 +10,13 @@
     font-weight: 700;
     color: #E9272D;
 }
-
+ 
+@media (min-width: 991px) {
 .section-line {
-    width: 192px;
+    width: 220px;
     height: 1px;
     background-color: #C4E454;
+}
 }
 
 .hero-section {

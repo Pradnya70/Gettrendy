@@ -133,3 +133,34 @@ code {
   background-color: #E9272D !important;
   color: white !important;
 }
+
+.col-sm-6 {
+  width: 50% !important;
+}
+
+@media (min-width:768px) {
+.col-md-2 {
+  width: 16.66% !important;
+}
+.col-md-3 {
+  width: 25% !important;
+}
+.col-md-4 {
+  width: 33.33% !important;
+}
+.col-md-6 {
+  width: 50% !important;
+}
+}
+
+@media (min-width:991px) {
+.col-lg-2 {
+  width: 16.66% !important;
+}
+.col-lg-3 {
+  width: 25% !important;
+}
+.col-lg-4 {
+  width: 33.33% !important;
+}
+}

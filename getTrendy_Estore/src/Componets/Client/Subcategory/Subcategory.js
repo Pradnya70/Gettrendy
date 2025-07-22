@@ -96,15 +96,15 @@ const Categories = () => {
                   </div>
                   <Card.Body className="text-center">
                     <Card.Title>{subcategory.subcategory_name}</Card.Title>
-                    {subcategory.subcategory_description && (
+                    {/* {subcategory.subcategory_description && (
                       <Card.Text className="text-muted">{subcategory.subcategory_description}</Card.Text>
-                    )}
+                    )} */}
                     {/* Display parent category if available */}
-                    {subcategory.parent_category && (
+                    {/* {subcategory.parent_category && (
                       <Card.Text className="text-muted small">
                         Category: {subcategory.parent_category.category_name || subcategory.parent_category}
                       </Card.Text>
-                    )}
+                    )} */}
                   </Card.Body>
                 </Card>
               </Col>

@@ -11,13 +11,17 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { BASEURL, authUtils, cartUtils, getImageUrl } from "../Comman/CommanConstans"
 import axios from "axios"
 import { ToastContainer, toast } from "react-toastify"
+import Services from "../Services/Services"
 
-const PerticularProductPage = () => {
+ const PerticularProductPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
+
+  // ✅ STATES
+  const [productData, setProductData] = useState({})
+  const [selectedImage, setSelectedImage] = useState(null) // <== NEW STATE
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
-  const [productData, setProductData] = useState({})
   const [isExpanded, setIsExpanded] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState("M")
@@ -32,6 +36,8 @@ const PerticularProductPage = () => {
     description: "",
   })
   const [errors, setErrors] = useState({})
+
+  const productID = location?.state?.productId
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -100,8 +106,6 @@ const PerticularProductPage = () => {
     setIsExpanded(!isExpanded)
   }
 
-  const productID = location?.state?.productId
-
   const getProductsById = async (id) => {
     try {
       setLoading(true)
@@ -109,18 +113,15 @@ const PerticularProductPage = () => {
       if (response.data) {
         const product = response.data.data || response.data
         setProductData(product)
-        // Set default size and color
-        if (product.sizes && product.sizes.length > 0) {
-          setSelectedSize(product.sizes[0])
-        } else {
-          setSelectedSize("M") // Default size
+
+        // ✅ Set default image for main display
+        if (product.images && product.images.length > 0) {
+          setSelectedImage(product.images[0])
         }
 
-        if (product.colors && product.colors.length > 0) {
-          setSelectedColor(product.colors[0])
-        } else {
-          setSelectedColor("Default") // Default color
-        }
+        // Default size and color
+        setSelectedSize(product.sizes?.[0] || "M")
+        setSelectedColor(product.colors?.[0] || "Default")
       } else {
         toast.error("Product not found")
       }
@@ -136,7 +137,6 @@ const PerticularProductPage = () => {
     try {
       const response = await axios.get(`${BASEURL}/api/review`)
       if (response.data && response.data.data) {
-        // Filter reviews for this product
         const productReviews = response.data.data.filter((review) => review.productId === productId)
         setReviews(productReviews)
       } else {
@@ -163,11 +163,10 @@ const PerticularProductPage = () => {
 
       if (result && result.success) {
         toast.success("Product added to cart successfully!")
-        // Redirect to cart page after successful addition
         setTimeout(() => {
           navigate("/cartPage")
           window.scroll(0, 0)
-        }, 1000) // Small delay to show the success message
+        }, 1000)
       } else {
         toast.error(result?.message || "Failed to add product to cart")
       }
@@ -208,35 +207,63 @@ const PerticularProductPage = () => {
 
   return (
     <>
-      <div className="container my-5" style={{ paddingTop: "150px" }}>
-        <Breadcrumb>
+      <div className="section my-3" style={{ paddingTop: "87px", 
+      }}>
+        <div className="container-fluid" style={{  backgroundColor: "aliceblue", position: "fixed"
+      }}>
+        <Breadcrumb className="container" style={{  backgroundColor: "aliceblue", paddingTop: "25px"
+      }}>
           <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
           <Breadcrumb.Item href="/shop">{renderCategory()}</Breadcrumb.Item>
           <Breadcrumb.Item active>{productData.product_name || productData.name}</Breadcrumb.Item>
         </Breadcrumb>
+      </div>
+      </div>
 
+      <div className="container my-1" style={{ padding: "100px 0px 50px 0px" }}>
         <div className="row">
-          <div className="col-md-6">
+          {/* ✅ Thumbnail column */}
+          <div className="col-md-1 d-flex flex-column gap-4">
+            {productData.images?.map((img, index) => (
+              <img
+                key={index}
+                src={getImageUrl(img)}
+                alt={`Thumbnail ${index}`}
+                onClick={() => setSelectedImage(img)}
+                className="img-fluid rounded-5 thumbnail-image"
+                style={{
+                  cursor: "pointer",
+                  border: selectedImage === img ? "2px solid grey" : "1px solid #ccc",
+                }}
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = "/placeholder.svg"
+                }}
+              />
+            ))}
+          </div>
+
+          {/* ✅ Main image */}
+          <div className="col-md-5">
             <div className="product-image">
-              <div>
-                <img
-                  src={getImageUrl(productData.images && productData.images.length > 0 ? productData.images[0] : null)}
-                  alt={productData.product_name || productData.name || "Product"}
-                  onError={(e) => {
-                    e.target.onerror = null
-                    e.target.src = "/placeholder.svg"
-                  }}
-                />
-              </div>
+              <img
+                src={getImageUrl(selectedImage || "/placeholder.svg")}
+                alt={productData.product_name || productData.name || "Product"}
+                className="img-fluid"
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = "/placeholder.svg"
+                }}
+              />
             </div>
           </div>
 
           <div className="col-md-6">
             <div className="product-details">
               <p className="product-category">{renderCategory()}</p>
-              <h3 className="product-title">{productData.product_name || productData.name}</h3>
+              <h3 className="product-title ">{productData.product_name || productData.name}</h3>
               <p className="stock-status">
-                <span className="badge bg-success">
+                <span className="badge bg-success" style={{paddingTop: "5px"}}>
                   {productData.stock > 0 ? `In Stock (${productData.stock})` : "Out of Stock"}
                 </span>
                 <FontAwesomeIcon icon={faStar} className="text-warning mx-2" />
@@ -478,7 +505,8 @@ const PerticularProductPage = () => {
           </div>
         </div>
       </div>
-
+      
+       <Services />
       <Footer />
       <ToastContainer
         position="top-center"

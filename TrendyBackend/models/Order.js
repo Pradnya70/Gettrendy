@@ -1,11 +1,10 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId || String, // Allow string for guest users
-      ref: "User",
-      required: true,
+      type: mongoose.Schema.Types.Mixed, // allows ObjectId or string
+      required: false,
     },
     items: [
       {
@@ -107,10 +106,14 @@ const orderSchema = new mongoose.Schema(
     razorpaySignature: {
       type: String,
     },
+    seenByAdmin: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-module.exports = mongoose.model("Order", orderSchema)
+module.exports = mongoose.model("Order", orderSchema);

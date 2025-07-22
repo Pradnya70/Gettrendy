@@ -159,7 +159,8 @@ const Checkout = () => {
         throw new Error("Failed to create payment order");
       }
 
-      const { order, key_id } = orderResponse.data;
+      const { order } = orderResponse.data;
+      const key_id = orderResponse.data.key_id; // Get key_id from the response
 
       // Prepare order items for database
       const orderItems = cartItems.map((item) => ({
@@ -200,17 +201,26 @@ const Checkout = () => {
         name: "GetTrendy",
         description: "Purchase from GetTrendy",
         order_id: order.id,
-        handler: async (response) => {
+        handler: async function (response) {
           try {
-            console.log("Payment successful:", response);
+            console.log("[Payment] Payment response received:", response);
 
-            // Verify payment on backend
+            if (
+              !response.razorpay_payment_id ||
+              !response.razorpay_order_id ||
+              !response.razorpay_signature
+            ) {
+              throw new Error("Incomplete payment response from Razorpay");
+            }
+
+            console.log("[Payment] Sending verification to backend...");
+            // Send payment verification to your backend
             const verifyResponse = await api.post(
               `${BASEURL}/api/razorpay/verify-payment`,
               {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
+                order_id: response.razorpay_order_id,
+                payment_id: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
                 orderData: orderData,
               },
               {
@@ -221,28 +231,86 @@ const Checkout = () => {
               }
             );
 
-            if (verifyResponse.data.success) {
-              toast.success("Payment successful! Order placed.");
+            console.log(
+              "[Payment] Verification response:",
+              verifyResponse.data
+            );
 
-              // Clear cart
+            if (verifyResponse.data && verifyResponse.data.success) {
+              console.log(
+                "[Payment] Payment verified successfully, clearing cart..."
+              );
+              // Clear the cart
               await cartUtils.clearCart();
-
-              // Navigate to success page with order details
-              setTimeout(() => {
-                navigate("/payment-success", {
-                  state: {
-                    orderNumber: verifyResponse.data.order._id,
-                    paymentId: response.razorpay_payment_id,
-                    amount: total,
-                  },
-                });
-              }, 1000);
+              // --- Shiprocket Integration ---
+              // Prepare Shiprocket order data
+              const shiprocketOrderData = {
+                order_id:
+                  verifyResponse.data.orderId ||
+                  verifyResponse.data.order?._id ||
+                  `ORDER_${Date.now()}`,
+                order_date: new Date()
+                  .toISOString()
+                  .slice(0, 19)
+                  .replace("T", " "),
+                pickup_location: "Primary",
+                billing_customer_name: formData.fullName,
+                billing_last_name: "",
+                billing_address: formData.address,
+                billing_city: formData.city,
+                billing_pincode: formData.postcode,
+                billing_state: formData.state,
+                billing_country: formData.country,
+                billing_email: formData.email,
+                billing_phone: formData.phone,
+                order_items: cartItems.map((item) => ({
+                  name:
+                    item.productId?.product_name ||
+                    item.product_name ||
+                    item.name,
+                  sku: item.productId?._id || item.productId || item.sku,
+                  units: item.quantity,
+                  selling_price:
+                    item.productId?.price || item.product_price || item.price,
+                })),
+                payment_method: "Prepaid",
+                shipping_charges: shipping,
+                giftwrap_charges: 0,
+                transaction_charges: 0,
+                total_discount: 0,
+                sub_total: subtotal,
+                length: 10,
+                breadth: 15,
+                height: 20,
+                weight: 0.5,
+              };
+              await createShiprocketOrder(shiprocketOrderData);
+              // --- End Shiprocket Integration ---
+              console.log("[Payment] Redirecting to success page...");
+              // Redirect to success page with order details
+              navigate("/order-success", {
+                state: {
+                  orderId:
+                    verifyResponse.data.orderId ||
+                    verifyResponse.data.order?._id,
+                  paymentId: response.razorpay_payment_id,
+                },
+                replace: true, // This prevents going back to payment page
+              });
             } else {
-              throw new Error("Payment verification failed");
+              const errorMsg =
+                verifyResponse.data?.message || "Payment verification failed";
+              console.error("[Payment] Verification failed:", errorMsg);
+              throw new Error(errorMsg);
             }
           } catch (error) {
-            console.error("Payment verification error:", error);
-            toast.error("Payment verification failed. Please contact support.");
+            console.error("[Payment] Error processing payment:", error);
+            toast.error(
+              error.message ||
+                "Error processing payment. Please contact support."
+            );
+          } finally {
+            setLoading(false);
           }
         },
         prefill: {
@@ -330,7 +398,9 @@ const Checkout = () => {
 
   const getCountries = async () => {
     try {
-      const response = await api.get("https://restcountries.com/v3.1/all");
+      const response = await api.get(
+        "https://restcountries.com/v3.1/all?fields=name"
+      );
       const countryList = response.data
         .map((country) => country.name.common)
         .sort();
@@ -344,6 +414,25 @@ const Checkout = () => {
         "Canada",
         "Australia",
       ]);
+    }
+  };
+
+  const createShiprocketOrder = async (shiprocketOrderData) => {
+    try {
+      const response = await api.post(
+        `${BASEURL}/api/orders/shiprocket-order`,
+        shiprocketOrderData
+      );
+      if (response.data.success) {
+        toast.success("Order shipped via Shiprocket!");
+      } else {
+        toast.error("Failed to create Shiprocket order");
+      }
+    } catch (error) {
+      toast.error(
+        "Shiprocket API error: " +
+          (error.response?.data?.message || error.message)
+      );
     }
   };
 
@@ -363,6 +452,27 @@ const Checkout = () => {
     getUserInfo();
     fetchCartItems();
     getCountries();
+
+    // Fetch saved address
+    const fetchSavedAddress = async () => {
+      try {
+        const response = await api.get(`${BASEURL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${authUtils.getToken()}`,
+          },
+        });
+        if (response.data && response.data.user) {
+          setFormData((prev) => ({
+            ...prev,
+            ...response.data.user, // or map the address fields as needed
+          }));
+        }
+      } catch (error) {
+        // No saved address, do nothing
+      }
+    };
+
+    fetchSavedAddress();
 
     return () => {
       // Cleanup script

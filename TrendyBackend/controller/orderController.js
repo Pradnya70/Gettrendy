@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Product = require("../models/Product");
 const mongoose = require("mongoose");
 const PDFDocument = require("pdfkit");
+const shiprocketService = require("../services/shiprocketService");
 
 // Place a new order
 const placeOrder = async (req, res) => {
@@ -250,6 +251,24 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// Mark all orders for a user as seen by admin
+const markOrdersAsSeen = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    await Order.updateMany(
+      { userId, seenByAdmin: false },
+      { $set: { seenByAdmin: true } }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error marking orders as seen",
+      error: error.message,
+    });
+  }
+};
+
 const downloadReceipt = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -293,13 +312,22 @@ const downloadReceipt = async (req, res) => {
 
     doc.end();
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error generating receipt",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error generating receipt",
+      error: error.message,
+    });
+  }
+};
+
+// Define the function
+const createShiprocketOrder = async (req, res) => {
+  try {
+    const orderData = req.body; // Validate this in production!
+    const result = await shiprocketService.createOrder(orderData);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -310,5 +338,7 @@ module.exports = {
   updateOrderStatus,
   getOrdersByUser, // <-- This is correct!
   getAllOrders,
+  markOrdersAsSeen,
   downloadReceipt,
+  createShiprocketOrder,
 };

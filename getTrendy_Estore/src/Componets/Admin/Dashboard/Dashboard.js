@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [deleteItemType, setDeleteItemType] = useState(null);
   const [contactsRefreshKey, setContactsRefreshKey] = useState(0);
+  const [unseenOrderCount, setUnseenOrderCount] = useState(0);
 
   // Common function to handle back navigation
   const handleBack = () => {
@@ -623,6 +624,11 @@ const Dashboard = () => {
             onClick={() => handleViewOrders(params.value)}
           >
             View Orders
+            {unseenOrderCount > 0 && (
+              <Badge bg="danger" className="ms-2">
+                {unseenOrderCount}
+              </Badge>
+            )}
           </Button>
         );
       },
@@ -651,6 +657,8 @@ const Dashboard = () => {
       console.log("API response:", response);
       setSelectedUserOrders(response.data.orders);
       setShowOrdersModal(true);
+      await ApiService.markOrdersAsSeen(userId);
+      setUnseenOrderCount(0); // Reset badge after marking as seen
     } catch (error) {
       console.error("Error in handleViewOrders:", error);
       showMessageAlert("Error fetching orders for user");

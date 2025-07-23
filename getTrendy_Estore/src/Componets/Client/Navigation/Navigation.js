@@ -442,46 +442,61 @@ const Navigation = () => {
 
           {/* Cart Items Container with Auto Scroll */}
           <div className="cart-items-container">
-            {cartItems && cartItems.length > 0 ? (
-              cartItems.map((item) => (
-                <div
-                  className="customs-shop-card mt-3"
-                  key={item._id || item.id}
-                >
-                  <Row className="align-items-center g-5">
-                    <Col xs={4} className="text-center">
-                      <img
-                        src={getImageUrl(item.image || item.product_image)}
-                        alt={item.name || item.product_name}
-                        className="shop-img"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/placeholder.svg";
-                        }}
-                      />
-                    </Col>
-                    <Col xs={8}>
-                      <div className="product-card-desc">
-                        <p className="rating">
-                          ★★★★★{" "}
-                          <span style={{ color: "black", marginBottom: "0px" }}>
-                            (5.0)
-                          </span>
-                        </p>
-                        <strong>{item.name || item.product_name}</strong>
-                        <p className="card-text">
-                          ₹{item.price || item.product_price}.00 *{" "}
-                          {item.quantity}
-                        </p>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              ))
-            ) : (
-              <p>No items in the cart</p>
-            )}
-          </div>
+  {cartItems && cartItems.length > 0 ? (
+    cartItems.map((item) => {
+      // Get the correct product name
+      const productName =
+        item.name || item.product_name || item.productId?.name || item.productId?.product_name;
+
+      // Get the correct image
+      const imageUrl = getImageUrl(item.image || item.product_image || item.productId?.image);
+
+      // Get the effective price (discounted if available)
+      const originalPrice =
+        item.productId?.price || item.product_price || item.price || 0;
+      const discountPrice =
+        item.productId?.discount_price || item.discount_price;
+
+      const productPrice =
+        discountPrice && discountPrice < originalPrice ? discountPrice : originalPrice;
+
+      return (
+        <div className="customs-shop-card mt-3" key={item._id || item.id}>
+          <Row className="align-items-center g-5">
+            <Col xs={4} className="text-center">
+              <img
+                src={imageUrl}
+                alt={productName}
+                className="shop-img"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/placeholder.svg";
+                }}
+              />
+            </Col>
+            <Col xs={8}>
+              <div className="product-card-desc">
+                <p className="rating">
+                  ★★★★★{" "}
+                  <span style={{ color: "black", marginBottom: "0px" }}>
+                    (5.0)
+                  </span>
+                </p>
+                <strong>{productName}</strong>
+                <p className="card-text">
+                  ₹{productPrice}.00 × {item.quantity}
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      );
+    })
+  ) : (
+    <p>No items in the cart</p>
+  )}
+</div>
+
 
           {/* Fixed Button Section */}
           <div className="end-section">

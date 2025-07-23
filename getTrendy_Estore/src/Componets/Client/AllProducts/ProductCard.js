@@ -208,7 +208,7 @@ const ProductCard = () => {
                             <span className="original-price">₹{discountAmount(product.price, 23)}</span>
                           )}
                         </div>
-                        <div>
+                        <div className="position">
                           <span className="discount">
                             {product.discount_price && product.discount_price < product.price
                               ? Math.round(((product.price - product.discount_price) / product.price) * 100)
@@ -229,7 +229,7 @@ const ProductCard = () => {
                           View More
                         </Button>
                         <Button
-                          className="add-to-cart-btn"
+                          className="add-to-cart-btn d-none"
                           onClick={(e) => {
                             e.stopPropagation()
                             handleAddToCart(product)

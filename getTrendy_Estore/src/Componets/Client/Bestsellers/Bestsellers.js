@@ -165,7 +165,7 @@ const Bestsellers = () => {
               <Row>
                 {allProducts && allProducts.length > 0 ? (
                   allProducts.map((product) => (
-                    <Col lg={3} md={4} sm={12} key={product.id || product._id} className="mb-5">
+                    <Col lg={3} md={6} sm={6} key={product.id || product._id} className="mb-5">
                       <Card className="">
                         <div className="product-image-container">
                           <Card.Img

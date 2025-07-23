@@ -35,7 +35,7 @@
     color: #E9272D;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .margin-btm {
         margin-bottom: 20px;
     }

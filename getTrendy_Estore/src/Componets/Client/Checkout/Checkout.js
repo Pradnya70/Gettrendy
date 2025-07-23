@@ -31,9 +31,12 @@ const Checkout = () => {
 
   // Calculate totals
   const subtotal = cartItems.reduce((acc, item) => {
-    const price =
-      item.productId?.price || item.product_price || item.price || 0;
-    return acc + price * item.quantity;
+    const productPrice =
+      item.productId?.discount_price &&
+      item.productId?.discount_price < item.productId?.price
+        ? item.productId?.discount_price
+        : item.productId?.price || item.product_price || item.price || 0;
+    return acc + productPrice * (item.quantity || 1);
   }, 0);
 
   const total = subtotal + shipping;
@@ -138,7 +141,7 @@ const Checkout = () => {
   const initializeRazorpayPayment = async () => {
     try {
       setLoading(true);
-
+      console.log("[Checkout] Starting initializeRazorpayPayment");
       // Create Razorpay order
       const orderResponse = await api.post(
         `${BASEURL}/api/razorpay/create-order`,
@@ -154,27 +157,41 @@ const Checkout = () => {
           },
         }
       );
+      console.log("[Checkout] Razorpay orderResponse:", orderResponse);
 
       if (!orderResponse.data.success) {
+        console.log(
+          "[Checkout] Failed to create payment order:",
+          orderResponse.data
+        );
         throw new Error("Failed to create payment order");
       }
 
       const { order } = orderResponse.data;
       const key_id = orderResponse.data.key_id; // Get key_id from the response
+      console.log("[Checkout] Razorpay order:", order, "key_id:", key_id);
 
       // Prepare order items for database
-      const orderItems = cartItems.map((item) => ({
-        productId: item.productId?._id || item.productId,
-        productName:
-          item.productId?.product_name ||
-          item.productId?.name ||
-          item.product_name ||
-          item.name,
-        quantity: item.quantity,
-        price: item.productId?.price || item.product_price || item.price,
-        size: item.size || "M",
-        color: item.color || "Default",
-      }));
+      const orderItems = cartItems.map((item) => {
+        const productPrice =
+          item.productId?.discount_price &&
+          item.productId?.discount_price < item.productId?.price
+            ? item.productId?.discount_price
+            : item.productId?.price || item.product_price || item.price || 0;
+        return {
+          productId: item.productId?._id || item.productId,
+          productName:
+            item.productId?.product_name ||
+            item.productId?.name ||
+            item.product_name ||
+            item.name,
+          quantity: item.quantity,
+          price: productPrice, // <-- now uses discounted price if available
+          size: item.size || "M",
+          color: item.color || "Default",
+        };
+      });
+      console.log("[Checkout] Prepared orderItems:", orderItems);
 
       const orderData = {
         items: orderItems,
@@ -192,6 +209,7 @@ const Checkout = () => {
         },
         notes: formData.orderNotes,
       };
+      console.log("[Checkout] Prepared orderData for backend:", orderData);
 
       // Razorpay options
       const options = {
@@ -210,17 +228,21 @@ const Checkout = () => {
               !response.razorpay_order_id ||
               !response.razorpay_signature
             ) {
+              console.log("[Payment] Incomplete payment response:", response);
               throw new Error("Incomplete payment response from Razorpay");
             }
 
-            console.log("[Payment] Sending verification to backend...");
+            console.log(
+              "[Payment] Sending verification to backend...",
+              orderData
+            );
             // Send payment verification to your backend
             const verifyResponse = await api.post(
               `${BASEURL}/api/razorpay/verify-payment`,
               {
-                order_id: response.razorpay_order_id,
-                payment_id: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
                 orderData: orderData,
               },
               {
@@ -284,15 +306,17 @@ const Checkout = () => {
                 height: 20,
                 weight: 0.5,
               };
+              console.log(
+                "[Payment] Shiprocket order data:",
+                shiprocketOrderData
+              );
               await createShiprocketOrder(shiprocketOrderData);
               // --- End Shiprocket Integration ---
               console.log("[Payment] Redirecting to success page...");
               // Redirect to success page with order details
-              navigate("/order-success", {
+              navigate("/payment-success", {
                 state: {
-                  orderId:
-                    verifyResponse.data.orderId ||
-                    verifyResponse.data.order?._id,
+                  orderId: verifyResponse.data.order.orderId, // pass only orderId
                   paymentId: response.razorpay_payment_id,
                 },
                 replace: true, // This prevents going back to payment page
@@ -311,6 +335,9 @@ const Checkout = () => {
             );
           } finally {
             setLoading(false);
+            console.log(
+              "[Payment] Payment handler finished, loading set to false"
+            );
           }
         },
         prefill: {
@@ -331,9 +358,11 @@ const Checkout = () => {
           },
         },
       };
+      console.log("[Checkout] Razorpay options:", options);
 
       // Open Razorpay checkout
       const rzp = new window.Razorpay(options);
+      console.log("[Checkout] Razorpay instance created:", rzp);
 
       rzp.on("payment.failed", async (response) => {
         console.error("Payment failed:", response.error);
@@ -358,9 +387,11 @@ const Checkout = () => {
 
         toast.error(`Payment failed: ${response.error.description}`);
         setLoading(false);
+        console.log("[Checkout] Payment failed, loading set to false");
       });
 
       rzp.open();
+      console.log("[Checkout] Razorpay checkout opened");
     } catch (error) {
       console.error("Error initializing payment:", error);
       let message = "Failed to initialize payment";
@@ -374,25 +405,33 @@ const Checkout = () => {
 
       toast.error(message);
       setLoading(false);
+      console.log(
+        "[Checkout] Error initializing payment, loading set to false"
+      );
     }
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("[Checkout] handleSubmit called");
     const formErrors = validate();
+    console.log("[Checkout] Validation errors:", formErrors);
 
     if (Object.keys(formErrors).length === 0) {
       if (cartItems.length === 0) {
         toast.error("Your cart is empty");
+        console.log("[Checkout] Cart is empty, aborting");
         return;
       }
 
       // Initialize Razorpay payment
+      console.log("[Checkout] Initializing Razorpay payment...");
       await initializeRazorpayPayment();
     } else {
       setErrors(formErrors);
       toast.error("Please fill in all required fields correctly");
+      console.log("[Checkout] Form errors found, aborting");
     }
   };
 
@@ -720,11 +759,12 @@ const Checkout = () => {
                           item.productId?.name ||
                           item.product_name ||
                           item.name;
-                        const productPrice =
-                          item.productId?.price ||
-                          item.product_price ||
-                          item.price ||
-                          0;
+                          const productPrice =
+                          item.productId?.discount_price &&
+                          item.productId?.discount_price < item.productId?.price
+                            ? item.productId?.discount_price
+                            : item.productId?.price || item.product_price || item.price || 0;
+                        
                         return (
                           <tr key={index}>
                             <td>

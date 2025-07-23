@@ -165,7 +165,7 @@ const createRazorpayOrder = async (req, res) => {
 // Verify Razorpay payment
 const verifyRazorpayPayment = async (req, res) => {
   try {
-    console.log("Verifying Razorpay payment...");
+    console.log("verifyRazorpayPayment req.body:", req.body);
 
     const {
       razorpay_order_id,
@@ -203,7 +203,7 @@ const verifyRazorpayPayment = async (req, res) => {
 
     // Create order in database
     const newOrder = new Order({
-      orderId: razorpay_order_id, // <-- This fixes your error!
+      orderId: `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`,
       userId: req.user ? req.user._id : "guest-user",
       items: orderData.items,
       totalAmount: orderData.totalAmount,

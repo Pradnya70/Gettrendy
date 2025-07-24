@@ -47,6 +47,7 @@ async function authenticate() {
 async function createOrder(orderData) {
   try {
     console.log("Creating Shiprocket order...")
+    console.log("Input order data:", JSON.stringify(orderData, null, 2))
 
     // Ensure we have a valid token
     const authToken = await authenticate()
@@ -56,56 +57,103 @@ async function createOrder(orderData) {
       throw new Error("Missing required order data for Shiprocket")
     }
 
-    // Prepare the order data for Shiprocket API
-    const shiprocketOrderData = {
-      order_id: orderData.order_id,
-      order_date: orderData.order_date || new Date().toISOString().slice(0, 19).replace("T", " "),
-      pickup_location: orderData.pickup_location || "Primary",
-      billing_customer_name: orderData.billing_customer_name,
-      billing_last_name: orderData.billing_last_name || "",
-      billing_address: orderData.billing_address,
-      billing_address_2: orderData.billing_address_2 || "",
-      billing_city: orderData.billing_city,
-      billing_pincode: orderData.billing_pincode,
-      billing_state: orderData.billing_state,
-      billing_country: orderData.billing_country || "India",
-      billing_email: orderData.billing_email,
-      billing_phone: orderData.billing_phone,
-      shipping_is_billing: orderData.shipping_is_billing || true,
-      shipping_customer_name: orderData.shipping_customer_name || orderData.billing_customer_name,
-      shipping_last_name: orderData.shipping_last_name || orderData.billing_last_name || "",
-      shipping_address: orderData.shipping_address || orderData.billing_address,
-      shipping_address_2: orderData.shipping_address_2 || orderData.billing_address_2 || "",
-      shipping_city: orderData.shipping_city || orderData.billing_city,
-      shipping_pincode: orderData.shipping_pincode || orderData.billing_pincode,
-      shipping_country: orderData.shipping_country || orderData.billing_country || "India",
-      shipping_state: orderData.shipping_state || orderData.billing_state,
-      shipping_email: orderData.shipping_email || orderData.billing_email,
-      shipping_phone: orderData.shipping_phone || orderData.billing_phone,
-      order_items: orderData.order_items,
-      payment_method: orderData.payment_method || "Prepaid",
-      shipping_charges: orderData.shipping_charges || 0,
-      giftwrap_charges: orderData.giftwrap_charges || 0,
-      transaction_charges: orderData.transaction_charges || 0,
-      total_discount: orderData.total_discount || 0,
-      sub_total: orderData.sub_total,
-      length: orderData.length || 10,
-      breadth: orderData.breadth || 15,
-      height: orderData.height || 20,
-      weight: orderData.weight || 0.5,
+    // Ensure order_items is properly formatted
+    if (!orderData.order_items || !Array.isArray(orderData.order_items) || orderData.order_items.length === 0) {
+      throw new Error("Order items are required and must be an array")
     }
 
-    console.log("Shiprocket order data:", JSON.stringify(shiprocketOrderData, null, 2))
+    // Validate each order item
+    orderData.order_items.forEach((item, index) => {
+      if (!item.name || !item.sku || !item.units || !item.selling_price) {
+        throw new Error(`Order item ${index + 1} is missing required fields (name, sku, units, selling_price)`)
+      }
+    })
+
+    // Prepare the order data for Shiprocket API with proper formatting
+    const shiprocketOrderData = {
+      order_id: String(orderData.order_id), // Ensure it's a string
+      order_date: orderData.order_date || new Date().toISOString().slice(0, 19).replace("T", " "),
+      pickup_location: orderData.pickup_location || "Primary",
+      channel_id: "", // Leave empty for manual orders
+      comment: orderData.comment || "Order from website",
+      billing_customer_name: String(orderData.billing_customer_name).trim(),
+      billing_last_name: String(orderData.billing_last_name || "").trim(),
+      billing_address: String(orderData.billing_address).trim(),
+      billing_address_2: String(orderData.billing_address_2 || "").trim(),
+      billing_city: String(orderData.billing_city).trim(),
+      billing_pincode: String(orderData.billing_pincode).trim(),
+      billing_state: String(orderData.billing_state).trim(),
+      billing_country: String(orderData.billing_country || "India").trim(),
+      billing_email: String(orderData.billing_email).trim(),
+      billing_phone: String(orderData.billing_phone).replace(/\D/g, ""), // Remove non-digits
+      shipping_is_billing: orderData.shipping_is_billing !== false, // Default to true
+      shipping_customer_name: String(orderData.shipping_customer_name || orderData.billing_customer_name).trim(),
+      shipping_last_name: String(orderData.shipping_last_name || orderData.billing_last_name || "").trim(),
+      shipping_address: String(orderData.shipping_address || orderData.billing_address).trim(),
+      shipping_address_2: String(orderData.shipping_address_2 || orderData.billing_address_2 || "").trim(),
+      shipping_city: String(orderData.shipping_city || orderData.billing_city).trim(),
+      shipping_pincode: String(orderData.shipping_pincode || orderData.billing_pincode).trim(),
+      shipping_country: String(orderData.shipping_country || orderData.billing_country || "India").trim(),
+      shipping_state: String(orderData.shipping_state || orderData.billing_state).trim(),
+      shipping_email: String(orderData.shipping_email || orderData.billing_email).trim(),
+      shipping_phone: String(orderData.shipping_phone || orderData.billing_phone).replace(/\D/g, ""),
+      order_items: orderData.order_items.map((item) => ({
+        name: String(item.name).trim(),
+        sku: String(item.sku).trim(),
+        units: Number(item.units),
+        selling_price: Number(item.selling_price),
+        discount: Number(item.discount || 0),
+        tax: Number(item.tax || 0),
+        hsn: Number(item.hsn || 0),
+      })),
+      payment_method: orderData.payment_method || "Prepaid",
+      shipping_charges: Number(orderData.shipping_charges || 0),
+      giftwrap_charges: Number(orderData.giftwrap_charges || 0),
+      transaction_charges: Number(orderData.transaction_charges || 0),
+      total_discount: Number(orderData.total_discount || 0),
+      sub_total: Number(orderData.sub_total),
+      length: Number(orderData.length || 10),
+      breadth: Number(orderData.breadth || 15),
+      height: Number(orderData.height || 20),
+      weight: Number(orderData.weight || 0.5),
+    }
+
+    // Additional validation
+    if (shiprocketOrderData.billing_phone.length < 10) {
+      throw new Error("Billing phone number must be at least 10 digits")
+    }
+
+    if (shiprocketOrderData.billing_pincode.length !== 6) {
+      throw new Error("Billing pincode must be 6 digits")
+    }
+
+    console.log("Final Shiprocket order data:", JSON.stringify(shiprocketOrderData, null, 2))
 
     const response = await axios.post(`${SHIPROCKET_BASE_URL}/orders/create/adhoc`, shiprocketOrderData, {
       headers: {
         Authorization: `Bearer ${authToken}`,
         "Content-Type": "application/json",
       },
+      timeout: 30000, // 30 second timeout
     })
 
     console.log("Shiprocket order created successfully:", response.data)
-    return response.data
+
+    // Check if the response indicates success
+    if (response.data && (response.data.order_id || response.data.shipment_id)) {
+      return {
+        success: true,
+        order_id: response.data.order_id,
+        shipment_id: response.data.shipment_id,
+        awb_code: response.data.awb_code,
+        courier_company_id: response.data.courier_company_id,
+        courier_name: response.data.courier_name,
+        response: response.data,
+      }
+    } else {
+      console.error("Unexpected Shiprocket response:", response.data)
+      throw new Error("Shiprocket order creation failed: Invalid response format")
+    }
   } catch (error) {
     console.error("Shiprocket order creation error:", error.response?.data || error.message)
 
@@ -123,16 +171,37 @@ async function createOrder(orderData) {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
           },
+          timeout: 30000,
         })
-        return response.data
+
+        if (response.data && (response.data.order_id || response.data.shipment_id)) {
+          return {
+            success: true,
+            order_id: response.data.order_id,
+            shipment_id: response.data.shipment_id,
+            awb_code: response.data.awb_code,
+            response: response.data,
+          }
+        }
       } catch (retryError) {
+        console.error("Shiprocket retry failed:", retryError.response?.data || retryError.message)
         throw new Error(
           `Shiprocket order creation failed after retry: ${retryError.response?.data?.message || retryError.message}`,
         )
       }
     }
 
-    throw new Error(`Shiprocket order creation failed: ${error.response?.data?.message || error.message}`)
+    // Provide more detailed error information
+    let errorMessage = "Shiprocket order creation failed"
+    if (error.response?.data?.message) {
+      errorMessage += `: ${error.response.data.message}`
+    } else if (error.response?.data?.errors) {
+      errorMessage += `: ${JSON.stringify(error.response.data.errors)}`
+    } else if (error.message) {
+      errorMessage += `: ${error.message}`
+    }
+
+    throw new Error(errorMessage)
   }
 }
 
@@ -177,9 +246,32 @@ async function cancelOrder(orderId) {
   }
 }
 
+// Get all orders from Shiprocket
+async function getAllOrders(page = 1, per_page = 10) {
+  try {
+    const authToken = await authenticate()
+
+    const response = await axios.get(`${SHIPROCKET_BASE_URL}/orders`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+      params: {
+        page,
+        per_page,
+      },
+    })
+
+    return response.data
+  } catch (error) {
+    console.error("Shiprocket get orders error:", error.response?.data || error.message)
+    throw new Error(`Failed to get Shiprocket orders: ${error.response?.data?.message || error.message}`)
+  }
+}
+
 module.exports = {
   authenticate,
   createOrder,
   trackOrder,
   cancelOrder,
+  getAllOrders,
 }

@@ -299,27 +299,30 @@ const verifyRazorpayPayment = async (req, res) => {
       // Don't fail the order if email sending fails
     }
 
-    // Create Shiprocket order
+    // Create Shiprocket order with improved data formatting
     try {
       const shiprocketOrderData = {
         order_id: savedOrder.orderId,
         order_date: new Date().toISOString().slice(0, 19).replace("T", " "),
         pickup_location: "Primary",
-        billing_customer_name: savedOrder.address.fullName,
-        billing_last_name: "",
+        billing_customer_name: savedOrder.address.fullName.split(" ")[0] || savedOrder.address.fullName,
+        billing_last_name: savedOrder.address.fullName.split(" ").slice(1).join(" ") || "",
         billing_address: savedOrder.address.street,
         billing_address_2: savedOrder.address.apartment || "",
         billing_city: savedOrder.address.city,
         billing_pincode: savedOrder.address.postcode,
-        billing_state: savedOrder.address.state,
+        billing_state: savedOrder.address.state || "Maharashtra", // Default state if not provided
         billing_country: savedOrder.address.country,
         billing_email: savedOrder.address.email,
         billing_phone: savedOrder.address.phone,
-        order_items: savedOrder.items.map((item) => ({
+        order_items: savedOrder.items.map((item, index) => ({
           name: item.productName,
-          sku: item.productId.toString(),
+          sku: `SKU${item.productId}${index}`, // Create a unique SKU
           units: item.quantity,
           selling_price: item.price,
+          discount: 0,
+          tax: 0,
+          hsn: 0,
         })),
         payment_method: "Prepaid",
         shipping_charges: 50, // You can make this dynamic
@@ -333,19 +336,21 @@ const verifyRazorpayPayment = async (req, res) => {
         weight: 0.5,
       }
 
-      console.log("Creating Shiprocket order...")
+      console.log("Creating Shiprocket order with data:", JSON.stringify(shiprocketOrderData, null, 2))
       const shiprocketResult = await shiprocketService.createOrder(shiprocketOrderData)
 
-      if (shiprocketResult && shiprocketResult.order_id) {
+      if (shiprocketResult && shiprocketResult.success) {
         savedOrder.shiprocketOrderId = shiprocketResult.order_id
         savedOrder.shiprocketShipmentId = shiprocketResult.shipment_id
         savedOrder.trackingNumber = shiprocketResult.awb_code
         await savedOrder.save()
-        console.log("Shiprocket order created successfully")
+        console.log("Shiprocket order created successfully:", shiprocketResult)
+      } else {
+        console.error("Shiprocket order creation failed:", shiprocketResult)
       }
     } catch (shiprocketError) {
       console.error("Error creating Shiprocket order:", shiprocketError)
-      // Don't fail the order if Shiprocket fails
+      // Don't fail the order if Shiprocket fails, but log the error
     }
 
     // Clear user's cart after successful order

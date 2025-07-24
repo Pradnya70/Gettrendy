@@ -198,7 +198,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 2.5rem;
+  padding: 10px 0px 0px 0px;
 }
 
 .product-description {
@@ -220,24 +220,30 @@
 
 .price {
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #e9272d;
 }
 
 .original-price {
   text-decoration: line-through;
   color: #999;
-  margin-left: 8px;
+  margin-left: 15px;
   font-size: 0.9rem;
 }
 
 .discount {
-  background-color: #e9272d;
-  color: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
+    background-color: #2d2b2b78;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 5px;
+}
+
+.position {
+    top: 10px;
+    position: absolute;
+    left: 10px;
 }
 
 .button-section {
@@ -302,4 +308,18 @@
   .header input {
     width: 100%;
   }
+}
+
+@media (min-width: 991px) {
+  .original-price {
+  text-decoration: line-through;
+  color: #999;
+  margin-left: 10px;
+  font-size: 0.9rem;
+}
+.price {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #e9272d;
+}
 }

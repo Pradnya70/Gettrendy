@@ -97,7 +97,7 @@
 
 @media (max-width: 768px) {
     .category-card {
-        width: 10rem;
+        width: 100%;
         height: auto;
     }
 

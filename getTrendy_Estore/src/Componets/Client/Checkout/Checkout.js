@@ -314,7 +314,7 @@ const Checkout = () => {
               // --- End Shiprocket Integration ---
               console.log("[Payment] Redirecting to success page...");
               // Redirect to success page with order details
-              navigate("/payment-success", {
+              navigate("/success", {
                 state: {
                   orderId: verifyResponse.data.order.orderId, // pass only orderId
                   paymentId: response.razorpay_payment_id,

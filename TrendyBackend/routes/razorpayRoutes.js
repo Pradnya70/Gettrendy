@@ -1,5 +1,6 @@
 const express = require("express")
 const router = express.Router()
+const { auth } = require("../middleware/auth") // Import the proper auth middleware
 
 // Import controller functions
 const {
@@ -10,22 +11,13 @@ const {
   getPaymentDetails,
 } = require("../controller/razorpayController")
 
-// Simple auth middleware that passes through all requests
-const simpleAuth = (req, res, next) => {
-  console.log("Simple auth middleware called for:", req.path)
-  if (!req.user) {
-    req.user = { _id: "guest-user" }
-  }
-  next()
-}
-
 // Test route (no auth needed)
 router.get("/test", testRazorpay)
 
-// Routes with simple auth
-router.post("/create-order", simpleAuth, createRazorpayOrder)
-router.post("/verify-payment", simpleAuth, verifyRazorpayPayment)
-router.post("/payment-failed", simpleAuth, handlePaymentFailure)
-router.get("/payment/:paymentId", simpleAuth, getPaymentDetails)
+// Routes with proper authentication
+router.post("/create-order", auth, createRazorpayOrder)
+router.post("/verify-payment", auth, verifyRazorpayPayment)
+router.post("/payment-failed", auth, handlePaymentFailure)
+router.get("/payment/:paymentId", auth, getPaymentDetails)
 
 module.exports = router

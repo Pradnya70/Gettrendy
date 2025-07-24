@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const orderSchema = new mongoose.Schema(
   {
@@ -8,8 +8,15 @@ const orderSchema = new mongoose.Schema(
       unique: true,
     },
     userId: {
-      type: mongoose.Schema.Types.Mixed, // allows ObjectId or string
-      required: false,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    userName: {
+      type: String,
+    },
+    userEmail: {
+      type: String,
     },
     items: [
       {
@@ -62,6 +69,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
+    status: {
+      type: String,
+      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
     address: {
       fullName: {
         type: String,
@@ -111,14 +123,48 @@ const orderSchema = new mongoose.Schema(
     razorpaySignature: {
       type: String,
     },
+    // Shiprocket specific fields
+    shiprocketOrderId: {
+      type: String,
+    },
+    shiprocketShipmentId: {
+      type: String,
+    },
+    trackingNumber: {
+      type: String,
+    },
+    // Notification fields
     seenByAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    adminNotified: {
+      type: Boolean,
+      default: false,
+    },
+    userNotified: {
+      type: Boolean,
+      default: false,
+    },
+    // Email status
+    userEmailSent: {
+      type: Boolean,
+      default: false,
+    },
+    adminEmailSent: {
       type: Boolean,
       default: false,
     },
   },
   {
     timestamps: true,
-  }
-);
+  },
+)
 
-module.exports = mongoose.model("Order", orderSchema);
+// Add indexes for better query performance
+orderSchema.index({ userId: 1, createdAt: -1 })
+orderSchema.index({ orderId: 1 })
+orderSchema.index({ razorpayOrderId: 1 })
+orderSchema.index({ seenByAdmin: 1 })
+
+module.exports = mongoose.model("Order", orderSchema)

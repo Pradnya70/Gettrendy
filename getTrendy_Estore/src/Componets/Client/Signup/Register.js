@@ -286,8 +286,8 @@ function Register() {
                       <p className="text-danger">{errors.confirmPassword}</p>
                     )}
                   </div>
-{/* 
-                  <div className="buttomsapcec">
+
+                  {/* <div className="buttomsapcec">
                     <label className="title-heading">Account Type</label>
                     <div className="d-flex gap-4">
                       <label className="d-flex align-items-center">
@@ -299,6 +299,16 @@ function Register() {
                           className="me-2"
                         />
                         User
+                      </label>
+                      <label className="d-flex align-items-center">
+                        <input
+                          type="radio"
+                          value="user"
+                          checked={role === "admin"}
+                          onChange={() => setRole("admin")}
+                          className="me-2"
+                        />
+                        Admin
                       </label>
                     </div>
                   </div> */}

@@ -30,13 +30,22 @@ const Home = () => {
 
   const items = [
     {
-      image: "/Images/01.webp",
+      image: "/Images/banner1.jpg",
     },
     {
-      image: "/Images/02.webp",
+      image: "/Images/banner2.jpg",
     },
     {
-      image: "/Images/03.webp",
+      image: "/Images/banner3.jpg",
+    },
+    {
+      image: "/Images/banner4.jpg",
+    },
+    {
+      image: "/Images/banner5.jpg",
+    },
+    {
+      image: "/Images/banner6.jpg",
     },
   ];
 

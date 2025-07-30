@@ -285,12 +285,12 @@ function ForgotPassword() {
                 )}
 
                 {/* Development mode OTP display */}
-                {devOtp && (
+                {/* {devOtp && (
                   <Alert variant="info" className="mb-3">
                     <strong>Development Mode:</strong> Use this OTP for testing:{" "}
                     <code>{devOtp}</code>
                   </Alert>
-                )}
+                )} */}
 
                 {!isOtpSent && (
                   <Form>

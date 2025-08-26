@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const axios = require("axios");
+
 
 // Register a new user
 exports.register = async (req, res) => {
@@ -206,69 +208,74 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// Utility: Send email with Brevo
+const sendEmailWithBrevo = async (to, subject, htmlContent) => {
+  try {
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { email: process.env.BREVO_SENDER_EMAIL, name: "GetTrendy" },
+        to: [{ email: to }],
+        subject: subject,
+        htmlContent: htmlContent,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+      }
+    );
+
+    console.log("Email sent:", response.data);
+    return { success: true, data: response.data };
+  } catch (err) {
+    console.error("Brevo send error:", err.response?.data || err.message);
+    return { success: false, error: err.message };
+  }
+};
+
 // Forgot Password - Send OTP
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
-
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
   }
 
   try {
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found with this email address" });
+      return res.status(404).json({ message: "User not found with this email address" });
     }
 
-    // Generate OTP (6 digit number)
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Save OTP to user document with expiry time (10 minutes)
+    // Save OTP + expiry
     user.resetPasswordOtp = otp;
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 min
     await user.save();
 
-    // Create email transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
+    // Email body
+    const html = `
+      <h1>Password Reset Request</h1>
+      <p>Your OTP for password reset is: <strong>${otp}</strong></p>
+      <p>This OTP will expire in 10 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
+    `;
 
-    // Email content
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Password Reset OTP",
-      html: `
-        <h1>Password Reset Request</h1>
-        <p>Your OTP for password reset is: <strong>${otp}</strong></p>
-        <p>This OTP will expire in 10 minutes.</p>
-        <p>If you did not request this, please ignore this email.</p>
-      `,
-    };
+    await sendEmailWithBrevo(email, "Password Reset OTP", html);
 
-    // Send email
-    await transporter.sendMail(mailOptions);
-
-    // For development/testing, return OTP in response
     if (process.env.NODE_ENV === "development") {
-      return res.status(200).json({
-        message: "OTP sent to your email",
-        otp: otp, // Only include in development!
-      });
+      return res.status(200).json({ message: "OTP sent", otp });
     }
 
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (error) {
     console.error("Forgot password error:", error.message);
     res.status(500).json({
-      message: "Failed to send OTP email. Please try again later.",
+      message: "Failed to send OTP email",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
@@ -277,13 +284,11 @@ exports.forgotPassword = async (req, res) => {
 // Verify OTP
 exports.verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
-
   if (!email || !otp) {
     return res.status(400).json({ message: "Email and OTP are required" });
   }
 
   try {
-    // Find user by email and valid OTP
     const user = await User.findOne({
       email,
       resetPasswordOtp: otp,
@@ -294,15 +299,11 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    // Generate a temporary token for reset password
     const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "15m",
     });
 
-    res.status(200).json({
-      message: "OTP verified successfully",
-      resetToken,
-    });
+    res.status(200).json({ message: "OTP verified successfully", resetToken });
   } catch (error) {
     console.error("OTP verification error:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -312,39 +313,26 @@ exports.verifyOtp = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
   const { resetToken, newPassword } = req.body;
-
   if (!resetToken || !newPassword) {
-    return res
-      .status(400)
-      .json({ message: "Reset token and new password are required" });
+    return res.status(400).json({ message: "Reset token and new password are required" });
   }
 
   try {
-    // Verify reset token
     const decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
-
-    // Find user by id
     const user = await User.findById(decoded.userId);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Clear OTP fields
     user.resetPasswordOtp = undefined;
     user.resetPasswordExpires = undefined;
-
-    // Update password - pre-save hook will hash it
-    user.password = newPassword;
+    user.password = newPassword; // pre-save hook will hash
     await user.save();
 
     res.status(200).json({
       message: "Password updated successfully",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Password reset error:", error.message);

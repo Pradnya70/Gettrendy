@@ -1,278 +1,160 @@
-const nodemailer = require("nodemailer")
+// emailService.js
+const axios = require("axios");
+const nodemailer = require("nodemailer");
 
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransporter({
-    service: "gmail", // or your email service
-    auth: {
-      user: process.env.EMAIL_USER, // your email
-      pass: process.env.EMAIL_PASSWORD, // Updated to match your .env file
-    },
-  })
-}
-
-// Send email to user after successful order
-const sendOrderConfirmationToUser = async (userEmail, orderData) => {
+/**
+ * Primary: Send email with Brevo API
+ */
+const sendWithBrevo = async (to, subject, htmlContent) => {
   try {
-    console.log(`Sending order confirmation email to: ${userEmail}`)
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { email: process.env.BREVO_SENDER_EMAIL, name: "Silksew" },
+        to: [{ email: to }],
+        subject,
+        htmlContent,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+      }
+    );
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.log("Email service not configured, skipping email send")
-      return { success: true, message: "Email service not configured" }
-    }
-
-    const transporter = createTransporter()
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: userEmail,
-      subject: `Order Confirmation - ${orderData.orderId}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #E9272D; color: white; padding: 20px; text-align: center;">
-            <h1>Order Confirmed!</h1>
-          </div>
-          
-          <div style="padding: 20px;">
-            <h2>Thank you for your order!</h2>
-            <p>Dear ${orderData.address.fullName},</p>
-            <p>Your order has been successfully placed and is being processed.</p>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Order Details:</h3>
-              <p><strong>Order ID:</strong> ${orderData.orderId}</p>
-              <p><strong>Order Date:</strong> ${new Date(orderData.createdAt).toLocaleDateString()}</p>
-              <p><strong>Total Amount:</strong> ₹${orderData.totalAmount}</p>
-              <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
-              <p><strong>Payment Status:</strong> ${orderData.paymentStatus}</p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Items Ordered:</h3>
-              ${orderData.items
-                .map(
-                  (item) => `
-                <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                  <p><strong>${item.productName}</strong></p>
-                  <p>Quantity: ${item.quantity} | Price: ₹${item.price}</p>
-                  <p>Size: ${item.size} | Color: ${item.color}</p>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Shipping Address:</h3>
-              <p>${orderData.address.fullName}</p>
-              <p>${orderData.address.street}</p>
-              ${orderData.address.apartment ? `<p>${orderData.address.apartment}</p>` : ""}
-              <p>${orderData.address.city}, ${orderData.address.state} ${orderData.address.postcode}</p>
-              <p>${orderData.address.country}</p>
-              <p>Phone: ${orderData.address.phone}</p>
-              <p>Email: ${orderData.address.email}</p>
-            </div>
-            
-            <p>We'll send you another email when your order ships.</p>
-            <p>If you have any questions, please contact us at ${process.env.EMAIL_USER}</p>
-            
-            <div style="text-align: center; margin-top: 30px;">
-              <p>Thank you for shopping with GetTrendy!</p>
-            </div>
-          </div>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666;">
-            <p>&copy; 2024 GetTrendy. All rights reserved.</p>
-          </div>
-        </div>
-      `,
-    }
-
-    await transporter.sendMail(mailOptions)
-    console.log("Order confirmation email sent to user:", userEmail)
-    return { success: true }
-  } catch (error) {
-    console.error("Error sending order confirmation email to user:", error)
-    return { success: false, error: error.message }
+    console.log("✅ Brevo email sent:", response.data);
+    return true;
+  } catch (err) {
+    console.error("❌ Brevo send error:", err.response?.data || err.message);
+    return false;
   }
-}
+};
 
-// Send email to admin about new order
-const sendNewOrderNotificationToAdmin = async (orderData) => {
+/**
+ * Fallback: Send email with Gmail (App Password)
+ */
+const sendWithGmail = async (to, subject, htmlContent) => {
   try {
-    console.log("Sending new order notification to admin")
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // SSL
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // App Password
+      },
+    });
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.log("Email service not configured, skipping admin email")
-      return { success: true, message: "Email service not configured" }
-    }
-
-    const transporter = createTransporter()
-
-    // Use ADMIN_EMAIL if set, otherwise use EMAIL_USER
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER
-
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: adminEmail,
-      subject: `New Order Received - ${orderData.orderId}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
-            <h1>New Order Received!</h1>
-          </div>
-          
-          <div style="padding: 20px;">
-            <h2>A new order has been placed</h2>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Order Details:</h3>
-              <p><strong>Order ID:</strong> ${orderData.orderId}</p>
-              <p><strong>Customer:</strong> ${orderData.address.fullName}</p>
-              <p><strong>Email:</strong> ${orderData.address.email}</p>
-              <p><strong>Phone:</strong> ${orderData.address.phone}</p>
-              <p><strong>Order Date:</strong> ${new Date(orderData.createdAt).toLocaleDateString()}</p>
-              <p><strong>Total Amount:</strong> ₹${orderData.totalAmount}</p>
-              <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
-              <p><strong>Payment Status:</strong> ${orderData.paymentStatus}</p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Items Ordered:</h3>
-              ${orderData.items
-                .map(
-                  (item) => `
-                <div style="border-bottom: 1px solid #ddd; padding: 10px 0;">
-                  <p><strong>${item.productName}</strong></p>
-                  <p>Quantity: ${item.quantity} | Price: ₹${item.price}</p>
-                  <p>Size: ${item.size} | Color: ${item.color}</p>
-                </div>
-              `,
-                )
-                .join("")}
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Shipping Address:</h3>
-              <p>${orderData.address.fullName}</p>
-              <p>${orderData.address.street}</p>
-              ${orderData.address.apartment ? `<p>${orderData.address.apartment}</p>` : ""}
-              <p>${orderData.address.city}, ${orderData.address.state} ${orderData.address.postcode}</p>
-              <p>${orderData.address.country}</p>
-            </div>
-            
-            ${
-              orderData.notes
-                ? `
-              <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h3>Order Notes:</h3>
-                <p>${orderData.notes}</p>
-              </div>
-            `
-                : ""
-            }
-            
-            <div style="text-align: center; margin-top: 30px;">
-              <p>Please process this order as soon as possible.</p>
-            </div>
-          </div>
-          
-          <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666;">
-            <p>&copy; 2024 GetTrendy Admin Panel</p>
-          </div>
-        </div>
-      `,
-    }
+      to,
+      subject,
+      html: htmlContent,
+    });
 
-    await transporter.sendMail(mailOptions)
-    console.log("New order notification email sent to admin")
-    return { success: true }
-  } catch (error) {
-    console.error("Error sending new order notification email to admin:", error)
-    return { success: false, error: error.message }
+    console.log("✅ Gmail email sent successfully");
+    return true;
+  } catch (err) {
+    console.error("❌ Gmail send error:", err.message);
+    return false;
   }
-}
+};
 
-// Send contact form email
-const sendContactFormEmail = async (contactData) => {
-  try {
-    console.log("Sending contact form email to admin")
-
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.log("Email service not configured, skipping contact email")
-      return { success: true, message: "Email service not configured" }
-    }
-
-    const transporter = createTransporter()
-
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: adminEmail,
-      subject: `New Contact Message - ${contactData.subject || "No Subject"}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #17a2b8; color: white; padding: 20px; text-align: center;">
-            <h1>New Contact Message</h1>
-          </div>
-          
-          <div style="padding: 20px;">
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Contact Details:</h3>
-              <p><strong>Name:</strong> ${contactData.name}</p>
-              <p><strong>Email:</strong> ${contactData.email}</p>
-              <p><strong>Subject:</strong> ${contactData.subject || "No Subject"}</p>
-              <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <h3>Message:</h3>
-              <p>${contactData.message}</p>
-            </div>
-          </div>
-        </div>
-      `,
-    }
-
-    await transporter.sendMail(mailOptions)
-    console.log("Contact form email sent to admin")
-    return { success: true }
-  } catch (error) {
-    console.error("Error sending contact form email:", error)
-    return { success: false, error: error.message }
+/**
+ * Unified email sender: Try Brevo → fallback to Gmail
+ */
+const sendEmail = async (to, subject, htmlContent) => {
+  let sent = await sendWithBrevo(to, subject, htmlContent);
+  if (!sent) {
+    console.log("⚠️ Falling back to Gmail...");
+    sent = await sendWithGmail(to, subject, htmlContent);
   }
-}
+  return sent;
+};
 
-// Generic send email function (for backward compatibility)
-const sendEmail = async (to, subject, text, html = null) => {
-  try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.log("Email service not configured, skipping email send")
-      return { success: true, message: "Email service not configured" }
-    }
+/**
+ * Example: Order confirmation to customer
+ */
+const sendOrderConfirmation = async (email, items, totalAmount, address) => {
+  const html = `
+    <h2>Thank You for Your Order, ${address.fullName || "Customer"}!</h2>
+    <p>Your order has been placed successfully.</p>
+    <table border="1" cellpadding="6" cellspacing="0" width="100%">
+      <tr><th>Product</th><th>Qty</th><th>Price</th></tr>
+      ${items
+        .map(
+          (i) => `
+        <tr>
+          <td>${i.name}</td>
+          <td align="center">${i.quantity}</td>
+          <td align="right">₹${i.price?.toFixed(2)}</td>
+        </tr>`
+        )
+        .join("")}
+      <tr>
+        <td colspan="2" align="right"><b>Total</b></td>
+        <td align="right">₹${totalAmount.toFixed(2)}</td>
+      </tr>
+    </table>
+    <p>We will notify you once your order is shipped.</p>
+  `;
 
-    const transporter = createTransporter()
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: to,
-      subject: subject,
-      text: text,
-      html: html || text,
-    }
+  return await sendEmail(email, "🎉 Order Confirmation", html);
+};
 
-    const result = await transporter.sendMail(mailOptions)
-    console.log("Email sent successfully:", result.messageId)
-    return { success: true, messageId: result.messageId }
-  } catch (error) {
-    console.error("Error sending email:", error)
-    return { success: false, error: error.message }
-  }
-}
+/**
+ * Example: Notify admin of new order
+ */
+const sendOrderNotificationToAdmin = async (order) => {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.BREVO_SENDER_EMAIL;
+
+  const html = `
+    <h2>New Order Received</h2>
+    <p><b>Order ID:</b> ${order.orderId}</p>
+    <p><b>Customer:</b> ${order.address.fullName}</p>
+    <p><b>Email:</b> ${order.address.email}</p>
+    <p><b>Phone:</b> ${order.address.phone}</p>
+    <p><b>Total:</b> ₹${order.totalAmount}</p>
+  `;
+
+  return await sendEmail(adminEmail, `🛒 New Order - ${order.orderId}`, html);
+};
+
+/**
+ * Example: Forgot password OTP
+ */
+const sendPasswordResetOtp = async (email, otp) => {
+  const html = `
+    <h2>Password Reset</h2>
+    <p>Your OTP is: <b>${otp}</b></p>
+    <p>This code will expire in 10 minutes.</p>
+  `;
+
+  return await sendEmail(email, "🔑 Password Reset OTP", html);
+};
+
+/**
+ * Example: Contact form
+ */
+const sendContactForm = async (contact) => {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.BREVO_SENDER_EMAIL;
+
+  const html = `
+    <h2>New Contact Message</h2>
+    <p><b>Name:</b> ${contact.name}</p>
+    <p><b>Email:</b> ${contact.email}</p>
+    <p><b>Subject:</b> ${contact.subject || "No Subject"}</p>
+    <p><b>Message:</b> ${contact.message}</p>
+  `;
+
+  return await sendEmail(adminEmail, `📩 Contact Form - ${contact.subject || "Message"}`, html);
+};
 
 module.exports = {
-  sendOrderConfirmationToUser,
-  sendNewOrderNotificationToAdmin,
-  sendContactFormEmail,
-  sendEmail,
-}
+  sendOrderConfirmation,
+  sendOrderNotificationToAdmin,
+  sendPasswordResetOtp,
+  sendContactForm,
+};

@@ -1,8 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
-const axios = require("axios");
+const { sendPasswordResetOtp } = require("../services/emailService");
 
 
 // Register a new user
@@ -208,33 +207,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Utility: Send email with Brevo
-const sendEmailWithBrevo = async (to, subject, htmlContent) => {
-  try {
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: { email: process.env.BREVO_SENDER_EMAIL, name: "GetTrendy" },
-        to: [{ email: to }],
-        subject: subject,
-        htmlContent: htmlContent,
-      },
-      {
-        headers: {
-          "api-key": process.env.BREVO_API_KEY,
-          "Content-Type": "application/json",
-          accept: "application/json",
-        },
-      }
-    );
 
-    console.log("Email sent:", response.data);
-    return { success: true, data: response.data };
-  } catch (err) {
-    console.error("Brevo send error:", err.response?.data || err.message);
-    return { success: false, error: err.message };
-  }
-};
 
 // Forgot Password - Send OTP
 exports.forgotPassword = async (req, res) => {
@@ -257,15 +230,8 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 min
     await user.save();
 
-    // Email body
-    const html = `
-      <h1>Password Reset Request</h1>
-      <p>Your OTP for password reset is: <strong>${otp}</strong></p>
-      <p>This OTP will expire in 10 minutes.</p>
-      <p>If you did not request this, please ignore this email.</p>
-    `;
-
-    await sendEmailWithBrevo(email, "Password Reset OTP", html);
+    // Send OTP email using the email service
+    await sendPasswordResetOtp(email, otp);
 
     if (process.env.NODE_ENV === "development") {
       return res.status(200).json({ message: "OTP sent", otp });

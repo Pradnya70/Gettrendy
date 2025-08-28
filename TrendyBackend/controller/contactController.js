@@ -1,5 +1,5 @@
 const Contact = require("../models/contact")
-const { sendContactFormEmail } = require("../services/emailService")
+const { sendContactForm } = require("../services/emailService")
 
 // @desc    Create a new contact message
 // @route   POST /api/contact
@@ -20,7 +20,7 @@ exports.createContact = async (req, res) => {
 
     // Send email notification to admin
     try {
-      await sendContactFormEmail(contact)
+      await sendContactForm(contact)
       console.log("Contact form email sent to admin")
     } catch (emailError) {
       console.error("Error sending contact form email:", emailError)

@@ -221,9 +221,9 @@ import Services from "../Services/Services"
       </div>
 
       <div className="container my-1" style={{ padding: "100px 0px 50px 0px" }}>
-        <div className="row">
+        <div className="row " style={{ marginLeft: "5px", marginRight: "5px" }}>
           {/* ✅ Thumbnail column */}
-          <div className="col-md-1 d-flex flex-column gap-4">
+          <div className="col-md-1 col-sm-3 d-flex flex-column gap-4">
             {productData.images?.map((img, index) => (
               <img
                 key={index}
@@ -244,7 +244,7 @@ import Services from "../Services/Services"
           </div>
 
           {/* ✅ Main image */}
-          <div className="col-md-5">
+          <div className="col-md-5 col-sm-9">
             <div className="product-image">
               <img
                 src={getImageUrl(selectedImage || "/placeholder.svg")}
@@ -258,7 +258,7 @@ import Services from "../Services/Services"
             </div>
           </div>
 
-          <div className="col-md-6">
+          <div className="col-lg-6 col-md-6 col-sm-12 sm-top">
             <div className="product-details">
               <p className="product-category">{renderCategory()}</p>
               <h3 className="product-title ">{productData.product_name || productData.name}</h3>

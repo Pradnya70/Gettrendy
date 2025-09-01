@@ -44,8 +44,8 @@ const Categories = () => {
   return (
     <>
       {loading && <Loader />}
-      <Container fluid className="categories-container my-5">
-        <Row>
+      <Container fluid className="categories-container  justify-content-center my-5" style={{ maxWidth: "1920px" }}>
+        <Row className="justify-content-center">
           {categories.length > 0 ? (
             categories.map((category) => (
               <Col
@@ -54,7 +54,7 @@ const Categories = () => {
                 md={4}
                 sm={6}
                 key={category.id}
-                className="mb-4 m-auto"
+                className=""
                 style={{ padding: "0px" }}
               >
                 <Card

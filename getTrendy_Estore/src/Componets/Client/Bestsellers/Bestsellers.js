@@ -183,7 +183,7 @@ const Bestsellers = () => {
                           />
                         </div>
                         <Card.Body>
-                          <Card.Title className="product-title">{product.product_name}</Card.Title>
+                          <Card.Title className="card-product-title">{product.product_name}</Card.Title>
                           <Card.Text className="product-description">
                             {truncateText(product.description || product.product_description, 100)}
                           </Card.Text>
@@ -197,7 +197,7 @@ const Bestsellers = () => {
                                 <span className="original-price">₹{discountAmount(product.price, 23)}</span>
                               )}
                             </div>
-                            <div>
+                            <div className="position">
                               <span className="discount">
                                 {product.discount_price
                                   ? Math.round(((product.price - product.discount_price) / product.price) * 100)
@@ -214,7 +214,7 @@ const Bestsellers = () => {
                             >
                               View More
                             </Button>
-                            <Button
+                            {/* <Button
                               className="add-to-cart-btn"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -222,7 +222,7 @@ const Bestsellers = () => {
                               }}
                             >
                               Add To Cart
-                            </Button>
+                            </Button> */}
                           </div>
                         </Card.Body>
                       </Card>

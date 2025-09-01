@@ -623,25 +623,21 @@
 
 /* Styling for the sidebar */
 .sidebar {
-  margin-top: 100px;
-  height: 100vh;
-  /* Full height of the viewport */
-  width: 300px;
-  /* Sidebar width */
-  position: fixed;
-  top: 0;
-  right: -300px;
-  /* Initially hidden (off-screen) */
-  background-color: white;
-  overflow-y: auto;
-  /* Enable scrolling for the entire sidebar */
-  padding-top: 60px;
-  transition: 0.4s;
-  color: rgb(255, 255, 255);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  /* Align items in column */
+    margin-top: -60px;
+    height: 110vh;
+    width: 300px;
+    position: fixed;
+    top: 0;
+    right: -300px;
+    background-color: white;
+    overflow-y: auto;
+    padding-top: 60px;
+    transition: 0.4s;
+    color: rgb(255, 255, 255);
+    z-index: 9999;
+    display: flex
+;
+    flex-direction: column;
 }
 
 .sidebar-open {
@@ -977,4 +973,10 @@
   .navbar-nav .dropdown-toggle {
     font-size: 16px;
   }
+}
+
+.side-border {
+    padding: 10px 15px ;
+    border-bottom: 1px solid #c4bfbf;
+    margin-top: 20px;
 }

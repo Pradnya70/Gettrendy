@@ -20,7 +20,7 @@ p {
     display: flex;
     justify-content: space-between;
     padding: 40px 40px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: -1px 1px 5px 14px rgb(222 222 222 / 31%);
 }
 
 .contact-form {

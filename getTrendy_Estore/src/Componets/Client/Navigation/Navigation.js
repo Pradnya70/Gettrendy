@@ -8,6 +8,7 @@ import { BASEURL, authUtils, cartUtils, getImageUrl } from "../Comman/CommanCons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUser } from "@fortawesome/free-solid-svg-icons"
 import { ToastContainer } from "react-toastify"
+import caticon from "../../../image/category.png"
 import axios from "axios"
 
 const Navigation = () => {
@@ -226,7 +227,16 @@ const Navigation = () => {
               </Nav.Link>
 
               {/* Categories Dropdown */}
-              <NavDropdown title="Categories" id="categories-dropdown" style={{ margin: "20px 0px" }}>
+              <NavDropdown title={   <span className="d-flex align-items-center">  {/* 👇 Add SVG Icon */}
+              <img
+        src={caticon}
+        alt="Categories Icon"
+        style={{ width: "40px", height: "auto", marginRight: "6px" }}
+      />
+                Categories
+                </span>
+                } 
+                id="categories-dropdown" >
                 {allCategoryList && allCategoryList.length > 0 ? (
                   allCategoryList.map((category) => (
                     <NavDropdown.Item
@@ -237,8 +247,8 @@ const Navigation = () => {
                       }}
                       className="category-item"
                     >
-                      <div className="d-flex align-items-center">
-                        <span className="category-name">{renderCategoryName(category)}</span>
+                      <div className="d-flex align-items-center">    
+          <span className="category-name">{renderCategoryName(category)}</span>
                       </div>
                     </NavDropdown.Item>
                   ))
@@ -401,7 +411,7 @@ const Navigation = () => {
           <div className="cart-items-container">
             {cartItems && cartItems.length > 0 ? (
               cartItems.map((item) => (
-                <div className="customs-shop-card mt-3" key={item._id || item.id}>
+                <div className="customs-shop-card side-border overflow-x-hidden" key={item._id || item.id}>
                   <Row className="align-items-center g-5">
                     <Col xs={4} className="text-center">
                       <img
@@ -419,8 +429,8 @@ const Navigation = () => {
                         <p className="rating">
                           ★★★★★ <span style={{ color: "black", marginBottom: "0px" }}>(5.0)</span>
                         </p>
-                        <strong>{item.name || item.product_name}</strong>
-                        <p className="card-text">
+                        <strong className="text-dark">{item.name || item.product_name}</strong>
+                        <p className="card-text ">
                           ₹{item.price || item.product_price}.00 * {item.quantity}
                         </p>
                       </div>

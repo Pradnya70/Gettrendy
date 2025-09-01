@@ -610,8 +610,9 @@ const Shop = () => {
             </div>
 
             {/* Product Grid */}
-            <div className="col-md-9">
+            <div className="col-lg-9 col-md-9">
               <div className="product-list-header">
+              <div className="col-lg-6 col-md-6">
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="product-count">
                     <span>
@@ -620,6 +621,31 @@ const Shop = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+                <div className="col-lg-6 col-md-6">
+                 {/* Sort Options */}
+                <div className="filter-section">
+                  <h4>Sort By</h4>
+                  <select
+                    className="form-control"
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split("-");
+                      setSortBy(field);
+                      setSortOrder(order);
+                      setPage(1);
+                    }}
+                  >
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="price-asc">Price (Low to High)</option>
+                    <option value="price-desc">Price (High to Low)</option>
+                    <option value="createdAt-desc">Newest First</option>
+                    <option value="createdAt-asc">Oldest First</option>
+                  </select>
+                </div>
+             
+              </div>
               </div>
 
               <div className="products-container">
@@ -646,7 +672,7 @@ const Shop = () => {
                         key={product._id}
                         lg={4}
                         md={6}
-                        sm={12}
+                        sm={6}
                         className="mb-4"
                       >
                         <Card className="product-card h-100">
@@ -716,27 +742,28 @@ const Shop = () => {
                                     )}
                                   </span>
                                 </div>
-                                <div className="discount-info">
+                                <div className="position">
                                   <span className="discount-badge">
                                     23% Off
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="product-rating">
+                              {/* <div className="product-rating">
                                 {renderStars(5)}
                                 <span className="rating-count">(5.0)</span>
-                              </div>
+                              </div> */}
                             </div>
 
                             <div className="product-actions mt-auto">
                               <Button
                                 variant="outline-primary"
                                 onClick={() => handleViewProduct(product._id)}
-                                className="view-details-btn"
+                                className="view-more-btn"
                               >
                                 View Details
-                              </Button>
+                              </Button> 
+                              
                               {/* {inCartStatus[product._id] === true ? (
                                 <Button
                                   variant="success"

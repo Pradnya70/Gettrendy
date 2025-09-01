@@ -1,8 +1,17 @@
 .cart-page {
+    padding: 20px;
+    background-color: #f8f9fa;
+    margin-top: 100px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+   .cart-page {
     padding: 50px;
     background-color: #f8f9fa;
-    margin-top: 180px;
+    margin-top: 200px;
     margin-bottom: 20px;
+} 
 }
 
 .cart-page h2 {
@@ -14,9 +23,9 @@
     border-radius: 5px;
 }
 
-.table {
+/* .table {
     margin-top: 20px;
-}
+} */
 
 .table img {
     max-width: 80px;

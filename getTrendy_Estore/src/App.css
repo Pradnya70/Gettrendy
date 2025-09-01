@@ -110,3 +110,15 @@
     flex: 1 1 auto;
 }
 }
+
+[class*=btn-outline-] {
+    --mdb-btn-padding-top: 0.5rem;
+    --mdb-btn-padding-bottom: 0.375rem;
+    --mdb-btn-padding-x: 1rem !important;
+    --mdb-btn-border-width: 2px;
+    --mdb-btn-line-height: 1.5;
+    padding: var(--mdb-btn-padding-top) var(--mdb-btn-padding-x) var(--mdb-btn-padding-bottom);
+    border-width: var(--mdb-btn-border-width);
+    border-style: solid;
+    box-shadow: none;
+}

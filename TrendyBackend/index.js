@@ -16,6 +16,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
+      "http://localhost:3001",
       "http://142.93.220.230:3000",
       "https://gettrendy.in",
       "https://api.gettrendy.in",
@@ -41,8 +42,21 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Custom caching for static files
+app.use(
+  express.static(path.join(__dirname, "build"), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith("index.html")) {
+        // Don't cache index.html
+        res.setHeader("Cache-Control", "no-cache");
+      } else {
+        // Cache hashed JS/CSS files for 1 year
+        res.setHeader("Cache-Control", "public, max-age=1536000, immutable");
+      }
+    },
+  })
+);
+
 
 // Connect to MongoDB (remove deprecated options)
 mongoose

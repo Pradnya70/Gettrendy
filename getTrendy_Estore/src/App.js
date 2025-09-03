@@ -3,6 +3,8 @@ import LoginPage from "./Componets/Client/Signup/LoginPage";
 import { Routes, Route, useLocation } from "react-router-dom";
   import { useEffect } from "react";
 
+  
+
 import Register from "./Componets/Client/Signup/Register";
 import Home from "./Componets/Client/Home/Home";
 import Contact from "./Componets/Client/Contact/Contact";
@@ -93,12 +95,13 @@ const App = () => {
   }, []);
 
   
+console.log("VERSION:", process.env.REACT_APP_VERSION);
 
 
 
   return (
     <>
-      <ToastContainer />
+      
 
       {!isAdminRoute() && <Navigation />}
       <Routes>
@@ -300,6 +303,20 @@ const App = () => {
         </Route>
       </Routes>
       <WhatsAppIcon />
+
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
     </>
   );
 };

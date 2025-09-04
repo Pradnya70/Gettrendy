@@ -9,14 +9,25 @@ const nodemailer = require("nodemailer");
  * - ADMIN_EMAIL: admin@yourdomain.com (optional, defaults to EMAIL_USER)
  */
 const createTransporter = () => {
+  if (process.env.NODE_ENV === "development") {
+    // 👇 Stream transport: email will not be sent, only printed to console
+    return nodemailer.createTransport({
+      streamTransport: true,
+      newline: "unix",
+      buffer: true,
+    });
+  }
+
+  // 👇 Real Gmail transporter (production)
   return nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // 16-digit app password
+      pass: process.env.EMAIL_PASS,
     },
   });
 };
+
 
 /**
  * Send email with Gmail

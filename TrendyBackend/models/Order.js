@@ -163,7 +163,6 @@ const orderSchema = new mongoose.Schema(
 
 // Add indexes for better query performance
 orderSchema.index({ userId: 1, createdAt: -1 })
-orderSchema.index({ orderId: 1 })
 orderSchema.index({ razorpayOrderId: 1 })
 orderSchema.index({ seenByAdmin: 1 })
 

@@ -290,7 +290,7 @@ const Shopping = () => {
           <Row className="product-cards">
             {allProducts &&
               allProducts.map((product) => (
-                <Col lg={3} md={6} sm={12} key={product.id} className="mb-5">
+                <Col lg={3} md={6} sm={6}  key={product.id} className="mb-5">
                   <Card className="shop-costume-product-card">
                     <div className="product-image-container">
                       <Card.Img

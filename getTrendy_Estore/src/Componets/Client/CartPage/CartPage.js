@@ -210,7 +210,7 @@ const CartPage = () => {
   return (
     <>
       <ToastContainer />
-      <Container className="cart-page" style={{ paddingTop: "150px" }}>
+      <Container className="cart-page" style={{ padding: "50px" }}>
         <h2>Shopping Cart</h2>
         <p>Home • Cart</p>
 

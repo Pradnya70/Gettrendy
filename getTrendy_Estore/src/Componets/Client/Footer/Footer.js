@@ -114,6 +114,7 @@ const Footer = () => {
           <a className="text-reset fw-bold " href="">
             Get Trendy
           </a>
+           <p className="float-end mb-0">Version : {process.env.REACT_APP_VERSION}</p>
         </div>
       </MDBFooter>
     </>

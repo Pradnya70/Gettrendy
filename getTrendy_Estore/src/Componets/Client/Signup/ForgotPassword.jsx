@@ -287,7 +287,7 @@ function ForgotPassword() {
                 {/* Development mode OTP display */}
                 {devOtp && (
                   <Alert variant="info" className="mb-3">
-                    <strong>Development Mode:</strong> Use this OTP for testing:{" "}
+                    <strong></strong> Use this OTP for Reset Your Password:{" "}
                     <code>{devOtp}</code>
                   </Alert>
                 )}

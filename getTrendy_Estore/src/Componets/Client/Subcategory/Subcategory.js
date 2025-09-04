@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Container, Row, Col, Card } from "react-bootstrap"
+import { Container, Card } from "react-bootstrap"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import { BASEURL, getImageUrl } from "../Comman/CommanConstans"
@@ -10,27 +10,23 @@ import "./Subcategory.css"
 import Aos from "aos"
 import "aos/dist/aos.css"
 
+// 👇 Import Swiper
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Navigation, Autoplay } from "swiper/modules"
+import "swiper/css"
+import "swiper/css/navigation"
+
 const Categories = () => {
   const navigate = useNavigate()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Fetch all subcategories
   const fetchCategories = async () => {
     try {
       setLoading(true)
-      console.log("Fetching subcategories from:", `${BASEURL}/api/subcategory?limit=6`)
-
-      const response = await axios.get(`${BASEURL}/api/subcategory?limit=6`) // Fixed: lowercase 'subcategory'
-
-      console.log("Subcategories API response:", response.data)
-
-      if (response && response.data) {
-        // Handle different response formats
-        const subcategoriesData = response.data.rows || response.data.data || response.data || []
-        console.log("Subcategories data:", subcategoriesData)
-        setCategories(subcategoriesData)
-      }
+      const response = await axios.get(`${BASEURL}/api/subcategory?limit=6`)
+      const subcategoriesData = response.data.rows || response.data.data || response.data || []
+      setCategories(subcategoriesData)
       setLoading(false)
     } catch (error) {
       console.error("Error fetching subcategories:", error)
@@ -38,16 +34,13 @@ const Categories = () => {
     }
   }
 
-  // Navigate to shop with selected subcategory
   const navigateToSubcategory = (subcategoryId) => {
-    console.log("Navigating to subcategory:", subcategoryId)
     navigate("/shop", { state: { subcategoryId } })
     window.scrollTo(0, 0)
   }
 
   useEffect(() => {
     fetchCategories()
-    // Initialize AOS
     Aos.init()
   }, [])
 
@@ -63,16 +56,23 @@ const Categories = () => {
           </div>
           <div className="section-line"></div>
         </div>
-        <Row>
-          {categories.length > 0 ? (
-            categories.map((subcategory) => (
-              <Col
-                lg={3}
-                md={4}
-                sm={6}
-                key={subcategory._id || subcategory.id} // Fixed: use _id for MongoDB
-                className="mb-4"
-              >
+
+        {categories.length > 0 ? (
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            navigation={true} // 👈 prev/next buttons
+            autoplay={{ delay: 2000, disableOnInteraction: false }} // 👈 auto-slide every 2 sec
+            loop={true} // 👈 infinite loop
+            spaceBetween={20}
+            slidesPerView={4}
+            breakpoints={{
+              320: { slidesPerView: 1 },
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 4 },
+            }}
+          >
+            {categories.map((subcategory) => (
+              <SwiperSlide key={subcategory._id || subcategory.id}>
                 <Card
                   className="Subcategory-card"
                   onClick={() => navigateToSubcategory(subcategory._id || subcategory.id)}
@@ -83,39 +83,25 @@ const Categories = () => {
                       variant="top"
                       src={
                         getImageUrl(subcategory.subcategory_logo || subcategory.subcategory_image) || "/placeholder.svg"
-                      } // Fixed: use getImageUrl helper and correct field name
+                      }
                       alt={subcategory.subcategory_name}
                       className="Subcategory-image"
                       onError={(e) => {
-                        console.error("Image load error for subcategory:", subcategory.subcategory_name)
-                        console.error("Image URL:", e.target.src)
                         e.target.onerror = null
                         e.target.src = "/placeholder.svg"
                       }}
                     />
                   </div>
-                  <Card.Body className="text-center">
-                    <Card.Title>{subcategory.subcategory_name}</Card.Title>
-                    {/* {subcategory.subcategory_description && (
-                      <Card.Text className="text-muted">{subcategory.subcategory_description}</Card.Text>
-                    )} */}
-                    {/* Display parent category if available */}
-                    {/* {subcategory.parent_category && (
-                      <Card.Text className="text-muted small">
-                        Category: {subcategory.parent_category.category_name || subcategory.parent_category}
-                      </Card.Text>
-                    )} */}
-                  </Card.Body>
                 </Card>
-              </Col>
-            ))
-          ) : (
-            <Col xs={12} className="text-center">
-              <h4>No subcategories found</h4>
-              <p className="text-muted">Please check your API connection or try again later.</p>
-            </Col>
-          )}
-        </Row>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <div className="text-center">
+            <h4>No subcategories found</h4>
+            <p className="text-muted">Please check your API connection or try again later.</p>
+          </div>
+        )}
       </Container>
     </>
   )

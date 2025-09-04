@@ -262,6 +262,18 @@ form button {
     /* Full width on smaller screens */
 }
 
+.product-title {
+    font-size: 1.75rem !important;
+    font-weight: 500;
+    margin-bottom: 0px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    padding: 0px 0px 5px 0px;
+    text-align: left;
+}
+
 /* Product description styles */
 .product-description {
     display: -webkit-box;

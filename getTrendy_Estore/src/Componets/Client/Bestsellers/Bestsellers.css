@@ -79,9 +79,22 @@
     background-color: #E9272D !important;
     color: white !important;
 }
+.card-body {
+    flex: 1 1 auto;
+    padding: 1rem !important;
+    color: var(--mdb-card-color);
+}
 
 @media (max-width :767px) {
     .product-image-container {
         margin-top: 0px;
     }
+}
+
+@media (min-width: 768px) {
+    .card-body {
+    flex: 1 1 auto;
+    padding: 1.5rem !important;
+    color: var(--mdb-card-color);
+}
 }

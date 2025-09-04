@@ -160,10 +160,10 @@ const ProductCard = () => {
               allProducts.map((product) => (
                 <Col
                   lg={3}
-                  md={6}
+                  md={4}
                   sm={6}
                   key={product.id || product._id}
-                  className="mb-5 d-flex justify-content-center"
+                  className="mb-2 d-flex justify-content-center"
                 >
                   <Card className="costume-product-card" onClick={() => navigateToProduct(product.id || product._id)}>
                     <div className="product-image-container">
@@ -188,7 +188,7 @@ const ProductCard = () => {
                       )}
                     </div>
                     <Card.Body>
-                      <Card.Title className="product-title">{product.product_name}</Card.Title>
+                      <Card.Title className="card-product-title">{product.product_name}</Card.Title>
                       <Card.Text className="product-description">
                         {truncateText(product.description || product.product_description, 100)}
                       </Card.Text>

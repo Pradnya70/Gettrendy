@@ -12,45 +12,55 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "http://142.93.220.230:3000",
-      "https://gettrendy.in",
-      "https://api.gettrendy.in",
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-access-token",
-      "Cache-Control",
-      "Pragma",
-      "Accept",
-      "Origin",
-      "X-Requested-With",
-    ],
-    exposedHeaders: ["Cache-Control", "Pragma"],
-    credentials: true,
-    maxAge: 86400,
-  })
-);
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://142.93.220.230:3000",
+    "https://gettrendy.in",
+    "https://www.gettrendy.in",
+    "https://api.gettrendy.in",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-access-token",
+    "Cache-Control",
+    "Pragma",
+    "Accept",
+    "Origin",
+    "X-Requested-With",
+  ],
+  exposedHeaders: ["Cache-Control", "Pragma"],
+  credentials: true,
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions)); // ✅ This handles CORS + preflight automatically
 
 // Middleware
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Custom caching for static files
+app.use(
+  express.static(path.join(__dirname, "build"), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith("index.html")) {
+        res.setHeader("Cache-Control", "no-cache");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=1536000, immutable");
+      }
+    },
+  })
+);
 
-// Connect to MongoDB (remove deprecated options)
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-//  console.log('🔍 MONGO_URI =', process.env.MONGO_URI);
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
@@ -111,7 +121,6 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-  // console.log(`404 - Route not found: ${req.method} ${req.url}`)
   res.status(404).json({
     success: false,
     message: `Route ${req.method} ${req.url} not found`,

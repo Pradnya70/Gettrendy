@@ -74,8 +74,19 @@
     margin-bottom: 20px;
 }
 
+.card-body {
+    flex: 1 1 auto;
+    padding: 1rem !important;
+    color: var(--mdb-card-color);
+}
+
 @media (max-width: 768px) {
     .promo-banner {
         margin-bottom: 20px;
     }
+    .card-body {
+    flex: 1 1 auto;
+    padding: 1.5rem !important;
+    color: var(--mdb-card-color);
+}
 }

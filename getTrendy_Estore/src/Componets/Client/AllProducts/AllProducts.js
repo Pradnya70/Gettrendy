@@ -652,7 +652,7 @@ const Allproducts = () => {
       {products.length > 0 ? (
         <Row>
           {products.map((product) => (
-            <Col lg={3} md={4} sm={6} key={product.id} className="mb-4">
+            <Col lg={3} md={4} sm={6} key={product.id} className="">
               <Card className="h-100 product-card">
                 <div className="product-image-container" onClick={() => navigateToProduct(product.id)}>
                   <Card.Img

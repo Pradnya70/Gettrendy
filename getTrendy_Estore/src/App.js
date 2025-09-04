@@ -1,6 +1,10 @@
 import Navigation from "./Componets/Client/Navigation/Navigation";
 import LoginPage from "./Componets/Client/Signup/LoginPage";
 import { Routes, Route, useLocation } from "react-router-dom";
+  import { useEffect } from "react";
+
+  
+
 import Register from "./Componets/Client/Signup/Register";
 import Home from "./Componets/Client/Home/Home";
 import Contact from "./Componets/Client/Contact/Contact";
@@ -65,9 +69,39 @@ const App = () => {
     );
   };
 
+
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) &&
+        (event.key === "+" || event.key === "-" || event.key === "=")) {
+        event.preventDefault();
+      }
+    };
+
+    const handleWheel = (event) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
+
+  
+console.log("VERSION:", process.env.REACT_APP_VERSION);
+
+
+
   return (
     <>
-      <ToastContainer />
+      
 
       {!isAdminRoute() && <Navigation />}
       <Routes>
@@ -269,6 +303,20 @@ const App = () => {
         </Route>
       </Routes>
       <WhatsAppIcon />
+
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
     </>
   );
 };

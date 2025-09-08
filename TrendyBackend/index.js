@@ -5,11 +5,15 @@ const dotenv = require("dotenv");
 const path = require("path");
 const HOST = "0.0.0.0";
 
+
 // Load environment variables
 dotenv.config();
 
 // Create Express app
 const app = express();
+
+
+
 
 // CORS configuration
 const corsOptions = {
@@ -75,6 +79,7 @@ const uploadRoute = require("./routes/uploadRoutes");
 const userRoutes = require("./routes/userRoutes");
 const razorpayRoutes = require("./routes/razorpayRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const shiprocketRoutes = require("./routes/shiprocketRoutes");
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -89,6 +94,8 @@ app.use("/api/review", reviewRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/razorpay", razorpayRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/shiprocket", shiprocketRoutes);
+
 
 // Test Route
 app.get("/", (req, res) => {
@@ -108,6 +115,22 @@ app.get("/api/test", (req, res) => {
     ],
   });
 });
+
+// Shiprocket webhook endpoint
+app.post('/api/shiprocket-webhook', (req, res) => {
+  const token = req.headers['x-api-key'];
+  if(token !== 'Getorder#38') {
+    return res.status(403).send('Unauthorized');
+  }
+
+  const trackingData = req.body;
+  console.log('Tracking update:', trackingData);
+
+  // Here you can save trackingData to your database or notify users
+
+  res.status(200).send('Received');
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

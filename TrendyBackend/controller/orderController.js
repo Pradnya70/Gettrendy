@@ -6,81 +6,61 @@ const mongoose = require("mongoose")
 const PDFDocument = require("pdfkit")
 const shiprocketService = require("../services/shiprocketService")
 const { sendOrderConfirmationToUser, sendNewOrderNotificationToAdmin } = require("../services/emailService")
+const crypto = require("crypto")
 
-// Place a new order
+// ===============================
+// PLACE ORDER
+// ===============================
 const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id
     const { items, totalAmount, paymentMethod, address, notes } = req.body
 
-    // Validate required fields
+    // ✅ Validate inputs
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Order items are required",
-      })
+      return res.status(400).json({ success: false, message: "Order items are required" })
     }
-
     if (!totalAmount || totalAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid total amount is required",
-      })
+      return res.status(400).json({ success: false, message: "Valid total amount is required" })
     }
-
     if (!address || !address.fullName || !address.street || !address.city || !address.phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Complete address information is required",
-      })
+      return res.status(400).json({ success: false, message: "Complete address information is required" })
     }
 
-    // Get user info
+    // ✅ Get user
     const user = await User.findById(userId)
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      })
-    }
+    if (!user) return res.status(404).json({ success: false, message: "User not found" })
 
-    // Validate products exist
+    // ✅ Validate products
     for (const item of items) {
       if (!mongoose.Types.ObjectId.isValid(item.productId)) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid product ID: ${item.productId}`,
-        })
+        return res.status(400).json({ success: false, message: `Invalid product ID: ${item.productId}` })
       }
-
       const product = await Product.findById(item.productId)
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: `Product not found: ${item.productName || item.productId}`,
-        })
-      }
+      if (!product) return res.status(404).json({ success: false, message: `Product not found: ${item.productName}` })
     }
 
-    // Generate order ID
+    // ✅ Generate order ID
     const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`
 
-    // Create order
+    // ✅ Create order in DB
     const order = new Order({
       orderId,
       userId,
       userName: user.name,
       userEmail: user.email,
-      items: items.map((item) => ({
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        price: item.price,
-        size: item.size || "M",
-        color: item.color || "Default",
+      items: items.map((i) => ({
+        productId: i.productId,
+        productName: i.productName,
+        quantity: i.quantity,
+        price: i.price,
+        size: i.size || "M",
+        color: i.color || "Default",
       })),
       totalAmount,
       paymentMethod: paymentMethod || "CASH",
+      paymentStatus: paymentMethod === "CASH" ? "paid" : "pending",
+      status: "pending",
       address: {
         fullName: address.fullName,
         street: address.street,
@@ -93,60 +73,161 @@ const placeOrder = async (req, res) => {
         country: address.country || "India",
       },
       notes: notes || "",
-      status: "pending",
-      paymentStatus: paymentMethod === "CASH" ? "pending" : "paid",
     })
 
     await order.save()
 
-    // Send emails
-    try {
-      // Use address email if provided, otherwise use user's registered email
-      const emailToSend = address.email || user.email
-      console.log("Sending confirmation email to:", emailToSend)
-
-      // Send confirmation email to user
-      const userEmailResult = await sendOrderConfirmationToUser(emailToSend, order)
-      if (userEmailResult.success) {
+    // ✅ COD Orders → Immediately confirm + Shiprocket
+    if (paymentMethod === "CASH") {
+      try {
+        const emailToSend = address.email || user.email
+        await sendOrderConfirmationToUser(emailToSend, order)
+        await sendNewOrderNotificationToAdmin(order)
         order.userEmailSent = true
-        order.userNotified = true
-        console.log("User email sent successfully")
-      } else {
-        console.error("Failed to send user email:", userEmailResult.error)
-      }
-
-      // Send notification email to admin
-      const adminEmailResult = await sendNewOrderNotificationToAdmin(order)
-      if (adminEmailResult.success) {
         order.adminEmailSent = true
+        order.userNotified = true
         order.adminNotified = true
-        console.log("Admin email sent successfully")
-      } else {
-        console.error("Failed to send admin email:", adminEmailResult.error)
+        await order.save()
+      } catch (err) {
+        console.error("Email error:", err.message)
       }
 
-      await order.save()
-    } catch (emailError) {
-      console.error("Error sending emails:", emailError)
-      // Don't fail the order if email sending fails
+      try {
+        const shiprocketPayload = {
+          order_id: order.orderId,
+          order_date: new Date().toISOString(),
+          pickup_location: "Primary", // must match your Shiprocket pickup
+          billing_customer_name: order.address.fullName,
+          billing_last_name: "",
+          billing_address: order.address.street,
+          billing_city: order.address.city,
+          billing_pincode: order.address.postcode,
+          billing_state: order.address.state,
+          billing_country: order.address.country,
+          billing_email: order.address.email,
+          billing_phone: order.address.phone,
+          order_items: order.items.map((i) => ({
+            name: i.productName,
+            sku: i.productId.toString(),
+            units: i.quantity,
+            selling_price: i.price,
+          })),
+          payment_method: "COD",
+          sub_total: order.totalAmount,
+          length: 10,
+          breadth: 10,
+          height: 10,
+          weight: 1.0,
+        }
+
+        const shipRes = await shiprocketService.createOrder(shiprocketPayload)
+        if (shipRes?.order_id) {
+          order.shiprocketOrderId = shipRes.order_id
+          order.shiprocketShipmentId = shipRes.shipment_id
+          order.trackingNumber = shipRes.awb_code
+          await order.save()
+        }
+      } catch (shipErr) {
+        console.error("Shiprocket sync error:", shipErr.message)
+      }
     }
 
-    // Clear user's cart after successful order
+    // ✅ Clear cart
     await Cart.findOneAndDelete({ userId })
 
     res.status(201).json({
       success: true,
-      message: "Order placed successfully",
+      message: paymentMethod === "CASH" ? "COD order placed successfully" : "Online order created (awaiting payment)",
       data: order,
       orderId: order.orderId,
     })
   } catch (error) {
     console.error("Place order error:", error)
-    res.status(500).json({
-      success: false,
-      message: "Error placing order",
-      error: error.message,
-    })
+    res.status(500).json({ success: false, message: "Error placing order", error: error.message })
+  }
+}
+
+// ===============================
+// VERIFY RAZORPAY PAYMENT
+// ===============================
+const verifyPayment = async (req, res) => {
+  try {
+    const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body
+
+    // ✅ Verify Razorpay signature
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpayOrderId + "|" + razorpayPaymentId)
+      .digest("hex")
+
+    if (expectedSignature !== razorpaySignature) {
+      return res.status(400).json({ success: false, message: "Invalid Razorpay signature" })
+    }
+
+    // ✅ Update order
+    const order = await Order.findOne({ orderId })
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" })
+
+    order.paymentStatus = "paid"
+    order.razorpayOrderId = razorpayOrderId
+    order.razorpayPaymentId = razorpayPaymentId
+    order.razorpaySignature = razorpaySignature
+    await order.save()
+
+    // ✅ Send Emails
+    const emailToSend = order.address.email || order.userEmail
+    await sendOrderConfirmationToUser(emailToSend, order)
+    await sendNewOrderNotificationToAdmin(order)
+    order.userEmailSent = true
+    order.adminEmailSent = true
+    order.userNotified = true
+    order.adminNotified = true
+    await order.save()
+
+    // ✅ Sync Shiprocket
+    try {
+      const shiprocketPayload = {
+        order_id: order.orderId,
+        order_date: new Date().toISOString(),
+        pickup_location: "Primary",
+        billing_customer_name: order.address.fullName,
+        billing_last_name: "",
+        billing_address: order.address.street,
+        billing_city: order.address.city,
+        billing_pincode: order.address.postcode,
+        billing_state: order.address.state,
+        billing_country: order.address.country,
+        billing_email: order.address.email,
+        billing_phone: order.address.phone,
+        order_items: order.items.map((i) => ({
+          name: i.productName,
+          sku: i.productId.toString(),
+          units: i.quantity,
+          selling_price: i.price,
+        })),
+        payment_method: "Prepaid",
+        sub_total: order.totalAmount,
+        length: 10,
+        breadth: 10,
+        height: 10,
+        weight: 1.0,
+      }
+
+      const shipRes = await shiprocketService.createOrder(shiprocketPayload)
+      if (shipRes?.order_id) {
+        order.shiprocketOrderId = shipRes.order_id
+        order.shiprocketShipmentId = shipRes.shipment_id
+        order.trackingNumber = shipRes.awb_code
+        await order.save()
+      }
+    } catch (shipErr) {
+      console.error("Shiprocket sync error:", shipErr.message)
+    }
+
+    res.json({ success: true, message: "Payment verified & order confirmed", order })
+  } catch (err) {
+    console.error("Verify payment error:", err)
+    res.status(500).json({ success: false, message: "Error verifying payment" })
   }
 }
 
@@ -411,6 +492,7 @@ const createShiprocketOrder = async (req, res) => {
 
 module.exports = {
   placeOrder,
+  verifyPayment,
   getUserOrders,
   getOrderById,
   updateOrderStatus,

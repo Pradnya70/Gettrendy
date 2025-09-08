@@ -1,5 +1,7 @@
-const axios = require("axios")
 
+require("dotenv").config(); // make sure this is at the very top
+
+const axios = require("axios")
 const SHIPROCKET_EMAIL = process.env.SHIPROCKET_EMAIL
 const SHIPROCKET_PASSWORD = process.env.SHIPROCKET_PASSWORD
 const SHIPROCKET_BASE_URL = "https://apiv2.shiprocket.in/v1/external"
@@ -16,6 +18,9 @@ async function authenticate() {
     }
 
     console.log("Authenticating with Shiprocket...")
+      // 🔍 Debug logs to check if .env is working
+    console.log("EMAIL:", SHIPROCKET_EMAIL);
+    console.log("PASSWORD:", SHIPROCKET_PASSWORD);
 
     if (!SHIPROCKET_EMAIL || !SHIPROCKET_PASSWORD) {
       throw new Error("Shiprocket credentials not configured")
@@ -73,7 +78,7 @@ async function createOrder(orderData) {
     const shiprocketOrderData = {
       order_id: String(orderData.order_id), // Ensure it's a string
       order_date: orderData.order_date || new Date().toISOString().slice(0, 19).replace("T", " "),
-      pickup_location: orderData.pickup_location || "Primary",
+      pickup_location: orderData.pickup_location || "warehouse",
       channel_id: "", // Leave empty for manual orders
       comment: orderData.comment || "Order from website",
       billing_customer_name: String(orderData.billing_customer_name).trim(),

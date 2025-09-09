@@ -96,7 +96,7 @@ const placeOrder = async (req, res) => {
         const shiprocketPayload = {
           order_id: order.orderId,
           order_date: new Date().toISOString(),
-          pickup_location: "Primary", // must match your Shiprocket pickup
+          pickup_location: "warehouse", // must match your Shiprocket pickup
           billing_customer_name: order.address.fullName,
           billing_last_name: "",
           billing_address: order.address.street,
@@ -189,7 +189,7 @@ const verifyPayment = async (req, res) => {
       const shiprocketPayload = {
         order_id: order.orderId,
         order_date: new Date().toISOString(),
-        pickup_location: "Primary",
+        pickup_location: "warehouse",
         billing_customer_name: order.address.fullName,
         billing_last_name: "",
         billing_address: order.address.street,

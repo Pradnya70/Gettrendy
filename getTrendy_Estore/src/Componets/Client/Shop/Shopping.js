@@ -1,379 +1,638 @@
-import React, { useEffect, useState } from "react";
-import "./Shop.css"; // Your custom CSS for additional styling
+"use client";
+
+import { useEffect, useState } from "react";
+import "./Shop.css";
 import { Badge, Button, Card, Col, Row } from "react-bootstrap";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
-import { FaHeart } from "react-icons/fa";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
+import { FaHeart, FaStar } from "react-icons/fa";
+import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import Footer from "../Footer/Footer";
-import axios from "axios";
-import { BASEURL } from "../Comman/CommanConstans";
+import { BASEURL, authUtils, cartUtils } from "../Comman/CommanConstans";
 import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../Loader/Loader";
-import { useCart } from "../../CartContext/CartContext";
-import { useAuth } from "../../AuthContext/AuthContext";
-import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
+import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
 
-const Shopping = () => {
-  const { userToken } = useAuth();
-  const { addToCart } = useCart();
+const Shop = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
-  const [value, setValue] = useState([20, 37]);
+  const [limit, setLimit] = useState(9);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
   const [pagesCount, setPagesCount] = useState(1);
-  const [allProducts, setAllProducts] = useState([]);
+  const [products, setProducts] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [inCartStatus, setInCartStatus] = useState({});
   const [allCategoryList, setAllCategoryList] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCategoryCount, setVisibleCategoryCount] = useState(6);
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
 
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Track Pants",
-      price: 49.0,
-      image: "/Images/Slim-Fit Joggers.jpg",
-      category: "Baby Food",
-      rating: "★★★★★",
-    },
-    {
-      id: 2,
-      name: "Wristbands or Socks",
-      price: 60.0,
-      image: "/Images/Wristbands or Socks.jpg",
-      category: "Strawberry",
-      rating: "★★★★",
-    },
-    {
-      id: 3,
-      name: "Backpacks",
-      price: 30.0,
-      image: "/Images/Everyday Casual Backpack.jpg",
-      category: "Meat",
-      rating: "★★★★★",
-    },
-    // Add more products
-  ]);
+  // Read category from URL query param on mount & on URL change
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlCategory = params.get("category");
 
-  function valuetext(value) {
-    return `${value}°C`;
-  }
+    if (urlCategory) {
+      setSelectedCategory(urlCategory);
+      setPage(1); // Reset page on category change from URL
+    }
+  }, [location.search]);
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
-
-  const getProductsById = async (id) => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${BASEURL}/customers/all-products?page=${page}&limit=${limit}&sub_category=${id}`
-      );
-      if (response) {
-        setLoading(false);
-        setAllProducts(response.data.rows);
-        setPagesCount(response.data.pages_count);
-        setTotalCount(response.data.count);
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
+
+      if (selectedCategory) {
+        params.append("category", selectedCategory);
+      }
+
+      if (searchQuery.trim()) {
+        params.append("search", searchQuery.trim());
+      }
+
+      params.append("minPrice", priceRange[0].toString());
+      params.append("maxPrice", priceRange[1].toString());
+      params.append("sortBy", sortBy);
+      params.append("sortOrder", sortOrder);
+
+      console.log("Fetching products with params:", params.toString());
+
+      const response = await axios.get(`${BASEURL}/api/products?${params.toString()}`);
+
+      console.log("Products response:", response.data);
+
+      if (response.data) {
+        let productData = [];
+        let totalPages = 1;
+        let total = 0;
+
+        if (response.data.rows && Array.isArray(response.data.rows)) {
+          productData = response.data.rows;
+          totalPages = response.data.pages_count || 1;
+          total = response.data.count || 0;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          productData = response.data.data;
+          totalPages = response.data.totalPages || 1;
+          total = response.data.total || 0;
+        } else if (Array.isArray(response.data)) {
+          productData = response.data;
+          totalPages = Math.ceil(response.data.length / limit);
+          total = response.data.length;
+        } else {
+          console.error("Unexpected product data format:", response.data);
+          productData = [];
+        }
+
+        setProducts(productData);
+        setPagesCount(totalPages);
+        setTotalCount(total);
+      } else {
+        setProducts([]);
+        setPagesCount(1);
+        setTotalCount(0);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
+      setProducts([]);
+      setPagesCount(1);
+      setTotalCount(0);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getAllProducts = async () => {
+  const fetchCategories = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(
-        `${BASEURL}/customers/products?page=${page}&limit=${limit}`
-      );
-      if (response) {
-        setLoading(false);
-        setAllProducts(response.data.rows);
-        setPagesCount(response.data.pages_count);
-        setTotalCount(response.data.count);
+      const response = await axios.get(`${BASEURL}/api/category`);
+
+      console.log("Categories response:", response.data);
+
+      if (response.data) {
+        let categoryData = [];
+
+        if (response.data.rows && Array.isArray(response.data.rows)) {
+          categoryData = response.data.rows;
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          categoryData = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          categoryData = response.data;
+        }
+
+        setAllCategoryList(categoryData);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching categories:", error);
+      setAllCategoryList([]);
     }
   };
+
+  // Fetch data when filters change
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([fetchProducts(), fetchCategories()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      }
+    };
+
+    fetchAllData();
+  }, [page, limit, selectedCategory, searchQuery, priceRange, sortBy, sortOrder]);
+
+  // Check cart status for products
+  useEffect(() => {
+    const checkCartStatus = async () => {
+      if (authUtils.isAuthenticated() && products.length > 0) {
+        try {
+          const cartItems = await cartUtils.fetchCartItems();
+          const cartProductIds = cartItems.map(
+            (item) => item.productId?._id || item.productId
+          );
+
+          const newInCartStatus = {};
+          products.forEach((product) => {
+            newInCartStatus[product._id] = cartProductIds.includes(product._id);
+          });
+          setInCartStatus(newInCartStatus);
+        } catch (error) {
+          console.error("Error checking cart status:", error);
+        }
+      } else {
+        // Clear cart status if not authenticated
+        setInCartStatus({});
+      }
+    };
+
+    checkCartStatus();
+
+    // Listen for cart changes
+    const handleCartChange = () => {
+      checkCartStatus();
+    };
+
+    window.addEventListener("cart-changed", handleCartChange);
+
+    return () => {
+      window.removeEventListener("cart-changed", handleCartChange);
+    };
+  }, [products]);
+
+  const handleAddToCart = async (product) => {
+    try {
+      if (!authUtils.isAuthenticated()) {
+        toast.warning("Please login to add items to cart");
+        navigate("/login");
+        return;
+      }
+
+      if (!product || !product._id) {
+        toast.error("Invalid product data");
+        return;
+      }
+
+      setInCartStatus((prev) => ({
+        ...prev,
+        [product._id]: "loading",
+      }));
+
+      const result = await cartUtils.addToCart(product, 1, "M", "Default");
+
+      if (result.success) {
+        toast.success(result.message || "Product added to cart successfully!");
+        setInCartStatus((prev) => ({
+          ...prev,
+          [product._id]: true,
+        }));
+      } else {
+        toast.error(result.message || "Failed to add product to cart");
+        setInCartStatus((prev) => ({
+          ...prev,
+          [product._id]: false,
+        }));
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
+      setInCartStatus((prev) => ({
+        ...prev,
+        [product._id]: false,
+      }));
+    }
+  };
+
+  const handleRemoveFromCart = async (product) => {
+    try {
+      if (!authUtils.isAuthenticated()) {
+        toast.warning("Please login to manage cart");
+        return;
+      }
+
+      setInCartStatus((prev) => ({
+        ...prev,
+        [product._id]: "loading",
+      }));
+
+      const result = await cartUtils.removeFromCart(product._id, "M", "Default");
+
+      if (result.success) {
+        toast.success("Product removed from cart");
+        setInCartStatus((prev) => ({
+          ...prev,
+          [product._id]: false,
+        }));
+      } else {
+        toast.error(result.message || "Failed to remove product from cart");
+        setInCartStatus((prev) => ({
+          ...prev,
+          [product._id]: true,
+        }));
+      }
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      toast.error("Failed to remove from cart");
+      setInCartStatus((prev) => ({
+        ...prev,
+        [product._id]: true,
+      }));
+    }
+  };
+
+  const handleViewProduct = (productId) => {
+    navigate("/perticularproductpage", {
+      state: { productId },
+    });
+    window.scroll(0, 0);
+  };
+
+  const handleSearch = () => {
+    setPage(1);
+    fetchProducts();
+  };
+
+  const handlePriceChange = (event, newValue) => {
+    setPriceRange(newValue);
+  };
+
+  const handleCategoryChange = (categoryId) => {
+    if (selectedCategory === categoryId) {
+      setSelectedCategory(null);
+      navigate("/shop"); // Remove category from URL
+    } else {
+      setSelectedCategory(categoryId);
+      navigate(`/shop?category=${categoryId}`); // Update URL param
+    }
+    setPage(1);
+  };
+
   const handlePageChange = (event, value) => {
     setPage(value);
     window.scroll(0, 0);
   };
 
-  // Calculate the range for the current page
-  const start = (page - 1) * limit + 1;
-  const end = Math.min(page * limit, totalCount);
-
-  const navigateToProduct = (id) => {
-    window.scroll(0, 0);
-    navigate("/perticularproductpage", { state: { productId: id } });
+  const resetFilters = () => {
+    setSelectedCategory(null);
+    setSearchQuery("");
+    setPriceRange([0, 10000]);
+    setSortBy("name");
+    setSortOrder("asc");
+    setPage(1);
+    navigate("/shop"); // Clear URL filters
   };
-  const handleAddToCart = (product) => {
-    if (userToken) {
-      addToCart(product, 1);
-      setInCartStatus((prevStatus) => ({
-        ...prevStatus,
-        [product.id]: true,
-      }));
-    } else {
-      navigate("/login");
-      window.scroll(0, 0);
+
+  const handleViewMoreCategories = () => {
+    setVisibleCategoryCount(allCategoryList.length);
+  };
+
+  const handleViewLessCategories = () => {
+    setVisibleCategoryCount(6);
+  };
+
+  // Helper rendering functions
+
+  const renderCategoryName = (category) => {
+    if (!category) return "Category";
+    if (typeof category === "string") return category;
+    return category.category_name || category.name || "Category";
+  };
+
+  const getProductName = (product) => {
+    return product.product_name || product.name || "Product";
+  };
+
+  const getProductPrice = (product) => {
+    return product.price || product.product_price || 0;
+  };
+
+  const getProductImage = (product) => {
+    let imagePath = null;
+
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      imagePath = product.images[0];
+    } else if (product.image) {
+      imagePath = product.image;
+    } else if (product.product_image) {
+      imagePath = product.product_image;
     }
+
+    if (imagePath) {
+      if (imagePath.startsWith("http")) {
+        return imagePath;
+      }
+      if (!imagePath.startsWith("/")) {
+        imagePath = "/" + imagePath;
+      }
+      return `${BASEURL}${imagePath}`;
+    }
+    return "/Images/placeholder.jpg";
   };
 
   const truncateText = (text, limit) => {
+    if (!text) return "";
     return text.length > limit ? text.slice(0, limit) + "..." : text;
   };
 
   const discountAmount = (price, rate) => {
     const amount = (price * rate) / 100;
     const originalPrice = price + amount;
-    return originalPrice;
+    return originalPrice.toFixed(2);
   };
 
-  const getAllCategories = async () => {
-    try {
-      const response = await axios.get(
-        `${BASEURL}/customers/subcategory-products?page=1&limit=100`,
-        {
-          headers: {
-            "x-access-token": userToken || localStorage.getItem("token"),
-          },
-        }
-      );
-      if (response) {
-        setAllCategoryList(response.data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const showViewMore = allCategoryList.length > visibleCount;
-
-  const handleViewMore = () => {
-    setVisibleCount(allCategoryList.length);
-  };
-  const handleViewLess = () => {
-    setVisibleCount(6);
+  const renderStars = (rating) => {
+    return Array(5)
+      .fill()
+      .map((_, i) => (
+        <FaStar key={i} color={i < rating ? "#ffc107" : "#e4e5e9"} size={14} />
+      ));
   };
 
-  const showProductsByCategory = (id) => {
-    getProductsById(id);
-  };
-  const resetFilter = () => {
-    getAllProducts();
-  };
-  const categoryID = location?.state?.category;
-  useEffect(() => {
-    if (categoryID) {
-      getProductsById(categoryID);
-    } else {
-      getAllProducts();
-    }
-    getAllCategories();
-  }, [page, limit, categoryID]);
+  const start = (page - 1) * limit + 1;
+  const end = Math.min(page * limit, totalCount);
+
   return (
     <>
-      {loading ? <Loader /> : ""}
-      <div className="shop-container">
-        <div className="shop-sidebar">
-          {/* <div className="price-filter" style={{ overflow: "hidden" }}>
-            <h4>Price Filter</h4>
-            <Box sx={{ width: 300 }}>
-              <Slider
-                getAriaLabel={() => "Temperature range"}
-                value={value}
-                onChange={handleChange}
-                valueLabelDisplay="auto"
-                getAriaValueText={valuetext}
-              />
-            </Box>
-
-            <div className="filter-actions">
-              <p>
-                ₹{value[0]} - ₹{value[1]}
-              </p>
-              <Button>Filter</Button>
-            </div>
-          </div> */}
-
-          <div className="categories">
-            <h4>Categories</h4>
-            {allCategoryList && allCategoryList.length > 0 ? (
-              <div>
-                <ul>
-                  {allCategoryList.slice(0, visibleCount).map((row) => (
-                    <li
-                      key={row.id}
-                      className="pointer"
-                      onClick={() => showProductsByCategory(row.id)}
-                    >
-                      {row.name}
-                    </li>
-                  ))}
-                </ul>
-                {showViewMore ? (
-                  <Button
-                    onClick={handleViewMore}
-                    className="viewMoreButton mb-3"
-                  >
-                    View More <MdKeyboardArrowDown size={20} />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleViewLess}
-                    className="viewMoreButton mb-3"
-                  >
-                    View Less <MdKeyboardArrowUp size={20} />
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <p>No Data found</p>
-            )}
-          </div>
-
-          <div className="top-rated-products">
-            <h4>Top Rated Products</h4>
-
-            {products.map((row) => {
-              return (
-                <>
-                  <div className="customs-shop-card">
-                    <Row noGutters className="align-items-center g-5">
-                      <Col xs={4} className="text-center">
-                        <img
-                          src={row.image}
-                          alt="Product"
-                          className="shop-img"
-                        />
-                      </Col>
-
-                      <Col xs={8}>
-                        <div className="product-card-desc">
-                          <p className="rating">
-                            {row.rating}{" "}
-                            <span style={{ color: "black" }}>(5.0)</span>
-                          </p>
-                          <strong>{row.name}</strong>
-                          <p className="card-text">$${row.price}</p>
-                        </div>
-                      </Col>
-                    </Row>
+      <ToastContainer />
+      {loading && <Loader />}
+      <div className="shop-container" style={{ paddingTop: "150px" }}>
+        <div className="container wide">
+          <div className="row">
+            {/* Sidebar */}
+            <div className="col-md-3">
+              <div className="shop-sidebar">
+                {/* Search */}
+                <div className="filter-section">
+                  <h4>Search Products</h4>
+                  <div className="search-box">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          handleSearch();
+                        }
+                      }}
+                    />
+                    <Button onClick={handleSearch} className="search-button mt-2">
+                      Search
+                    </Button>
                   </div>
-                </>
-              );
-            })}
-          </div>
-          <div className="top-rated-products mt-3">
-            <h4>Reset Filter</h4>
-            <Button
-              style={{ background: "#E9272D" }}
-              onClick={() => resetFilter()}
-            >
-              Reset Filter
-            </Button>
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="product-grid">
-          <div className="sort-options">
-            <span>{`Showing ${start}–${end} of ${totalCount} results`}</span>
-          </div>
-
-          <Row className="product-cards">
-            {allProducts &&
-              allProducts.map((product) => (
-                <Col lg={3} md={6} sm={6}  key={product.id} className="mb-5">
-                  <Card className="shop-costume-product-card">
-                    <div className="product-image-container">
-                      <Card.Img
-                        variant="top"
-                        src={BASEURL + product.product_image}
-                        alt="Product Image"
-                        className="particular-product-image"
-                      />
-                      <FaHeart className="heart-icon" />
-                      {inCartStatus[product.id] && (
-                        <Badge className="added-to-cart-badge" bg="success">
-                          Added to cart
-                        </Badge>
+                </div>
+                {/* Price Filter */}
+                <div className="filter-section">
+                  <h4>Price Range</h4>
+                  <Box sx={{ width: "100%" }}>
+                    <Slider
+                      value={priceRange}
+                      onChange={handlePriceChange}
+                      valueLabelDisplay="auto"
+                      max={10000}
+                      min={0}
+                    />
+                    <div className="price-range-display d-flex justify-content-between">
+                      <span>₹{priceRange[0]}</span>
+                      <span>₹{priceRange[1]}</span>
+                    </div>
+                  </Box>
+                </div>
+                {/* Categories */}
+                <div className="filter-section">
+                  <h4>Categories</h4>
+                  {Array.isArray(allCategoryList) && allCategoryList.length > 0 ? (
+                    <div>
+                      <ul className="category-list">
+                        {allCategoryList
+                          .slice(0, visibleCategoryCount)
+                          .map((category) => (
+                            <li
+                              key={category._id}
+                              className={`category-item ${
+                                selectedCategory === category._id ? "active" : ""
+                              }`}
+                              onClick={() => handleCategoryChange(category._id)}
+                            >
+                              {renderCategoryName(category)}
+                            </li>
+                          ))}
+                      </ul>
+                      {allCategoryList.length > 6 && (
+                        <div className="view-toggle">
+                          {visibleCategoryCount < allCategoryList.length ? (
+                            <Button
+                              onClick={handleViewMoreCategories}
+                              className="view-more-btn"
+                            >
+                              View More <MdKeyboardArrowDown size={20} />
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={handleViewLessCategories}
+                              className="view-more-btn"
+                            >
+                              View Less <MdKeyboardArrowUp size={20} />
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <Card.Body>
-                      <Card.Text className="product-weight">
-                        &nbsp;&nbsp;
-                        {product.weight ? (
-                          <span>• {product.weight} g</span>
-                        ) : (
-                          ""
-                        )}{" "}
-                        &nbsp;{" "}
-                        {product.no_of_pices ? (
-                          <span>• {product.no_of_pices} Pieces</span>
-                        ) : (
-                          ""
-                        )}{" "}
-                        &nbsp;
-                        {product.serves ? (
-                          <span>• {product.serves} Serves</span>
-                        ) : (
-                          ""
-                        )}{" "}
-                      </Card.Text>
-                      <Card.Title className="product-title">
-                        {product.product_name}
-                      </Card.Title>
-                      <Card.Text className="product-description">
-                        {truncateText(product.description, 100)}
-                      </Card.Text>
-                      <div className="price-section">
-                        <div>
-                          <span className="price">₹{product.price}.00</span>
-                          <span className="original-price">
-                            ₹{discountAmount(product.price, 23)}.00
-                          </span>
-                        </div>
-                        <div>
-                          <span className="discount">23% Off</span>
-                        </div>
-                      </div>
-                      <div className="button-section">
-                        <Button
-                          variant="outline-dark"
-                          className="view-more-btn"
-                          onClick={() => navigateToProduct(product.id)}
-                        >
-                          View More
-                        </Button>
-                        <Button
-                          className="add-to-cart-btn"
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          Add to cart
-                        </Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-          </Row>
-          <div className="text-start">
-            <Stack spacing={2}>
-              <Pagination
-                count={pagesCount} // Total number of pages
-                page={page} // Current page
-                variant="outlined"
-                shape="rounded"
-                onChange={handlePageChange} // Handle page change
-              />
-            </Stack>
+                  ) : (
+                    <p className="text-muted">No categories found</p>
+                  )}
+                </div>
+                {/* Sort Options */}
+                <div className="filter-section">
+                  <h4>Sort By</h4>
+                  <select
+                    className="form-control"
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split("-");
+                      setSortBy(field);
+                      setSortOrder(order);
+                      setPage(1);
+                    }}
+                  >
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="price-asc">Price (Low to High)</option>
+                    <option value="price-desc">Price (High to Low)</option>
+                    <option value="createdAt-desc">Newest First</option>
+                    <option value="createdAt-asc">Oldest First</option>
+                  </select>
+                </div>
+                {/* Reset Filter */}
+                <div className="filter-section">
+                  <h4>Reset Filters</h4>
+                  <Button
+                    style={{ background: "#E9272D", border: "none" }}
+                    onClick={resetFilters}
+                    className="w-100"
+                  >
+                    Reset All Filters
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {/* Product Grid */}
+            <div className="col-lg-9 col-md-9">
+              <div className="product-list-header">
+                <div className="col-lg-6 col-md-6">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="product-count">
+                      <span>
+                        Showing {products.length > 0 ? start : 0}–{end} of {totalCount}{" "}
+                        results
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-lg-6 col-md-6">
+                  <div className="filter-section">
+                    <h4>Sort By</h4>
+                    <select
+                      className="form-control"
+                      value={`${sortBy}-${sortOrder}`}
+                      onChange={(e) => {
+                        const [field, order] = e.target.value.split("-");
+                        setSortBy(field);
+                        setSortOrder(order);
+                        setPage(1);
+                      }}
+                    >
+                      <option value="name-asc">Name (A-Z)</option>
+                      <option value="name-desc">Name (Z-A)</option>
+                      <option value="price-asc">Price (Low to High)</option>
+                      <option value="price-desc">Price (High to Low)</option>
+                      <option value="createdAt-desc">Newest First</option>
+                      <option value="createdAt-asc">Oldest First</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="products-container">
+                {loading ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                ) : products.length === 0 ? (
+                  <div className="no-products-found text-center py-5">
+                    <h3>No products found</h3>
+                    <p className="text-muted">Try adjusting your search criteria or filters</p>
+                    <Button onClick={resetFilters} className="btn btn-primary">
+                      Reset Filters
+                    </Button>
+                  </div>
+                ) : (
+                  <Row>
+                    {products.map((product) => (
+                      <Col key={product._id} lg={4} md={6} sm={6} className="mb-4">
+                        <Card className="product-card h-100">
+                          <div className="product-image-container">
+                            <Card.Img
+                              variant="top"
+                              src={getProductImage(product)}
+                              alt={getProductName(product)}
+                              className="product-img"
+                              onClick={() => handleViewProduct(product._id)}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/Images/placeholder.jpg";
+                              }}
+                            />
+                            <FaHeart className="heart-icon" />
+                            {inCartStatus[product._id] === true && (
+                              <Badge className="added-to-cart-badge" bg="success">
+                                In Cart
+                              </Badge>
+                            )}
+                          </div>
+                          <Card.Body className="d-flex flex-column">
+                            <div className="product-info flex-grow-1">
+                              <Card.Title className="product-name">{getProductName(product)}</Card.Title>
+                              <Card.Text className="product-description">
+                                {truncateText(product.description || product.product_description, 100)}
+                              </Card.Text>
+                              <div className="price-section">
+                                <div className="price-info">
+                                  <span className="current-price">₹{getProductPrice(product)}</span>
+                                  <span className="original-price">
+                                    ₹{discountAmount(getProductPrice(product), 23)}
+                                  </span>
+                                </div>
+                                <div className="position">
+                                  <span className="discount-badge">23% Off</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="product-actions mt-auto">
+                              <Button
+                                variant="outline-primary"
+                                onClick={() => handleViewProduct(product._id)}
+                                className="view-more-btn"
+                              >
+                                View Details
+                              </Button>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                )}
+              </div>
+              {pagesCount > 1 && (
+                <div className="pagination-container text-center mt-4">
+                  <Stack spacing={2}>
+                    <Pagination
+                      count={pagesCount}
+                      page={page}
+                      onChange={handlePageChange}
+                      variant="outlined"
+                      shape="rounded"
+                      color="primary"
+                    />
+                  </Stack>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -382,4 +641,4 @@ const Shopping = () => {
   );
 };
 
-export default Shopping;
+export default Shop;

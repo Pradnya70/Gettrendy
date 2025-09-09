@@ -34,30 +34,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState("name");
   const [sortOrder, setSortOrder] = useState("asc");
 
-  // Top rated products (static for now)
-  const [topRatedProducts] = useState([
-    {
-      id: 1,
-      name: "Track Pants",
-      price: 49.0,
-      image: "/Images/Slim-Fit Joggers.jpg",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "Wristbands or Socks",
-      price: 60.0,
-      image: "/Images/Wristbands or Socks.jpg",
-      rating: 4,
-    },
-    {
-      id: 3,
-      name: "Backpacks",
-      price: 30.0,
-      image: "/Images/Everyday Casual Backpack.jpg",
-      rating: 5,
-    },
-  ]);
+  
 
   // Get category from location state if available
   useEffect(() => {

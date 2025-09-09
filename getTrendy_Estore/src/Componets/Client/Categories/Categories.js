@@ -31,11 +31,12 @@ const Categories = () => {
     }
   };
 
-  // Navigate to shop with selected category
-  const navigateToCategory = (categoryId) => {
-    navigate("/shop", { state: { categoryId } });
-    window.scrollTo(0, 0);
-  };
+ // Navigate to shop with selected category (same as Navbar)
+const navigateToCategory = (categoryId) => {
+  if (!categoryId) return;
+  navigate(`/shop?category=${categoryId}`);
+  window.scrollTo(0, 0);
+};
 
   useEffect(() => {
     fetchCategories();
@@ -59,7 +60,7 @@ const Categories = () => {
               >
                 <Card
                   className="category-card"
-                  onClick={() => navigateToCategory(category.id)}
+                  onClick={() => navigateToCategory(category._id)}
                   style={{ margin: "0px", boxShadow: "none" }}
                 >
                   <div className="category-image-container">

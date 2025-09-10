@@ -304,7 +304,7 @@ const verifyRazorpayPayment = async (req, res) => {
       const shiprocketOrderData = {
         order_id: savedOrder.orderId,
         order_date: new Date().toISOString().slice(0, 19).replace("T", " "),
-        pickup_location: "Primary",
+        pickup_location: "warehouse",
         billing_customer_name: savedOrder.address.fullName.split(" ")[0] || savedOrder.address.fullName,
         billing_last_name: savedOrder.address.fullName.split(" ").slice(1).join(" ") || "",
         billing_address: savedOrder.address.street,
@@ -338,6 +338,7 @@ const verifyRazorpayPayment = async (req, res) => {
 
       console.log("Creating Shiprocket order with data:", JSON.stringify(shiprocketOrderData, null, 2))
       const shiprocketResult = await shiprocketService.createOrder(shiprocketOrderData)
+      console.log("Shiprocket API result:", JSON.stringify(shiprocketResult, null, 2)) // <--- Add this line
 
       if (shiprocketResult && shiprocketResult.success) {
         savedOrder.shiprocketOrderId = shiprocketResult.order_id
@@ -347,6 +348,11 @@ const verifyRazorpayPayment = async (req, res) => {
         console.log("Shiprocket order created successfully:", shiprocketResult)
       } else {
         console.error("Shiprocket order creation failed:", shiprocketResult)
+        return res.status(500).json({
+          success: false,
+          message: "Shiprocket order creation failed",
+          shiprocketError: shiprocketResult,
+        });
       }
     } catch (shiprocketError) {
       console.error("Error creating Shiprocket order:", shiprocketError)

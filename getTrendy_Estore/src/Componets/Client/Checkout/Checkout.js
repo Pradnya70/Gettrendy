@@ -269,38 +269,44 @@ const Checkout = () => {
               const shiprocketOrderData = {
                 order_id:
                   verifyResponse.data.orderId ||
-                  verifyResponse.data.order?._id ||
+                  verifyResponse.data.order?.orderId ||
                   `ORDER_${Date.now()}`,
-                order_date: new Date()
-                  .toISOString()
-                  .slice(0, 19)
-                  .replace("T", " "),
-                pickup_location: "Primary",
-                billing_customer_name: formData.fullName,
+                order_date: new Date().toISOString().slice(0, 19).replace("T", " "),
+                pickup_location: "warehouse",
+                billing_customer_name: String(formData.fullName),
                 billing_last_name: "",
-                billing_address: formData.address,
-                billing_city: formData.city,
-                billing_pincode: formData.postcode,
-                billing_state: formData.state,
-                billing_country: formData.country,
-                billing_email: formData.email,
-                billing_phone: formData.phone,
+                billing_address: String(formData.address),
+                billing_city: String(formData.city),
+                billing_pincode: String(formData.postcode),
+                billing_state: String(formData.state),
+                billing_country: String(formData.country),
+                billing_email: String(formData.email),
+                billing_phone: String(formData.phone),
                 order_items: cartItems.map((item) => ({
-                  name:
+                  name: String(
                     item.productId?.product_name ||
                     item.product_name ||
-                    item.name,
-                  sku: item.productId?._id || item.productId || item.sku,
-                  units: item.quantity,
-                  selling_price:
-                    item.productId?.price || item.product_price || item.price,
+                    item.name
+                  ),
+                  sku: String(
+                    (item.productId && typeof item.productId === "object" && item.productId._id)
+                      ? item.productId._id
+                      : item.productId || item.sku
+                  ),
+                  units: Number(item.quantity),
+                  selling_price: Number(
+                    item.productId?.price ||
+                    item.product_price ||
+                    item.price
+                  ),
+                  // Do NOT add any extra fields here!
                 })),
                 payment_method: "Prepaid",
-                shipping_charges: shipping,
+                shipping_charges: Number(shipping),
                 giftwrap_charges: 0,
                 transaction_charges: 0,
                 total_discount: 0,
-                sub_total: subtotal,
+                sub_total: Number(subtotal),
                 length: 10,
                 breadth: 15,
                 height: 20,
@@ -308,7 +314,7 @@ const Checkout = () => {
               };
               console.log(
                 "[Payment] Shiprocket order data:",
-                shiprocketOrderData
+                JSON.stringify(shiprocketOrderData, null, 2)
               );
               await createShiprocketOrder(shiprocketOrderData);
               // --- End Shiprocket Integration ---

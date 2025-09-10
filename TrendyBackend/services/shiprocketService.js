@@ -1,4 +1,3 @@
-
 require("dotenv").config(); // make sure this is at the very top
 
 const axios = require("axios")
@@ -51,9 +50,7 @@ async function authenticate() {
 // Create order in Shiprocket
 async function createOrder(orderData) {
   try {
-    console.log("Creating Shiprocket order...")
-    console.log("Input order data:", JSON.stringify(orderData, null, 2))
-
+    console.log("ShiprocketService: Creating order with data:", JSON.stringify(orderData, null, 2));
     // Ensure we have a valid token
     const authToken = await authenticate()
 
@@ -142,8 +139,7 @@ async function createOrder(orderData) {
       timeout: 30000, // 30 second timeout
     })
 
-    console.log("Shiprocket order created successfully:", response.data)
-
+    console.log("ShiprocketService: Shiprocket API response:", response.data);
     // Check if the response indicates success
     if (response.data && (response.data.order_id || response.data.shipment_id)) {
       return {

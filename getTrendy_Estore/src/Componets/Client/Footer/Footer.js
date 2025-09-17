@@ -108,12 +108,10 @@ const Footer = () => {
         
         <div
           className="text-center p-4"
-          style={{ backgroundColor: "black", color: "white" }}
-        >
-          © {new Date().getFullYear()} All Rights Reserved &nbsp; | &nbsp;
-          <a className="text-reset fw-bold " href="">
-            Get Trendy
-          </a>
+          style={{ backgroundColor: "black", color: "white" }}>
+          © {new Date().getFullYear()} All Rights Reserved Get Trendy &nbsp; | &nbsp; Design & Developed by 
+          <a className="text-reset fw-bold " href="https://arisecommunications.co/"> Arise Communications.</a>
+            
            <p className="float-end mb-0">Version : {process.env.REACT_APP_VERSION}</p>
         </div>
       </MDBFooter>

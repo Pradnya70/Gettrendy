@@ -118,6 +118,7 @@ console.log("VERSION:", process.env.REACT_APP_VERSION);
         />
         <Route path="/r" element={<RazorpayButton />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/shop/:categoryId" element={<Shop />} />
         <Route path="/cartPage" element={<CartPage />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/videogallery" element={<Videogallery />} />

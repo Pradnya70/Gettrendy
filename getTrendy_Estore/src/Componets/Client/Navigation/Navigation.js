@@ -227,16 +227,21 @@ const Navigation = () => {
               </Nav.Link>
 
               {/* Categories Dropdown */}
-              <NavDropdown title={   <span className="d-flex align-items-center">  {/* 👇 Add SVG Icon */}
-              <img
-        src={caticon}
-        alt="Categories Icon"
-        style={{ width: "40px", height: "auto", marginRight: "6px" }}
-      />
-                Categories
-                </span>
-                } 
-                id="categories-dropdown" >
+              <NavDropdown
+                title={
+                  <span className="d-flex align-items-center">
+                    {" "}
+                    {/* 👇 Add SVG Icon */}
+                    <img
+                      src={caticon}
+                      alt="Categories Icon"
+                      style={{ width: "40px", height: "auto", marginRight: "6px" }}
+                    />
+                    Categories
+                  </span>
+                }
+                id="categories-dropdown"
+              >
                 {allCategoryList && allCategoryList.length > 0 ? (
                   allCategoryList.map((category) => (
                     <NavDropdown.Item
@@ -247,8 +252,8 @@ const Navigation = () => {
                       }}
                       className="category-item"
                     >
-                      <div className="d-flex align-items-center">    
-          <span className="category-name">{renderCategoryName(category)}</span>
+                      <div className="d-flex align-items-center">
+                        <span className="category-name">{renderCategoryName(category)}</span>
                       </div>
                     </NavDropdown.Item>
                   ))

@@ -1,124 +1,83 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { axios, API_ENDPOINTS, BASEURL } from "../Comman/CommanConstans";
-import { toast } from "react-toastify";
-import "./Categories.css";
+"use client"
+
+import { useEffect, useState } from "react"
+import { Container, Row, Col, Card } from "react-bootstrap"
+import { useNavigate } from "react-router-dom"
+import axios from "axios"
+// import { BASEURL } from "../Comman/CommanConstans";
+import { BASEURL, getImageUrl } from "../Comman/CommanConstans"
+import Loader from "../Loader/Loader"
+import "./Categories.css"
+import "aos/dist/aos.css"
 
 const Categories = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const navigate = useNavigate()
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
+  // Fetch all categories
   const fetchCategories = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      console.log("Fetching categories from:", API_ENDPOINTS.CATEGORY.LIST);
+      setLoading(true)
+      const response = await axios.get(`${BASEURL}/api/category?limit=100`) // Limit to 6 categories for display
 
-      const response = await axios.get(API_ENDPOINTS.CATEGORY.LIST);
-      console.log("Categories response:", response.data);
-
-      if (response.data && response.data.rows) {
-        setCategories(response.data.rows);
-        setRetryCount(0); // Reset retry count on success
-      } else {
-        throw new Error("Invalid response format");
+      if (response && response.data) {
+        setCategories(response.data.rows || [])
       }
+
+      setLoading(false)
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      setError(error.response?.data?.message || "Failed to load categories");
-
-      // Implement retry logic
-      if (retryCount < 3) {
-        setRetryCount((prev) => prev + 1);
-        console.log(`Retrying category fetch (attempt ${retryCount + 1})...`);
-        setTimeout(fetchCategories, 2000); // Retry after 2 seconds
-      } else {
-        toast.error("Failed to load categories. Please try again later.");
-      }
-    } finally {
-      setLoading(false);
+      console.error("Error fetching categories:", error)
+      setLoading(false)
     }
-  };
-
-  if (loading) {
-    return (
-      <div className="categories-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading categories...</p>
-      </div>
-    );
   }
 
-  if (error) {
-    return (
-      <div className="categories-error">
-        <p>{error}</p>
-        <button
-          onClick={() => {
-            setRetryCount(0);
-            fetchCategories();
-          }}
-          className="retry-button"
-        >
-          Retry
-        </button>
-      </div>
-    );
+  // Navigate to shop with selected category (same as Navbar)
+  const navigateToCategory = (categoryId) => {
+    navigate("/shop", { state: { category: categoryId } }) // 👈 use "category"
+    window.scrollTo(0, 0)
   }
 
-  if (categories.length === 0) {
-    return (
-      <div className="categories-empty">
-        <p>No categories found</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchCategories()
+  }, [])
 
   return (
-    <div className="categories-container">
-      <h2>Categories</h2>
-      <div className="categories-grid">
-        {categories.map((category) => (
-          <Link
-            to={`/category/${category._id}`}
-            key={category._id}
-            className="category-card"
-          >
-            <div className="category-image">
-              {category.category_image ? (
-                <img
-                  src={`${process.env.REACT_APP_API_URL || BASEURL}${
-                    category.category_image
-                  }`}
-                  alt={category.category_name}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/placeholder-image.png";
-                  }}
-                />
-              ) : (
-                <div className="category-placeholder">
-                  {category.category_name.charAt(0)}
-                </div>
-              )}
-            </div>
-            <div className="category-info">
-              <h3>{category.category_name}</h3>
-              {category.category_description && (
-                <p>{category.category_description}</p>
-              )}
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-};
+    <>
+      {loading && <Loader />}
+      <Container fluid className="categories-container  justify-content-center my-5" style={{ maxWidth: "1920px" }}>
+        <Row className="justify-content-center">
+          {categories.length > 0 ? (
+            categories.map((category) => (
+              <Col lg={2} md={4} sm={6} key={category._id}>
+                <Card
+                  className="category-card"
+                  onClick={() => navigateToCategory(category._id)} // 👈 use _id if backend sends _id
+                  style={{ margin: "0px", boxShadow: "none" }}
+                >
+                  <div className="category-image-container">
+                    <Card.Img
+                      variant="top"
+                      src={getImageUrl(category.category_image)}
+                      alt={category.category_name}
+                      className="category-image"
+                    />
+                  </div>
+                  <Card.Body className="text-center">
+                    <Card.Title>{category.category_name}</Card.Title>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <Col xs={12} className="text-center">
+              <h4>No categories found</h4>
+            </Col>
+          )}
+        </Row>
+      </Container>
+    </>
+  )
+}
 
-export default Categories;
+export default Categories

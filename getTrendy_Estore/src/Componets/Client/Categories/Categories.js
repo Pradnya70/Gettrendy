@@ -33,10 +33,9 @@ const Categories = () => {
 
  // Navigate to shop with selected category (same as Navbar)
 const navigateToCategory = (categoryId) => {
-  if (!categoryId) return;
-  navigate(`/shop?category=${categoryId}`);
-  window.scrollTo(0, 0);
-};
+  navigate("/shop", { state: { category: categoryId } })  // 👈 use "category"
+  window.scrollTo(0, 0)
+}
 
   useEffect(() => {
     fetchCategories();
@@ -49,37 +48,27 @@ const navigateToCategory = (categoryId) => {
         <Row className="justify-content-center">
           {categories.length > 0 ? (
             categories.map((category) => (
-              <Col
-              
-                lg={2}
-                md={4}
-                sm={6}
-                key={category.id}
-                className=""
-                style={{ padding: "0px" }}
-              >
-                <Card
-                  className="category-card"
-                  onClick={() => navigateToCategory(category._id)}
-                  style={{ margin: "0px", boxShadow: "none" }}
-                >
-                  <div className="category-image-container">
-                    <Card.Img
-                      variant="top"
-                      src={getImageUrl(category.category_image)}
-                      alt={category.category_name}
-                      className="category-image"
-                    />
-                  </div>
-                  <Card.Body className="text-center">
-                    <Card.Title>{category.category_name}</Card.Title>
-                    {/* <Card.Text className="text-muted">
-                      {category.category_description}
-                    </Card.Text> */}
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))
+  <Col lg={2} md={4} sm={6} key={category._id}>
+    <Card
+      className="category-card"
+      onClick={() => navigateToCategory(category._id)}  // 👈 use _id if backend sends _id
+      style={{ margin: "0px", boxShadow: "none" }}
+    >
+      <div className="category-image-container">
+        <Card.Img
+          variant="top"
+          src={getImageUrl(category.category_image)}
+          alt={category.category_name}
+          className="category-image"
+        />
+      </div>
+      <Card.Body className="text-center">
+        <Card.Title>{category.category_name}</Card.Title>
+      </Card.Body>
+    </Card>
+  </Col>
+))
+
           ) : (
             <Col xs={12} className="text-center">
               <h4>No categories found</h4>

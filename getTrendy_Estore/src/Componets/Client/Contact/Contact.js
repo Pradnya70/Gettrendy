@@ -189,8 +189,8 @@ const Contact = () => {
                 src="https://shofy-grocery-next-js.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fcontact-icon-1.9066600e.png&w=64&q=75"
                 alt="Contact Icon"
               />
-              <p>prashhaant@gmail.com</p>
-              <p>+91 9096321038</p>
+              <p>gettrendy.in@gmail.com</p>
+              <p>+91 8551000442</p>
             </div>
             <div className="info-item">
               <img

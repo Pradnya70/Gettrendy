@@ -114,18 +114,48 @@ const getAllProducts = async (req, res) => {
 
     const count = await Product.countDocuments(filter)
 
-    let sortOptions = { createdAt: -1 }
-    if (req.query.sortBy) {
-      const sortBy = req.query.sortBy
-      const sortOrder = req.query.sortOrder === "desc" ? -1 : 1
-      if (sortBy === "name") {
-        sortOptions = { product_name: sortOrder }
-      } else if (sortBy === "price") {
-        sortOptions = { price: sortOrder }
-      } else if (sortBy === "createdAt") {
-        sortOptions = { createdAt: sortOrder }
-      }
-    }
+
+    // Build sort object
+    let sortOptions = { createdAt: -1 };
+
+if (req.query.sortBy) {
+  const sortBy = req.query.sortBy || "random";
+  const sortOrder = req.query.sortOrder || "asc";
+  
+   if (sortBy === "random") {
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = parseInt(req.query.skip) || 0;
+
+  const total = await Product.countDocuments(filter);
+
+  const products = await Product.aggregate([
+    { $match: filter },
+    { $sample: { size: limit + skip } }
+  ]);
+
+  const paginated = products.slice(skip, skip + limit);
+
+  return res.json({
+    success: true,
+    count: total,
+    pages_count: Math.ceil(total / limit),
+    current_page: page,
+    limit,
+    data: paginated,
+    rows: paginated,
+  });
+} else 
+  if (sortBy === "name") {
+    sortOptions = { product_name: sortOrder === "desc" ? -1 : 1};
+  } else if (sortBy === "price") {
+    sortOptions = { price: sortOrder === "desc" ? -1 : 1};
+  } else if (sortBy === "createdAt") {
+    sortOptions = { createdAt: sortOrder === "desc" ? -1 : 1};
+  } 
+  
+}
+  // close sort  
+
 
     const products = await Product.find(filter)
       .populate("category", "category_name")

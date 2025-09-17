@@ -51,8 +51,8 @@ const ProductCard = () => {
     try {
       setLoading(true)
       setError(null)
-      console.log("Fetching products from:", `${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}`)
-      const response = await axios.get(`${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}`)
+      console.log("Fetching products from:", `${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&sortBy=random&sortOrder=asc`)
+      const response = await axios.get(`${BASEURL}/api/products?page=${pageAll}&limit=${limitAll}&sortBy=random&sortOrder=asc`)
       setLoading(false)
 
       // Log the entire response to see its structure

@@ -1,6 +1,6 @@
 {
-  "name": "kgnexpress",
-  "version": "0.1.0",
+  "name": "Gettrendy",
+  "version": "1.7.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.13.3",

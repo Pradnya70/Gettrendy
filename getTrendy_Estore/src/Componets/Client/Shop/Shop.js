@@ -31,7 +31,7 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleCategoryCount, setVisibleCategoryCount] = useState(6);
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("random");
   const [sortOrder, setSortOrder] = useState("asc");
 
   // Top rated products (static for now)
@@ -622,7 +622,7 @@ const Shop = () => {
                   </div>
                 </div>
               </div>
-                <div className="col-lg-6 col-md-6">
+              <div className="col-lg-6 col-md-6">
                  {/* Sort Options */}
                 <div className="filter-section">
                   <h4>Sort By</h4>
@@ -636,12 +636,12 @@ const Shop = () => {
                       setPage(1);
                     }}
                   >
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="name-desc">Name (Z-A)</option>
+                   <option value="random-asc">Relevance</option>
                     <option value="price-asc">Price (Low to High)</option>
                     <option value="price-desc">Price (High to Low)</option>
                     <option value="createdAt-desc">Newest First</option>
                     <option value="createdAt-asc">Oldest First</option>
+                   
                   </select>
                 </div>
              
@@ -702,7 +702,7 @@ const Shop = () => {
                               </Badge>
                             )}
                           </div>
-                          <Card.Body className="d-flex flex-column">
+                          <Card.Body className=" flex-column">
                             <div className="product-info flex-grow-1">
                               {/* Product details */}
                               {/* <Card.Text className="product-details">
@@ -717,7 +717,7 @@ const Shop = () => {
                                 )}
                               </Card.Text> */}
 
-                              <Card.Title className="product-name">
+                              <Card.Title className="card-product-title">
                                 {getProductName(product)}
                               </Card.Title>
 
@@ -729,25 +729,31 @@ const Shop = () => {
                                 )}
                               </Card.Text>
 
-                              <div className="price-section">
-                                <div className="price-info">
-                                  <span className="current-price">
-                                    ₹{getProductPrice(product)}
-                                  </span>
-                                  <span className="original-price">
-                                    ₹
-                                    {discountAmount(
-                                      getProductPrice(product),
-                                      23
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="position">
-                                  <span className="discount-badge">
-                                    23% Off
-                                  </span>
-                                </div>
-                              </div>
+                               <div className="price-section">
+                        <div>
+                          <span className="price">
+                            ₹
+                            {product.discount_price && product.discount_price < product.price
+                              ? product.discount_price
+                              : product.price}
+                            .00
+                          </span>
+                          {product.discount_price && product.discount_price < product.price && (
+                            <span className="original-price">₹{product.price}.00</span>
+                          )}
+                          {!product.discount_price && (
+                            <span className="original-price">₹{discountAmount(product.price, 23)}</span>
+                          )}
+                        </div>
+                        <div className="position">
+                          <span className="discount">
+                            {product.discount_price && product.discount_price < product.price
+                              ? Math.round(((product.price - product.discount_price) / product.price) * 100)
+                              : 23}
+                            % Off
+                          </span>
+                        </div>
+                      </div>
 
                               {/* <div className="product-rating">
                                 {renderStars(5)}
@@ -755,9 +761,9 @@ const Shop = () => {
                               </div> */}
                             </div>
 
-                            <div className="product-actions mt-auto">
+                            <div className="button-section">
                               <Button
-                                variant="outline-primary"
+                                variant="outline-dark"
                                 onClick={() => handleViewProduct(product._id)}
                                 className="view-more-btn"
                               >

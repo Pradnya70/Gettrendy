@@ -177,7 +177,7 @@ const Navigation = () => {
               </Nav.Link>
 
               {/* Categories Dropdown */}
-              <NavDropdown title="Categories" id="categories-dropdown">
+              <NavDropdown title="Categories" id="categories-dropdown" className="cat-mt">
                 {allCategoryList && allCategoryList.length > 0 ? (
                   allCategoryList.map((category) => (
                     <NavDropdown.Item

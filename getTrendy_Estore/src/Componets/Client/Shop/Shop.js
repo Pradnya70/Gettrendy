@@ -6,6 +6,7 @@ import { Badge, Button, Card, Col, Row } from "react-bootstrap";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import Pagination from "@mui/material/Pagination";
+import { getImageUrl } from "../Comman/CommanConstans"
 import Stack from "@mui/material/Stack";
 import { FaHeart, FaStar } from "react-icons/fa";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
@@ -15,6 +16,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Loader from "../Loader/Loader";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
+
 
 const Shop = () => {
   const navigate = useNavigate();
@@ -33,31 +35,10 @@ const Shop = () => {
   const [visibleCategoryCount, setVisibleCategoryCount] = useState(6);
   const [sortBy, setSortBy] = useState("random");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [allSubCategoryList, setAllSubCategoryList] = useState([]);
+const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
-  // Top rated products (static for now)
-  const [topRatedProducts] = useState([
-    {
-      id: 1,
-      name: "Track Pants",
-      price: 49.0,
-      image: "/Images/Slim-Fit Joggers.jpg",
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: "Wristbands or Socks",
-      price: 60.0,
-      image: "/Images/Wristbands or Socks.jpg",
-      rating: 4,
-    },
-    {
-      id: 3,
-      name: "Backpacks",
-      price: 30.0,
-      image: "/Images/Everyday Casual Backpack.jpg",
-      rating: 5,
-    },
-  ]);
+
 
   // Get category from location state if available
   useEffect(() => {
@@ -65,6 +46,7 @@ const Shop = () => {
       setSelectedCategory(location.state.category);
     }
   }, [location.state]);
+  
 
   const fetchProducts = async () => {
     try {
@@ -78,6 +60,11 @@ const Shop = () => {
       if (selectedCategory) {
         params.append("category", selectedCategory);
       }
+
+      if (selectedSubCategory) {
+  params.append("subcategory", selectedSubCategory);
+}
+
 
       if (searchQuery.trim()) {
         params.append("search", searchQuery.trim());
@@ -163,6 +150,9 @@ const Shop = () => {
     }
   };
 
+
+  
+
   // Fetch data when filters change
   useEffect(() => {
     const fetchAllData = async () => {
@@ -179,6 +169,7 @@ const Shop = () => {
     page,
     limit,
     selectedCategory,
+    selectedSubCategory,
     searchQuery,
     priceRange,
     sortBy,
@@ -274,6 +265,8 @@ const Shop = () => {
     }
   };
 
+  
+
   const handleRemoveFromCart = async (product) => {
     try {
       if (!authUtils.isAuthenticated()) {
@@ -338,14 +331,29 @@ const Shop = () => {
     setPriceRange(newValue);
   };
 
-  const handleCategoryChange = (categoryId) => {
-    if (selectedCategory === categoryId) {
-      setSelectedCategory(null);
-    } else {
-      setSelectedCategory(categoryId);
+ const handleCategoryChange = async (categoryId) => {
+  if (selectedCategory === categoryId) {
+    setSelectedCategory(null);
+    setAllSubCategoryList([]);
+    setSelectedSubCategory(null);
+  } else {
+    setSelectedCategory(categoryId);
+    setSelectedSubCategory(null);
+
+    // Fetch subcategories immediately
+    try {
+      const response = await axios.get(`${BASEURL}/api/subcategory?parent_category=${categoryId}`);
+      const subCategoryData = response.data.rows || response.data.data || response.data || [];
+      setAllSubCategoryList(subCategoryData);
+    } catch (err) {
+      console.error("Error fetching subcategories:", err);
+      setAllSubCategoryList([]);
     }
-    setPage(1);
-  };
+  }
+
+  setPage(1);
+};
+
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -354,6 +362,7 @@ const Shop = () => {
 
   const resetFilters = () => {
     setSelectedCategory(null);
+    setSelectedSubCategory(null);
     setSearchQuery("");
     setPriceRange([0, 10000]);
     setSortBy("name");
@@ -443,7 +452,7 @@ const Shop = () => {
       <ToastContainer />
       {loading && <Loader />}
       <div className="shop-container" style={{ paddingTop: "150px" }}>
-        <div className="container wide">
+        <div className="container">
           <div className="row">
             {/* Sidebar */}
             <div className="col-md-3">
@@ -539,61 +548,55 @@ const Shop = () => {
                   )}
                 </div>
 
-                {/* Sort Options */}
-                <div className="filter-section">
-                  <h4>Sort By</h4>
-                  <select
-                    className="form-control"
-                    value={`${sortBy}-${sortOrder}`}
-                    onChange={(e) => {
-                      const [field, order] = e.target.value.split("-");
-                      setSortBy(field);
-                      setSortOrder(order);
-                      setPage(1);
-                    }}
-                  >
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="name-desc">Name (Z-A)</option>
-                    <option value="price-asc">Price (Low to High)</option>
-                    <option value="price-desc">Price (High to Low)</option>
-                    <option value="createdAt-desc">Newest First</option>
-                    <option value="createdAt-asc">Oldest First</option>
-                  </select>
-                </div>
 
-                {/* Top Rated Products */}
-                {/* <div className="filter-section">
-                  <h4>Top Rated Products</h4>
-                  {topRatedProducts.map((product) => (
-                    <div key={product.id} className="top-rated-item">
-                      <Row className="align-items-center">
-                        <Col xs={4}>
-                          <img
-                            src={product.image || "/placeholder.svg"}
-                            alt={product.name}
-                            className="top-rated-img"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "/Images/placeholder.jpg";
-                            }}
-                          />
-                        </Col>
-                        <Col xs={8}>
-                          <div className="top-rated-info">
-                            <div className="rating-stars">
-                              {renderStars(product.rating)}
-                              <span className="rating-text">(5.0)</span>
-                            </div>
-                            <strong className="product-name">
-                              {product.name}
-                            </strong>
-                            <p className="product-price">₹{product.price}</p>
-                          </div>
-                        </Col>
-                      </Row>
-                    </div>
-                  ))}
-                </div> */}
+                
+{/* Subcategories */}
+{allSubCategoryList.length > 0 && (
+  <div className="filter-section">
+    <h4>Subcategories</h4>
+    <ul className="category-list">
+      {allSubCategoryList
+        .slice(0, visibleCategoryCount) // optional if you want view more/less
+        .map((subcat) => (
+          <li
+            key={subcat._id}
+            className={`category-item ${
+              selectedSubCategory === subcat._id ? "active" : ""
+            }`}
+            onClick={() =>
+              setSelectedSubCategory(
+                selectedSubCategory === subcat._id ? null : subcat._id
+              )
+            }
+          >
+            {subcat.name || subcat.subcategory_name}
+          </li>
+        ))}
+    </ul>
+
+    {/* Optional View More / View Less for subcategories */}
+    {allSubCategoryList.length > 6 && (
+      <div className="view-toggle">
+        {visibleCategoryCount < allSubCategoryList.length ? (
+          <Button
+            onClick={() => setVisibleCategoryCount(allSubCategoryList.length)}
+            className="view-more-btn"
+          >
+            View More <MdKeyboardArrowDown size={20} />
+          </Button>
+        ) : (
+          <Button
+            onClick={() => setVisibleCategoryCount(6)}
+            className="view-more-btn"
+          >
+            View Less <MdKeyboardArrowUp size={20} />
+          </Button>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
 
                 {/* Reset Filter */}
                 <div className="filter-section">
@@ -612,7 +615,7 @@ const Shop = () => {
             {/* Product Grid */}
             <div className="col-lg-9 col-md-9">
               <div className="product-list-header">
-              <div className="col-lg-6 col-md-6">
+              <div className="col-lg-9 col-md-6 position-absolute">
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="product-count">
                     <span>
@@ -622,12 +625,12 @@ const Shop = () => {
                   </div>
                 </div>
               </div>
-              <div className="col-lg-6 col-md-6">
+              <div className="col-lg-3 col-md-6 position-relative float-end">
                  {/* Sort Options */}
-                <div className="filter-section">
-                  <h4>Sort By</h4>
+                <div className="filter-section flex items-baseline d-flex" >
+                  <h4 style={{width:"40%"}}>Sort By</h4>
                   <select
-                    className="form-control"
+                    className="form-control" style={{width:"", marginLeft:"10px"}}
                     value={`${sortBy}-${sortOrder}`}
                     onChange={(e) => {
                       const [field, order] = e.target.value.split("-");
@@ -677,21 +680,34 @@ const Shop = () => {
                       >
                         <Card className="product-card h-100">
                           <div className="product-image-container">
-                            <Card.Img
-                              variant="top"
-                              src={getProductImage(product)}
-                              alt={getProductName(product)}
-                              className="product-img"
-                              onClick={() => handleViewProduct(product._id)}
-                              onError={(e) => {
-                                console.log(
-                                  "Image failed to load:",
-                                  e.target.src
-                                );
-                                e.target.onerror = null;
-                                e.target.src = "/Images/placeholder.jpg";
-                              }}
-                            />
+                           <Card.Img
+  variant="top"
+  src={getImageUrl(product.images?.[0]) || "/Images/placeholder.jpg"}
+  alt={getProductName(product)}
+  className="product-img main-image"
+  onClick={() => handleViewProduct(product._id)}
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "/Images/placeholder.jpg"; // guaranteed local placeholder
+  }}
+/>
+
+        {product.images && product.images.length > 1 && (
+  <Card.Img
+    variant="top"
+    src={getImageUrl(product.images[1]) || getImageUrl(product.images[0]) || "/Images/placeholder.jpg"}
+    alt={`${product.product_name} hover`}
+    className="product-img hover-image"
+    onError={(e) => {
+      e.target.onerror = null;
+      // fallback to main image or placeholder
+      e.target.src = getImageUrl(product.images?.[0]) || "/Images/placeholder.jpg";
+    }}
+  />
+)}
+
+
+
                             <FaHeart className="heart-icon" />
                             {inCartStatus[product._id] === true && (
                               <Badge

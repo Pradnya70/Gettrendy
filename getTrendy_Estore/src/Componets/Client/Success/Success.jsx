@@ -16,7 +16,7 @@ const Success = () => {
               <p className="mb-4">
                 Thank you for your purchase! Your order has been confirmed and will be processed shortly.
               </p>
-              <div className="d-flex justify-content-center gap-3">
+              <div className="d-flex justify-content-center gap-3"> 
                 <Link to="/shop">
                   <button className="btn btn-primary px-4 py-2">Continue Shopping</button>
                 </Link>

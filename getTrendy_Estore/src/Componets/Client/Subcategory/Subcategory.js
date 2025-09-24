@@ -4,17 +4,12 @@ import { useEffect, useState } from "react"
 import { Container, Card } from "react-bootstrap"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
+import Slider from "react-slick"
 import { BASEURL, getImageUrl } from "../Comman/CommanConstans"
 import Loader from "../Loader/Loader"
+import "slick-carousel/slick/slick.css"
+import "slick-carousel/slick/slick-theme.css"
 import "./Subcategory.css"
-import Aos from "aos"
-import "aos/dist/aos.css"
-
-// 👇 Import Swiper
-import { Swiper, SwiperSlide } from "swiper/react"
-import { Navigation, Autoplay } from "swiper/modules"
-import "swiper/css"
-import "swiper/css/navigation"
 
 const Categories = () => {
   const navigate = useNavigate()
@@ -24,7 +19,7 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${BASEURL}/api/subcategory?limit=6`)
+      const response = await axios.get(`${BASEURL}/api/subcategory?limit=20`)
       const subcategoriesData = response.data.rows || response.data.data || response.data || []
       setCategories(subcategoriesData)
       setLoading(false)
@@ -41,14 +36,50 @@ const Categories = () => {
 
   useEffect(() => {
     fetchCategories()
-    Aos.init()
   }, [])
+
+  const settings = {
+    dots: true,
+    infinite: categories.length > 4,       // Loop only if more than 4 cards
+    speed: 500,
+    slidesToShow: 4,                        // Show 4 cards on desktop
+    slidesToScroll: 1,                      // Scroll one card at a time
+    autoplay: true,
+    autoplaySpeed: 3000,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          infinite: categories.length > 3,
+          dots: true,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          infinite: categories.length > 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          infinite: categories.length > 1,
+        },
+      },
+    ],
+  }
 
   return (
     <>
       {loading && <Loader />}
       <Container fluid className="categories-container my-5">
-        <div data-aos="fade-down" data-aos-duration="2000" data-aos-easing="ease-in-out" className="section-title mb-3">
+        <div className="section-title mb-3">
           <div className="section-line"></div>
           <div className="text-center">
             <h5>All Product Shop</h5>
@@ -58,21 +89,9 @@ const Categories = () => {
         </div>
 
         {categories.length > 0 ? (
-          <Swiper
-            modules={[Navigation, Autoplay]}
-            navigation={true} // 👈 prev/next buttons
-            autoplay={{ delay: 2000, disableOnInteraction: false }} // 👈 auto-slide every 2 sec
-            loop={true} // 👈 infinite loop
-            spaceBetween={20}
-            slidesPerView={4}
-            breakpoints={{
-              320: { slidesPerView: 1 },
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 4 },
-            }}
-          >
+          <Slider {...settings}>
             {categories.map((subcategory) => (
-              <SwiperSlide key={subcategory._id || subcategory.id}>
+              <div key={subcategory._id || subcategory.id} style={{ padding: '0 10px' }}>
                 <Card
                   className="Subcategory-card"
                   onClick={() => navigateToSubcategory(subcategory._id || subcategory.id)}
@@ -93,9 +112,9 @@ const Categories = () => {
                     />
                   </div>
                 </Card>
-              </SwiperSlide>
+              </div>
             ))}
-          </Swiper>
+          </Slider>
         ) : (
           <div className="text-center">
             <h4>No subcategories found</h4>

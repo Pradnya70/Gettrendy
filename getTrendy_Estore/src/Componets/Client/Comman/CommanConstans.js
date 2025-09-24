@@ -2,11 +2,14 @@ import axios from "axios";
 
 // API Configuration
   export const BASEURL = "https://api.gettrendy.in";
-  // export const BASEURL = "http://localhost:5000";
+ //  export const BASEURL = "http://localhost:5000";
 
 // Helper function to get proper image URL
 export function getImageUrl(path) {
-  if (!path) return "/placeholder.svg";
+  // If path is null, undefined, empty, or only spaces
+  if (!path || path.toString().trim() === "") {
+    return "/Images/placeholder.jpg"; // make sure this file exists in your public folder
+  }
 
   // If it's already a full URL (Cloudinary or other CDN), return as is
   if (path.startsWith("http://") || path.startsWith("https://")) {

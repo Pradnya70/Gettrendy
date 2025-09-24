@@ -42,15 +42,6 @@ const Home = () => {
       image: "/Images/banner4.jpg",
     },
     {
-      image: "/Images/banner8.jpg",
-    },
-    {
-      image: "/Images/banner6.jpg",
-    },
-    {
-      image: "/Images/banner7.jpg",
-    },
-    {
       image: "/Images/banner5.jpg",
     },
   ];

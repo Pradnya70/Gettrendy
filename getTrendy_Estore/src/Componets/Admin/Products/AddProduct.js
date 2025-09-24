@@ -8,6 +8,8 @@ import { useLocation, useNavigate } from "react-router-dom"
 import Loader from "../../Client/Loader/Loader"
 import ApiService from "../../api/services/api-service"
 import { getImageUrl } from "../../Client/Comman/CommanConstans"
+import axios from "axios"
+import { BASEURL } from "../../Client/Comman/CommanConstans"
 
 const AddProduct = () => {
   const navigate = useNavigate()
@@ -56,50 +58,61 @@ const AddProduct = () => {
   }
 
   // Handle input change
-  const handleInputChange = (e) => {
-    const { name, value, type, checked, files } = e.target
+ const handleInputChange = async (e) => {
+  const { name, value, type, checked, files } = e.target;
 
-    if (type === "checkbox") {
-      setFormData({ ...formData, [name]: checked })
-    } else if (type === "file") {
-      // Handle multiple file uploads
-      const fileArray = Array.from(files)
-      // Check total image limit (existing + new)
-      const totalImages = existingImages.length + formData.images.length + fileArray.length
-      if (totalImages > 3) {
-        showMessageAlert(
-          `Maximum 3 images allowed. You currently have ${existingImages.length + formData.images.length} images.`,
-        )
-        return
-      }
-
-      setFormData({ ...formData, [name]: [...formData.images, ...fileArray] })
-
-      // Create preview URLs for the new images
-      const newPreviewImages = [...previewImages]
-      fileArray.forEach((file) => {
-        newPreviewImages.push(URL.createObjectURL(file))
-      })
-      setPreviewImages(newPreviewImages)
-    } else if (name === "category") {
-      // When category changes, filter subcategories and update form
-      setFormData({ ...formData, [name]: value, subcategory: "" })
-      // Filter subcategories based on selected category
-      const filtered = subcategories.filter((subcategory) => subcategory.parent_category === value)
-      setFilteredSubcategories(filtered)
-    } else if (name === "sizes" || name === "colors") {
-      // Handle multi-select for sizes and colors
-      const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value)
-      setFormData({ ...formData, [name]: selectedValues })
-    } else {
-      setFormData({ ...formData, [name]: value })
+  if (type === "checkbox") {
+    setFormData({ ...formData, [name]: checked });
+  } else if (type === "file") {
+    // Handle multiple file uploads
+    const fileArray = Array.from(files);
+    // Check total image limit (existing + new)
+    const totalImages = existingImages.length + formData.images.length + fileArray.length;
+    if (totalImages > 3) {
+      showMessageAlert(
+        `Maximum 3 images allowed. You currently have ${existingImages.length + formData.images.length} images.`,
+      );
+      return;
     }
 
-    // Clear error for this field when user makes changes
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" })
-    }
+    setFormData({ ...formData, [name]: [...formData.images, ...fileArray] });
+
+    // Create preview URLs for the new images
+    const newPreviewImages = [...previewImages];
+    fileArray.forEach((file) => {
+      newPreviewImages.push(URL.createObjectURL(file));
+    });
+    setPreviewImages(newPreviewImages);
+  } else if (name === "category") {
+    // When category changes, reset subcategory and update form
+    setFormData({ ...formData, [name]: value, subcategory: "" });
+
+   try {
+    // fetch subcategories for selected category
+  console.log("Fetching subcategories for category", value);
+  const response = await axios.get(`${BASEURL}/api/subcategory?parent_category=${value}`);
+  console.log("Subcategory API response:", response.data);
+  setFilteredSubcategories(response.data.rows || []);
+} catch (error) {
+  console.error("Error fetching subcategories for category:", error);
+  setFilteredSubcategories([]);
+}
+
+  } else if (name === "sizes" || name === "colors") {
+    // Handle multi-select for sizes and colors
+    const selectedValues = Array.from(e.target.selectedOptions, (option) => option.value);
+    setFormData({ ...formData, [name]: selectedValues });
+  } else {
+    setFormData({ ...formData, [name]: value });
   }
+
+  // Clear error for this field when user makes changes
+  if (errors[name]) {
+    setErrors({ ...errors, [name]: "" });
+  }
+};
+
+
 
   // Remove existing image
   const removeExistingImage = (index) => {
@@ -353,12 +366,18 @@ const AddProduct = () => {
   }, [location, subcategories])
 
   // Update filtered subcategories when subcategories are loaded
-  useEffect(() => {
-    if (formData.category && subcategories.length > 0) {
-      const filtered = subcategories.filter((subcategory) => subcategory.parent_category === formData.category)
-      setFilteredSubcategories(filtered)
-    }
-  }, [subcategories, formData.category])
+useEffect(() => {
+  if (formData.category && subcategories.length > 0) {
+    const filtered = subcategories.filter(subcategory => 
+      (subcategory.parent_category && typeof subcategory.parent_category === 'object' && subcategory.parent_category._id === formData.category) ||
+      subcategory.parent_category === formData.category
+    );
+    setFilteredSubcategories(filtered);
+  } else {
+    setFilteredSubcategories([]);
+  }
+}, [formData.category, subcategories]);
+
 
   // Cleanup preview URLs on unmount
   useEffect(() => {
@@ -646,7 +665,7 @@ const AddProduct = () => {
                 />
                 <Form.Control.Feedback type="invalid">{errors.images}</Form.Control.Feedback>
                 <Form.Text className="text-muted">
-                  You can select multiple images at once. Maximum 3 images allowed. Supported formats: JPG, JPEG, PNG,
+                  You can select multiple images at once. Maximum 5 images allowed. Supported formats: JPG, JPEG, PNG,
                   GIF, WebP, AVIF (Max: 5MB each)
                 </Form.Text>
               </Form.Group>

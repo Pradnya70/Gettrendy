@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button, Card, Col, Container, Row } from "react-bootstrap"
+import { Button, Card, Col, Badge, Container, Row } from "react-bootstrap"
 import "./Bestsellers.css"
+import { FaHeart } from "react-icons/fa"
 import Pagination from "@mui/material/Pagination"
 import Stack from "@mui/material/Stack"
 import { useNavigate } from "react-router-dom"
@@ -19,6 +20,7 @@ const Bestsellers = () => {
   const [limitAll, setLimitAll] = useState(4)
   const [allProducts, setAllProducts] = useState([])
   const [pagesCountAll, setPagesCountAll] = useState(1)
+    const [inCartStatus, setInCartStatus] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
@@ -181,6 +183,22 @@ const Bestsellers = () => {
                               e.target.src = "/placeholder.svg"
                             }}
                           />
+                             {product.images && product.images.length > 1 && (
+                                              <Card.Img
+                                            src={getImageUrl(product.images[1])}
+                                             alt={`${product.product_name} hover`}
+                                             className="product-image hover-image"
+                                                 onError={(e) => (e.target.src = "/placeholder.svg")}
+                                               />
+                                            )}
+                          
+                                                <FaHeart className="heart-icon" />
+                                                {inCartStatus[product.id || product._id] && (
+                                                  <Badge className="added-to-cart-badge" bg="success">
+                                                    Added to cart
+                                                  </Badge>
+                                                )}
+                                            
                         </div>
                         <Card.Body>
                           <Card.Title className="card-product-title">{product.product_name}</Card.Title>

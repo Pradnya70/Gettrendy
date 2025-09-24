@@ -180,6 +180,16 @@ const ProductCard = () => {
                           e.target.src = "/placeholder.svg"
                         }}
                       />
+
+                      {product.images && product.images.length > 1 && (
+                    <Card.Img
+                  src={getImageUrl(product.images[1])}
+                   alt={`${product.product_name} hover`}
+                   className="product-image hover-image"
+                       onError={(e) => (e.target.src = "/placeholder.svg")}
+                     />
+                  )}
+
                       <FaHeart className="heart-icon" />
                       {inCartStatus[product.id || product._id] && (
                         <Badge className="added-to-cart-badge" bg="success">

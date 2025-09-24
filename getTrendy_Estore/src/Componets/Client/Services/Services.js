@@ -33,7 +33,7 @@ const Services = () => {
                 </span>
               </div>
               <div className="ml-10">
-                <strong>5 Day's Return Policy </strong>
+                <strong>7 Day's Replacement </strong>
               </div>
             </div>
           </Col>

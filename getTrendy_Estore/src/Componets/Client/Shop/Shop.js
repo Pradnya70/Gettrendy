@@ -634,7 +634,7 @@ const [selectedSubCategory, setSelectedSubCategory] = useState(null);
               <div className="col-lg-3 col-md-6 position-relative float-end">
                  {/* Sort Options */}
                 <div className="filter-section flex items-baseline d-flex" >
-                  <h4 style={{width:"40%"}}>Sort By</h4>
+                  <h4 className="w-47">Sort By</h4>
                   <select
                     className="form-control" style={{width:"", marginLeft:"10px"}}
                     value={`${sortBy}-${sortOrder}`}

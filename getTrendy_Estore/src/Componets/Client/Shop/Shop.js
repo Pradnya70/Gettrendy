@@ -37,6 +37,7 @@ const Shop = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [allSubCategoryList, setAllSubCategoryList] = useState([]);
 const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const navigation = useNavigate();
 
 
 
@@ -47,6 +48,11 @@ const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     }
   }, [location.state]);
   
+   const navigateToProduct = (id) => {
+    navigation("/perticularproductpage", { state: { productId: id } })
+    window.scroll(0, 0)
+  }
+
 
   const fetchProducts = async () => {
     try {
@@ -676,76 +682,47 @@ const [selectedSubCategory, setSelectedSubCategory] = useState(null);
                         lg={4}
                         md={6}
                         sm={6}
-                        className="mb-4"
+                        className=""
                       >
-                        <Card className="product-card h-100">
-                          <div className="product-image-container">
-                           <Card.Img
-  variant="top"
-  src={getImageUrl(product.images?.[0]) || "/Images/placeholder.jpg"}
-  alt={getProductName(product)}
-  className="product-img main-image"
-  onClick={() => handleViewProduct(product._id)}
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = "/Images/placeholder.jpg"; // guaranteed local placeholder
-  }}
-/>
+                        <Card className="costume-product-card" onClick={() => navigateToProduct(product.id || product._id)}>
+                    <div className="product-image-container">
+                      <Card.Img
+                        variant="top"
+                        src={getImageUrl(
+                          product.product_image ||
+                            (product.images && product.images.length > 0 ? product.images[0] : null),
+                        )}
+                        alt={product.product_name}
+                        className="particular-product-image"
+                        onError={(e) => {
+                          console.log("Image error:", e)
+                          e.target.src = "/placeholder.svg"
+                        }}
+                      />
 
-        {product.images && product.images.length > 1 && (
-  <Card.Img
-    variant="top"
-    src={getImageUrl(product.images[1]) || getImageUrl(product.images[0]) || "/Images/placeholder.jpg"}
-    alt={`${product.product_name} hover`}
-    className="product-img hover-image"
-    onError={(e) => {
-      e.target.onerror = null;
-      // fallback to main image or placeholder
-      e.target.src = getImageUrl(product.images?.[0]) || "/Images/placeholder.jpg";
-    }}
-  />
-)}
+                      {product.images && product.images.length > 1 && (
+                    <Card.Img
+                  src={getImageUrl(product.images[1])}
+                   alt={`${product.product_name} hover`}
+                   className="product-image hover-image"
+                       onError={(e) => (e.target.src = "/placeholder.svg")}
+                     />
+                  )}
+                  
 
-
-
-                            <FaHeart className="heart-icon" />
-                            {inCartStatus[product._id] === true && (
-                              <Badge
-                                className="added-to-cart-badge"
-                                bg="success"
-                              >
-                                In Cart
-                              </Badge>
-                            )}
-                          </div>
-                          <Card.Body className=" flex-column">
-                            <div className="product-info flex-grow-1">
-                              {/* Product details */}
-                              {/* <Card.Text className="product-details">
-                                {product.weight && (
-                                  <span>• {product.weight}g </span>
-                                )}
-                                {product.no_of_pieces && (
-                                  <span>• {product.no_of_pieces} Pieces </span>
-                                )}
-                                {product.serves && (
-                                  <span>• Serves {product.serves}</span>
-                                )}
-                              </Card.Text> */}
-
-                              <Card.Title className="card-product-title">
-                                {getProductName(product)}
-                              </Card.Title>
-
-                              <Card.Text className="product-description">
-                                {truncateText(
-                                  product.description ||
-                                    product.product_description,
-                                  100
-                                )}
-                              </Card.Text>
-
-                               <div className="price-section">
+                      <FaHeart className="heart-icon" />
+                      {inCartStatus[product.id || product._id] && (
+                        <Badge className="added-to-cart-badge" bg="success">
+                          Added to cart
+                        </Badge>
+                      )}
+                    </div>
+                    <Card.Body>
+                      <Card.Title className="card-product-title">{product.product_name}</Card.Title>
+                      <Card.Text className="product-description">
+                        {truncateText(product.description || product.product_description, 100)}
+                      </Card.Text>
+                      <div className="price-section">
                         <div>
                           <span className="price">
                             ₹
@@ -770,47 +747,29 @@ const [selectedSubCategory, setSelectedSubCategory] = useState(null);
                           </span>
                         </div>
                       </div>
-
-                              {/* <div className="product-rating">
-                                {renderStars(5)}
-                                <span className="rating-count">(5.0)</span>
-                              </div> */}
-                            </div>
-
-                            <div className="button-section">
-                              <Button
-                                variant="outline-dark"
-                                onClick={() => handleViewProduct(product._id)}
-                                className="view-more-btn"
-                              >
-                                View Details
-                              </Button> 
-                              
-                              {/* {inCartStatus[product._id] === true ? (
-                                <Button
-                                  variant="success"
-                                  onClick={() => handleRemoveFromCart(product)}
-                                  className="remove-from-cart-btn"
-                                >
-                                  Remove from Cart
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="primary"
-                                  onClick={() => handleAddToCart(product)}
-                                  disabled={
-                                    inCartStatus[product._id] === "loading"
-                                  }
-                                  className="add-to-cart-btn"
-                                >
-                                  {inCartStatus[product._id] === "loading"
-                                    ? "Adding..."
-                                    : "Add to Cart"}
-                                </Button>
-                              )} */}
-                            </div>
-                          </Card.Body>
-                        </Card>
+                      <div className="button-section">
+                        <Button
+                          variant="outline-dark"
+                          className="view-more-btn"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigateToProduct(product.id || product._id)
+                          }}
+                        >
+                          View More
+                        </Button>
+                        <Button
+                          className="add-to-cart-btn d-none"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleAddToCart(product)
+                          }}
+                        >
+                          Add to cart
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
                       </Col>
                     ))}
                   </Row>

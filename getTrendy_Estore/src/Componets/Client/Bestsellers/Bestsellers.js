@@ -36,9 +36,9 @@ const Bestsellers = () => {
       setError(null)
 
       // Use the dedicated bestseller endpoint
-      console.log("Fetching bestsellers from:", `${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}`)
+      console.log("Fetching bestsellers from:", `${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}&sortBy=random&sortOrder=asc`)
 
-      const response = await axios.get(`${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}`)
+      const response = await axios.get(`${BASEURL}/api/products/bestseller?page=${pageAll}&limit=${limitAll}&sortBy=random&sortOrder=asc`)
 
       setLoading(false)
 

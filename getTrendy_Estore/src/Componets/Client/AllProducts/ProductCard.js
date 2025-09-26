@@ -19,6 +19,7 @@ const ProductCard = () => {
   const [inCart, setInCart] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const [allProducts, setAllProducts] = useState([])
+  
   const [loading, setLoading] = useState(false)
   const [pagesCountAll, setPagesCountAll] = useState(1)
   const [inCartStatus, setInCartStatus] = useState({})

@@ -1,13 +1,14 @@
+/* eslint-disable react/jsx-key */
 "use client"
 import { useEffect, useState } from "react"
 import { AgGridReact } from "ag-grid-react"
 import "ag-grid-community/styles/ag-grid.css"
 import "ag-grid-community/styles/ag-theme-quartz.css"
-import axios from "axios"
 import { BASEURL, authUtils, getImageUrl } from "../Comman/CommanConstans"
 import Footer from "../Footer/Footer"
 import { Pagination, Stack } from "@mui/material"
 import { toast } from "react-toastify"
+import axios from "axios"
 
 const MyOrders = () => {
   const [allOrders, setAllOrders] = useState([])
@@ -16,6 +17,121 @@ const MyOrders = () => {
   const [totalPages, setTotalPages] = useState(1)
   const [limit, setLimit] = useState(10)
   const [page, setPage] = useState(1)
+  const [showReplaceModal, setShowReplaceModal] = useState(false)
+  const [selectedOrderId, setSelectedOrderId] = useState(null)
+  const [replaceReason, setReplaceReason] = useState("")
+  const [replaceNote, setReplaceNote] = useState("")
+  const [myReplacementOrderIds, setMyReplacementOrderIds] = useState(new Set())
+  const [replacementStatuses, setReplacementStatuses] = useState({})
+
+  const getDisplayStatus = (status) => {
+    if (!status) return "in progress"
+    const s = String(status).toLowerCase()
+    if (s === "approved") return "resolved"
+    if (s === "pending") return "in progress"
+    return s // rejected or any other server-provided status
+  }
+
+  // check if order is within 5 days
+  const isReturnEligible = (createdAt) => {
+    if (!createdAt) return false
+    const orderDate = new Date(createdAt)
+    const currentDate = new Date()
+    const diffInDays = Math.floor((currentDate - orderDate) / (1000 * 60 * 60 * 24))
+    return diffInDays <= 5
+  }
+
+  // open replacement modal only if not already requested
+  const openReplaceModal = (orderId) => {
+    if (myReplacementOrderIds.has(String(orderId))) {
+      toast.info("You have already requested replacement for this order.")
+      return
+    }
+    setSelectedOrderId(orderId)
+    setReplaceReason("")
+    setReplaceNote("")
+    setShowReplaceModal(true)
+  }
+
+  const closeReplaceModal = () => {
+    setShowReplaceModal(false)
+    setSelectedOrderId(null)
+    setReplaceReason("")
+    setReplaceNote("")
+  }
+
+  const submitReplacement = async () => {
+    try {
+      if (!selectedOrderId) return
+      if (!replaceReason || replaceReason.trim().length < 3) {
+        toast.warning("Please provide a brief reason for replacement (min 3 chars)")
+        return
+      }
+
+      const token = authUtils.getToken()
+      if (!token) {
+        toast.error("Please login to submit a replacement request")
+        return
+      }
+
+      const payload = {
+        type: "replacement",
+        reason: replaceReason,
+        note: replaceNote,
+      }
+
+      const response = await axios.post(`${BASEURL}/api/orders/return/${selectedOrderId}`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.data?.success) {
+        toast.success("Replacement request submitted successfully")
+        closeReplaceModal()
+        await fetchMyReplacements()
+        getAllOrders()
+      } else {
+        toast.error(response.data?.message || "Failed to submit replacement request")
+      }
+    } catch (error) {
+      console.error("Replacement request error:", error)
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message)
+      } else {
+        toast.error("Failed to submit replacement request")
+      }
+    }
+  }
+
+  const fetchMyReplacements = async () => {
+    try {
+      const token = authUtils.getToken()
+      if (!token) return
+      const res = await axios.get(`${BASEURL}/api/orders/replacements/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      // Controller returns { success: true, data: requests }
+      const list = res?.data?.data || res?.data?.rows || []
+      const ids = new Set()
+      const statuses = {}
+
+      list.forEach((r) => {
+        // r.orderId may be an ObjectId string or populated object with _id
+        const orderKey = String(r?.orderId?._id || r?.orderId)
+        if (orderKey) {
+          ids.add(orderKey)
+          statuses[orderKey] = r?.status || "pending"
+        }
+      })
+
+      setMyReplacementOrderIds(ids)
+      setReplacementStatuses(statuses)
+    } catch (err) {
+      console.error("Failed to fetch my replacement requests", err)
+    }
+  }
 
   const columnDefs = [
     {
@@ -50,8 +166,7 @@ const MyOrders = () => {
           )
         }
 
-        // Show first product image, or multiple if there are multiple products
-        const imagesToShow = items.slice(0, 3) // Show max 3 images
+        const imagesToShow = items.slice(0, 3)
 
         return (
           <div
@@ -64,7 +179,6 @@ const MyOrders = () => {
             }}
           >
             {imagesToShow.map((item, index) => {
-              // Get image from populated productId or fallback
               let imageUrl = "/placeholder.svg"
 
               if (item.productId && item.productId.images && item.productId.images.length > 0) {
@@ -232,6 +346,48 @@ const MyOrders = () => {
         )
       },
     },
+    {
+      headerName: "Replacement Status",
+      field: "_id",
+      width: 200,
+      cellRenderer: (params) => {
+        const { _id, createdAt } = params.data
+        const key = String(_id)
+        const alreadyRequested = myReplacementOrderIds.has(key)
+        const rawStatus = replacementStatuses[key]
+        const display = getDisplayStatus(rawStatus)
+
+        if (!isReturnEligible(createdAt)) {
+          return <span className="text-muted">Not Eligible</span>
+        }
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+            <button
+              className="btn btn-warning btn-sm"
+              onClick={() => openReplaceModal(_id)}
+              title={alreadyRequested ? "Replacement already requested" : "Request Replacement"}
+              disabled={alreadyRequested}
+              style={{ cursor: alreadyRequested ? "not-allowed" : "pointer" }}
+            >
+              Replace
+            </button>
+            {alreadyRequested ? (
+              <small
+                style={{
+                  fontSize: 12,
+                  color: display === "resolved" ? "#28a745" : display === "rejected" ? "#dc3545" : "#fd7e14",
+                }}
+              >
+                ({display})
+              </small>
+            ) : rawStatus ? (
+              <small style={{ fontSize: 12, color: "#6c757d" }}>({display})</small>
+            ) : null}
+          </div>
+        )
+      },
+    },
   ]
 
   const defaultColDef = {
@@ -260,7 +416,6 @@ const MyOrders = () => {
       })
 
       if (response.data) {
-        console.log("Orders response:", response.data)
         let orders = []
         if (Array.isArray(response.data)) {
           orders = response.data
@@ -296,7 +451,6 @@ const MyOrders = () => {
   }
 
   const handleTrackOrder = (trackingNumber) => {
-    // You can integrate with Shiprocket tracking or redirect to courier website
     window.open(`https://shiprocket.in/tracking/${trackingNumber}`, "_blank")
   }
 
@@ -306,6 +460,8 @@ const MyOrders = () => {
       return
     }
     getAllOrders()
+    fetchMyReplacements()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit])
 
   return (
@@ -322,18 +478,16 @@ const MyOrders = () => {
               </div>
             </div>
           ) : (
-            <>
-              <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
-                <AgGridReact
-                  rowData={allOrders}
-                  columnDefs={columnDefs}
-                  defaultColDef={defaultColDef}
-                  pagination={false}
-                  paginationPageSize={limit}
-                  rowSelection="multiple"
-                  rowHeight={80} // Increase row height to accommodate images
-                />
-              </div>
+            <div className="ag-theme-quartz" style={{ height: 500, width: "100%" }}>
+              <AgGridReact
+                rowData={allOrders}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                pagination={false}
+                paginationPageSize={limit}
+                rowSelection="multiple"
+                rowHeight={80}
+              />
               {totalPages > 1 && (
                 <div className="mt-4 d-flex justify-content-center">
                   <Stack spacing={2}>
@@ -347,10 +501,58 @@ const MyOrders = () => {
                   </Stack>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>
+
+      {showReplaceModal && (
+        <div className="modal d-block" tabIndex="-1" role="dialog" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Request Replacement</h5>
+                <button type="button" className="btn-close" onClick={closeReplaceModal} aria-label="Close"></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Reason</label>
+                  <select
+                    className="form-select"
+                    value={replaceReason}
+                    onChange={(e) => setReplaceReason(e.target.value)}
+                  >
+                    <option value="">Select a reason</option>
+                    <option value="Damaged/Defective product">Damaged/Defective product</option>
+                    <option value="Wrong item delivered">Wrong item delivered</option>
+                    <option value="Size/fit issue">Size/fit issue</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Additional note (optional)</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Add any details that help us process the replacement"
+                    value={replaceNote}
+                    onChange={(e) => setReplaceNote(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeReplaceModal}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={submitReplacement}>
+                  Submit Replacement
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   )

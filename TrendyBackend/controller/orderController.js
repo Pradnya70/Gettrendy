@@ -7,6 +7,7 @@ const PDFDocument = require("pdfkit")
 const shiprocketService = require("../services/shiprocketService")
 const { sendOrderConfirmationToUser, sendNewOrderNotificationToAdmin } = require("../services/emailService")
 const crypto = require("crypto")
+const ReplacementRequest = require("../models/ReplacementRequest")
 
 // ===============================
 // PLACE ORDER
@@ -494,6 +495,91 @@ const createShiprocketOrder = async (req, res) => {
   }
 }
 
+// ===============================
+// REPLACEMENT REQUESTS (Top-level)
+// ===============================
+
+// Create a replacement request for an order
+const createReplacementRequest = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { orderId } = req.params;
+    const { productId, reason, note } = req.body;
+
+    const existing = await ReplacementRequest.findOne({ orderId, productId, userId });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "This product has already been replaced" });
+    }
+
+    const request = await ReplacementRequest.create({ orderId, productId, userId, reason, note });
+    return res.status(201).json({ success: true, message: "Replacement request created", data: request });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Failed to create replacement request" });
+  }
+};
+
+
+// List replacement requests (admin)
+const getReplacementRequests = async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const [rows, count] = await Promise.all([
+    ReplacementRequest.find({})
+      .populate({ path: "orderId", select: "orderId totalAmount createdAt" })
+      .populate({ path: "userId", select: "name email" })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    ReplacementRequest.countDocuments()
+  ]);
+
+  return res.json({ success: true, rows, count, pages_count: Math.ceil(count / limit), current_page: page });
+};
+
+
+// Update replacement request status (admin)
+// PUT /api/admin/replacements/:id
+// PUT /api/orders/replacements/:id/status
+const updateReplacementStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // pending, approved, rejected
+
+    const replacement = await ReplacementRequest.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    return res.json({ success: true, replacement });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
+
+// Get replacement requests for the logged-in user
+const getMyReplacementRequests = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const requests = await ReplacementRequest.find({ userId })
+      .populate({ path: "orderId", select: "orderId totalAmount createdAt" })
+      .sort({ createdAt: -1 });
+
+    return res.json({ success: true, data: requests });
+  } catch (error) {
+    console.error("getMyReplacementRequests error:", error);
+    return res.status(500).json({ success: false, message: "Failed to get replacement requests" });
+  }
+};
+
+
 module.exports = {
   placeOrder,
   verifyPayment,
@@ -506,4 +592,9 @@ module.exports = {
   getUnseenOrdersCount,
   downloadReceipt,
   createShiprocketOrder,
+
+  createReplacementRequest,
+  getReplacementRequests,
+  updateReplacementStatus,
+  getMyReplacementRequests,
 }

@@ -293,18 +293,6 @@ const ApiService = {
     }
   },
 
-  async getUserOrders(page = 1, limit = 10) {
-    try {
-      const response = await axios.get(`${BASEURL}/api/orders/myorders?page=${page}&limit=${limit}`, {
-        headers: this.getHeaders(),
-      })
-      return response
-    } catch (error) {
-      console.error("Error fetching user orders:", error)
-      throw error
-    }
-  },
-
   async getOrderById(orderId) {
     try {
       const response = await axios.get(`${BASEURL}/api/orders/${orderId}`, {
@@ -337,18 +325,6 @@ const ApiService = {
       return response
     } catch (error) {
       console.error("Error fetching orders by user:", error)
-      throw error
-    }
-  },
-
-  async updateOrderStatus(orderId, statusData) {
-    try {
-      const response = await axios.put(`${BASEURL}/api/orders/${orderId}/status`, statusData, {
-        headers: this.getHeaders(),
-      })
-      return response
-    } catch (error) {
-      console.error("Error updating order status:", error)
       throw error
     }
   },
@@ -394,15 +370,31 @@ const ApiService = {
     }
   },
 
-  // ==================== CART APIs ====================
-  async getCart() {
+  // Replacement Requests (Admin)
+  async getReplacementRequests(page = 1, limit = 10) {
     try {
-      const response = await axios.get(`${BASEURL}/api/cart`, {
+      const response = await axios.get(`${BASEURL}/api/orders/replacements?page=${page}&limit=${limit}`, {
         headers: this.getHeaders(),
       })
       return response
     } catch (error) {
-      console.error("Error fetching cart:", error)
+      console.error("Error fetching replacement requests:", error)
+      throw error
+    }
+  },
+
+  async updateReplacementStatus(requestId, statusData) {
+    try {
+      const response = await axios.put(
+        `${BASEURL}/api/orders/replacements/${requestId}/status`,
+        statusData,
+        {
+          headers: this.getHeaders(),
+        },
+      )
+      return response
+    } catch (error) {
+      console.error("Error updating replacement status:", error)
       throw error
     }
   },

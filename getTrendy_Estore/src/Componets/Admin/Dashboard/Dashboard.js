@@ -1,5 +1,4 @@
 "use client"
-import { useEffect, useState } from "react"
 import { faArrowLeft, faPenToSquare, faPlus, faTrash, faFilter } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { AgGridReact } from "ag-grid-react"
@@ -11,6 +10,8 @@ import { Button, Modal, Form, Row, Col, Card, Badge, Tabs, Tab, Table } from "re
 import { useNavigate, useLocation } from "react-router-dom"
 import ApiService from "../../api/services/api-service"
 import { getImageUrl } from "../../Client/Comman/CommanConstans"
+import { useState } from "react"
+import { useEffect } from "react"
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -26,6 +27,11 @@ const Dashboard = () => {
   const [unseenOrderCount, setUnseenOrderCount] = useState(0)
   const [orderRefreshKey, setOrderRefreshKey] = useState(0)
   const [currentViewingUserId, setCurrentViewingUserId] = useState(null)
+  // Replacements (admin)
+  const [replacements, setReplacements] = useState([])
+  const [replacementsPage, setReplacementsPage] = useState(1)
+  const [replacementsTotalPages, setReplacementsTotalPages] = useState(1)
+
 
   // Common function to handle back navigation
   const handleBack = () => {
@@ -89,6 +95,26 @@ const Dashboard = () => {
     }
   }
 
+
+  // Replacement requests (admin)
+  const fetchReplacements = async (page = replacementsPage) => {
+    try {
+      setLoading(true)
+      const response = await ApiService.getReplacementRequests(page, 10)
+      if (response?.data) {
+        const rows = response.data.rows || response.data.requests || response.data.data || []
+        setReplacements(rows)
+        setReplacementsTotalPages(response.data.pages_count || 1)
+        // keep page in sync when called with explicit page
+        if (page !== replacementsPage) setReplacementsPage(page)
+      }
+      setLoading(false)
+    } catch (error) {
+      setLoading(false)
+      console.error("Error fetching replacements:", error)
+      showMessageAlert("Error fetching replacements")
+    }
+  }
   // ==================== CATEGORIES ====================
   const [categories, setCategories] = useState([])
   const [categoryPage, setCategoryPage] = useState(1)
@@ -678,6 +704,8 @@ const Dashboard = () => {
     } else if (activeTab === "users") {
       fetchUsers()
       getUnseenOrdersCount() // Get unseen orders count when users tab is active
+    } else if (activeTab === "replacements") {
+      fetchReplacements()
     }
   }, [activeTab, categoryPage, subcategoryPage, productPage, userPage])
 
@@ -959,6 +987,110 @@ const Dashboard = () => {
           </div>
         </Tab>
 
+        <Tab eventKey="replacements" title="Replacements-Requests">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h3>Replacement Requests</h3>
+          </div>
+          <div className="table-responsive">
+            <Table striped bordered hover responsive>
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Order ID</th>
+                  <th>User</th>
+                  <th>Date</th>
+                  <th>Reason</th>
+                  <th>Note</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {replacements && replacements.length > 0 ? (
+                  replacements.map((req) => (
+                    <tr key={req._id}>
+                      <td>{req._id}</td>
+                      <td>{req.orderId?.orderId || req.orderId || "-"}</td>
+                      <td>
+                        {req.userId?.name || req.user?.name || "N/A"}
+                        {req.userId?.email || req.user?.email ? (
+                          <span> ({req.userId?.email || req.user?.email})</span>
+                        ) : null}
+                      </td>
+                      <td>{req.createdAt ? new Date(req.createdAt).toLocaleString() : "N/A"}</td>
+                      <td>{req.reason || "-"}</td>
+                      <td>{req.note || "-"}</td>
+                      <td>
+                        <Badge bg={
+                          req.status === "resolved" ? "success" : req.status === "in_progress" ? "info" : req.status === "rejected" ? "danger" : "warning"
+                        }>
+                          {req.status || "pending"}
+                        </Badge>
+                      </td>
+                      <td className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={async () => {
+                            try {
+                              await ApiService.updateReplacementStatus(req._id, { status: "in_progress" })
+                              fetchReplacements(replacementsPage)
+                            } catch (e) {
+                              showMessageAlert("Failed to update status")
+                            }
+                          }}
+                        >
+                          In Progress
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={async () => {
+                            try {
+                              await ApiService.updateReplacementStatus(req._id, { status: "resolved" })
+                              fetchReplacements(replacementsPage)
+                            } catch (e) {
+                              showMessageAlert("Failed to update status")
+                            }
+                          }}
+                        >
+                          Resolve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={async () => {
+                            try {
+                              await ApiService.updateReplacementStatus(req._id, { status: "rejected" })
+                              fetchReplacements(replacementsPage)
+                            } catch (e) {
+                              showMessageAlert("Failed to update status")
+                            }
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="text-center">No replacement requests found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </Table>
+          </div>
+          <div className="d-flex justify-content-center mt-3">
+            <Pagination
+              count={replacementsTotalPages}
+              page={replacementsPage}
+              onChange={(e, p) => fetchReplacements(p)}
+              color="primary"
+            />
+          </div>
+        </Tab>
+
         <Tab eventKey="users" title="Users">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h3>Users Management</h3>
@@ -977,6 +1109,8 @@ const Dashboard = () => {
           </div>
         </Tab>
       </Tabs>
+
+      
 
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={handleCloseDelete}>

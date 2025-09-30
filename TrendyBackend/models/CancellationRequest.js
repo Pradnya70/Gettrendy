@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const replacementRequestSchema = new mongoose.Schema(
+const cancellationRequestSchema = new mongoose.Schema(
   {
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -12,10 +12,6 @@ const replacementRequestSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-    },
     reason: {
       type: String,
       required: true,
@@ -26,7 +22,7 @@ const replacementRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "approved", "rejected", "resolved"],
+      enum: ["pending", "in_progress", "approved", "rejected"],
       default: "pending",
     },
     resolvedAt: {
@@ -38,4 +34,4 @@ const replacementRequestSchema = new mongoose.Schema(
   },
 )
 
-module.exports = mongoose.model("ReplacementRequest", replacementRequestSchema)
+module.exports = mongoose.model("CancellationRequest", cancellationRequestSchema)
